@@ -218,7 +218,25 @@ parallel runs coexist).
 Nothing to change: JAX places computation on the default device. On a machine
 with a CUDA GPU, install the CUDA build of JAX
 (`pip install "jax[cuda12]"`, or just run `bash setup.sh`) and the same
-commands run on GPU (`jax.devices()` is printed at startup).
+commands run on GPU (`jax.devices()` is printed at startup). Use
+`--scan assoc` (the default) on GPU; `--scan lax` is only faster on few CPU
+cores.
+
+### Running on the SLURM cluster
+
+```bash
+git clone https://github.com/aledurso22/prospective-s5.git && cd prospective-s5
+bash setup.sh                    # builds .venv, auto-detects the GPU
+python test_scan.py              # 8/8 must pass before trusting any run
+
+sbatch -p <partition> -A <account> scripts/train.sbatch baseline
+sbatch -p <partition> -A <account> scripts/train.sbatch prospective "--rho-init 1e-3 --tag _rho1e-3"
+```
+
+`scripts/train.sbatch` runs the full default budget (T=784, 60k train, H=96,
+N=64, L=3, 3 epochs) and writes `results/metrics_<model><tag>.json`. MNIST
+downloads itself on first run. **`train.py` has no checkpoint/resume** — if a
+job hits its `--time` limit the run is lost, so size the limit generously.
 
 ---
 

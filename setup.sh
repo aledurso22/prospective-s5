@@ -14,7 +14,7 @@ elif command -v nvidia-smi >/dev/null 2>&1; then
     echo ">> NVIDIA GPU detected — installing JAX with CUDA 12"
     pip install -U "jax[cuda12]==0.11.0" \
         -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-    pip install numpy scipy flax==0.12.8 optax==0.2.8
+    pip install numpy flax==0.12.8 optax==0.2.8
 else
     echo ">> no GPU detected — installing CPU-only JAX"
     pip install -r requirements.txt
