@@ -197,6 +197,41 @@ Everything else in the update is implemented EXACTLY as derived above.
 
 ---
 
+### Turning prospection off (the matched control)
+
+`--gamma` scales the prospective term (`ssm/prospective/layer.py`), following
+the partial-prospection form
+
+```
+s_t = [(1-rho)I + (rho+gamma)A] s_{t-1} - gamma*A s_{t-2}
+      + (rho+gamma) B x_{t-1} - gamma*B x_{t-2}
+```
+
+* `--gamma 1` (default) — the derivation as written;
+* `--gamma 0` — the prospective term is gone, `a2 = 0`, and the recurrence is
+  first-order **explicit-Euler S5**: same parameters, same code path, same
+  discretization.
+
+This is a cleaner control than `--model baseline`, which is also plain S5 but
+uses **bilinear** discretization — so it changes the integrator and the
+prospective term at once.
+
+Since `mu1*mu2 = gamma*A`, gamma scales the parasitic root linearly. Measured
+at `rho=0.1`, exact `A = Lambda` (from `exact_failure.py`):
+
+| gamma | 1.0 | 0.5 | 0.1 | 0.01 | 0.0 |
+|---|---|---|---|---|---|
+| max\|mu\| | 1433.60 | 781.96 | 260.65 | 143.36 | **130.33** |
+
+Note the floor: at `gamma = 0` there is no prospective term and no parasitic
+root, and it is **still unstable** — the surviving physical root is
+`a1 = (1-rho) + rho*A`, and `|rho*A| = 130` at the HiPPO spectrum. Explicit
+Euler cannot integrate this spectrum at all. That is a *third* failure,
+independent of both the continuous cancellation and the parasitic root, and
+it is why a trainable control needs `--gamma 0 --stabilized`.
+
+---
+
 ## 3. Usage
 
 ```bash

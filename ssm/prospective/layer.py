@@ -161,6 +161,13 @@ class ProspectiveSSM(nn.Module):
     # trainable at the cost of flattening the spectrum — see the class
     # docstring and README "Stability note".
     exact: bool = True
+    # gamma = partial-prospection strength (README "Turning prospection off").
+    #   gamma = 1 : the derivation verbatim (DEFAULT)
+    #   gamma = 0 : the prospective term is gone and the recurrence collapses
+    #               to first order, s_t = [(1-rho)I + rho*A] s_{t-1} + rho*B
+    #               x_{t-1} -- explicit-Euler S5, same code path, same params.
+    # Roots satisfy mu1*mu2 = gamma*A, so gamma also scales the parasitic root.
+    gamma: float = 1.0
     # rho0 = exp(log_ratio_init); see README for the stability discussion.
     log_ratio_init: float = float(np.log(0.1))
     # Stability-fallback clamps — used only when exact=False.
@@ -208,17 +215,21 @@ class ProspectiveSSM(nn.Module):
 
         # M = [[a1, a2], [1, 0]] per (channel h, state n); assembled per
         # channel inside run_channel.
+        # Partial prospection (gamma=1 is the derivation as written):
+        #   s_t = [(1-rho)I + (rho+gamma)A] s_{t-1} - gamma*A s_{t-2}
+        #         + (rho+gamma) B x_{t-1} - gamma*B x_{t-2}
+        g = self.gamma
         a1 = ((1.0 - rho)[:, None]
-              + (1.0 + rho)[:, None] * A)                          # (H, N)
-        a2 = -A                                                    # (H, N)
+              + (rho + g)[:, None] * A)                            # (H, N)
+        a2 = -g * A                                                # (H, N)
 
         # Causal conv kernel [(1+rho), -1] on the B-transformed inputs, i.e.
         #   x~_t = (1+rho) * Bx_{t-1} + (-1) * Bx_{t-2}.
         # causal_conv1d_time(v, [w0, w1]) gives out_t = w0 v_{t-1} + w1 v_t;
         # convolving the one-step-delayed sequence v'_t = Bx_{t-1} with
         # [w0, w1] = [-1, 1+rho] yields exactly x~_t.
-        k0 = -jnp.ones((H,))                                       # taps on Bx_{t-2}
-        k1 = 1.0 + rho                                             # taps on Bx_{t-1}
+        k0 = -g * jnp.ones((H,))                                   # taps on Bx_{t-2}
+        k1 = rho + g                                               # taps on Bx_{t-1}
         kernels = jnp.stack([k0, k1], axis=1)                      # (H, 2)
 
         # B is used UNSCALED (exactly as written in the derivation); only A

@@ -21,10 +21,14 @@ _h = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_h)
 
 
-def companion_roots(A: np.ndarray, rho: float) -> np.ndarray:
-    """Roots of mu^2 - a1 mu - a2 with a1 = (1-rho) + (1+rho)A, a2 = -A."""
-    a1 = (1.0 - rho) + (1.0 + rho) * A
-    a2 = -A
+def companion_roots(A: np.ndarray, rho: float, gamma: float = 1.0) -> np.ndarray:
+    """Roots of mu^2 - a1 mu - a2 for partial prospection strength gamma.
+
+    a1 = (1-rho) + (rho+gamma)A,  a2 = -gamma*A,  so mu1*mu2 = gamma*A:
+    gamma scales the parasitic root linearly and kills it at gamma=0.
+    """
+    a1 = (1.0 - rho) + (rho + gamma) * A
+    a2 = -gamma * A
     return np.array([np.roots([1.0, -x, -y]) for x, y in zip(a1, a2)])
 
 
@@ -102,6 +106,23 @@ def main() -> None:
     print("The fallback is stable, but every physical root collapses onto")
     print("(1 - rho): the HiPPO spectrum (3 orders of magnitude) moves the")
     print("pole by <1e-3. It trains because it is no longer an S5.")
+    print()
+    print("TURNING PROSPECTION OFF (--gamma), exact A = Lambda, rho = 0.1:")
+    print(f"    {'gamma':>7} {'max|mu|':>14}   {'mu1*mu2 = gamma*A':>18}")
+    for g in (1.0, 0.5, 0.1, 0.01, 0.0):
+        mu = companion_roots(Lambda, 0.1, g)
+        flag = "" if np.abs(mu).max() <= 1 else "  UNSTABLE"
+        print(f"    {g:7.2f} {np.abs(mu).max():14.6f}   {g * np.abs(Lambda).max():18.2f}{flag}")
+    print("  gamma=0 removes the prospective term entirely: a2 = 0, the second")
+    print("  root is 0, and the recurrence is first-order explicit-Euler S5.")
+    print()
+    print("  BUT IT IS STILL UNSTABLE: max|mu| = 130.33 at gamma=0. That root")
+    print("  is the PHYSICAL one, a1 = (1-rho) + rho*A, and |rho*A| = 130 at")
+    print("  rho=0.1, |Lambda|max=1303. So explicit Euler cannot integrate the")
+    print("  HiPPO spectrum even with no prospective term at all — a THIRD")
+    print("  failure, independent of both the cancellation and the parasite.")
+    print("  A trainable control therefore needs --gamma 0 --stabilized, where")
+    print("  the Delta-scaling shrinks A enough for Euler to be stable.")
     print("=" * 72)
 
 
