@@ -291,7 +291,7 @@ the clamps are the empirical footprint of the ghost.
 *successor* model, not another name for the work in this repo — the two are
 different objects and the naming marks the pivot:
 
-| | this repo (`prospective/`) | PESM (`../prospective_ssm_project/ssm/pesm.py`) |
+| | this repo (`prospective/`) | PESM (`../pesm/ssm/pesm.py`) |
 |---|---|---|
 | state defined by | a **recurrence** (S5-style, second order) | an **energy** `E(s; x)`, state = equilibrium `grad E = 0` |
 | prospectiveness lives in | the update rule itself | the **solver metric** (Hessian mass), `gamma=1` = Newton |
@@ -306,7 +306,7 @@ which is how the two families are tied together.
 
 The sections below record findings from that wider project. Their code
 (`ssm/pesm.py`, `train_lm.py`, `train_copy.py`, `test_pesm.py`,
-`results/EXPERIMENTS.md`) lives in `../prospective_ssm_project/`, not in this
+`results/EXPERIMENTS.md`) lives in `../pesm/`, not in this
 minimal repo — kept here so the experimental record stays in one place.
 
 ### Stage 8 — Prospective DEQ LM (`ssm/pesm.py` + `train_lm.py`)
