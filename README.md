@@ -38,14 +38,15 @@ prospective-s5/
 │   └── model.py             ── SHARED: SequenceClassifier, the arm switch ──
 │
 ├── train.py                 sMNIST training loop, --model {baseline,prospective}
-├── test_scan.py             8 correctness tests: every scan == sequential ref
+├── test_scan.py             9 correctness checks: every scan == sequential ref
 ├── ghost_demo.py            standalone numpy diagnosis of the instability
+├── exact_failure.py         the derivation verbatim + where it overflows
 ├── data/                    MNIST IDX .gz files (auto-downloaded)
 └── results/                 metrics_<model>.json written here
 ```
 
 **Everything outside `ssm/prospective/` is standard S5.** The two arms share
-the HiPPO initialization, the parameters (`Lambda, B, C, D, log_step`), the
+the HiPPO initialization, the parameters (`Lambda, B, C, D`), the
 block, the pooling, the head, the optimizer and the training loop.
 
 ### Suggested reading order
@@ -71,7 +72,7 @@ block, the pooling, the head, the optimizer and the training loop.
 | discretization | bilinear / Tustin | Euler (of the prospective ODE) |
 | input term | `B_bar x_t` | `x~_t = (1+rho) B x_{t-1} - B x_{t-2}` (2-tap causal conv) |
 | extra params | — | `log_ratio = log(rho)`, per channel |
-| `A` used as | `Lambda_bar` (bilinear) | `Delta * Lambda`, clamped (stability fallback) |
+| `A` used as | `Lambda_bar` (bilinear) | **`Lambda`** (default, verbatim) / `Delta * Lambda` clamped (`--stabilized`) |
 | init | `log_step ~ U[log 1e-3, log 1e-1]` | `log_step ~ U[log 1e-4, log 5e-4]` |
 | shared | HiPPO init, `Lambda/B/C/D`, block, classifier, training loop | same |
 
@@ -161,11 +162,28 @@ The prospective Euler recurrence is a *second-order* difference equation; the
 companion matrix `M_i = [[a1_i, a2_i], [1, 0]]` has a parasitic mode with
 `|eig| ~ |A_i|` (the product of its two eigenvalues equals `-a2_i = A_i`).
 With the HiPPO eigenvalues (`|Lambda|` up to ~1.3e3 at N=64) the recurrence is
-**unstable for every rho** if A is used unscaled (measured: `max|eig(M_i)|`
-~ 64 even as `rho -> 0` with the direct eigenvalues, where the roots approach
-`1` and `Lambda_i`).
+**unstable for every rho** if A is used unscaled. Measured at the real
+DPLR/HiPPO init, N=64 (`python exact_failure.py`):
 
-Fallback adopted (explicit, documented; also flagged in code):
+| rho = Delta t/tau | physical root | parasitic root | float32 overflow |
+|---|---|---|---|
+| 0.5   | ~0.60-0.67 | **1954.91** | step 13 |
+| 0.1   | ~0.90-0.91 | **1433.60** | step 14 |
+| 1e-3  | ~0.999     | **1304.58** | step 14 |
+
+The physical root behaves exactly as intended (`~ 1 - rho`); it is the
+parasitic root, `|mu| ~ |A|`, that destroys the run — and shrinking `rho`
+does not touch it, because `mu1*mu2 = A` is set by the spectrum, not the
+step size.
+
+**As of the `exact` flag, this fallback is OPT-IN and off by default.** The
+prospective layer now runs the derivation verbatim (`A = Lambda`, `B`
+unscaled, no clamps) and diverges — `python exact_failure.py` measures the
+companion spectrum and the overflow step. Pass `--stabilized` to `train.py`
+to enable the fallback below, which is what the numbers in `results/` were
+produced with.
+
+Fallback (opt-in, `--stabilized`):
 
 * `A := Delta * Lambda` with a **trainable log-Delta** exactly like S5 — the
   consistent discrete-time reading of the derivation's `f_theta` — while
@@ -184,8 +202,11 @@ Everything else in the update is implemented EXACTLY as derived above.
 ```bash
 pip install -r requirements.txt      # or: bash setup.sh   (GPU auto-detect)
 
-# 1. correctness of both associative scans (must pass, 8/8)
+# 1. correctness of both associative scans (must pass, 9/9)
 python test_scan.py
+
+# 1b. the derivation run verbatim, and exactly where it breaks
+python exact_failure.py
 
 # 2. the instability diagnosis, no training, numpy only
 python ghost_demo.py
@@ -227,7 +248,7 @@ cores.
 ```bash
 git clone https://github.com/aledurso22/prospective-s5.git && cd prospective-s5
 bash setup.sh                    # builds .venv, auto-detects the GPU
-python test_scan.py              # 8/8 must pass before trusting any run
+python test_scan.py              # 9/9 must pass before trusting any run
 
 sbatch -p <partition> -A <account> scripts/train.sbatch baseline
 sbatch -p <partition> -A <account> scripts/train.sbatch prospective "--rho-init 1e-3 --tag _rho1e-3"

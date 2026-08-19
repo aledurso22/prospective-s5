@@ -191,13 +191,18 @@ def test_s5_layer_end_to_end() -> None:
     check("S5SSM layer", got, jax.vmap(ref_batch)(x))
 
 
-def test_prospective_layer_end_to_end() -> None:
-    print("[6] ProspectiveSSM layer (scan+conv path) vs fully sequential ref")
+def _prospective_layer_check(exact: bool, T: int, label: str) -> None:
+    """ProspectiveSSM (either mode) vs a fully sequential reference.
+
+    ``exact=True`` is the derivation verbatim (A = Lambda, no clamps); it
+    diverges, so it is checked over a short window where the state is still
+    finite. ``exact=False`` is the documented stability fallback.
+    """
     from ssm.prospective.layer import ProspectiveSSM
-    T, H, N = 128, 4, 16
+    H, N = 4, 16
     rng = np.random.RandomState(2)
     x = jnp.asarray(rng.randn(2, T, H).astype(np.float32))
-    layer = ProspectiveSSM(state_size=N, d_model=H)
+    layer = ProspectiveSSM(state_size=N, d_model=H, exact=exact)
     variables = layer.init(jax.random.PRNGKey(0), x)
     params = variables["params"]
     got = layer.apply(variables, x)
@@ -206,9 +211,14 @@ def test_prospective_layer_end_to_end() -> None:
     B = _get_complex(params, "B")
     C = _get_complex(params, "C")
     D = params["D"]
-    rho = jnp.exp(jnp.clip(params["log_ratio"], *layer.clip_log_ratio))     # (H,)
-    Delta = jnp.exp(jnp.clip(params["log_step"], *layer.clip_log_step))     # (H,)
-    A = Delta[:, None] * Lambda[None, :]                                    # (H, N)
+    if exact:
+        assert "log_step" not in params, "exact mode must not create log_step"
+        rho = jnp.exp(params["log_ratio"])                                  # (H,)
+        A = jnp.broadcast_to(Lambda[None, :], (H, N))                       # A = Lambda
+    else:
+        rho = jnp.exp(jnp.clip(params["log_ratio"], *layer.clip_log_ratio))
+        Delta = jnp.exp(jnp.clip(params["log_step"], *layer.clip_log_step))
+        A = Delta[:, None] * Lambda[None, :]                                # (H, N)
     B_eff = B.T                                                             # (H, N) unscaled
     a1 = (1.0 - rho)[:, None] + (1.0 + rho)[:, None] * A
     a2 = -A
@@ -226,7 +236,16 @@ def test_prospective_layer_end_to_end() -> None:
             s_prev2, s_prev1 = s_prev1, s
         return jnp.stack(ys, 0)
 
-    check("ProspectiveSSM layer", got, jax.vmap(ref_batch)(x))
+    check(label, got, jax.vmap(ref_batch)(x))
+
+
+def test_prospective_layer_end_to_end() -> None:
+    print("[6] ProspectiveSSM layer (scan+conv path) vs fully sequential ref")
+    # Fallback mode (exact=False): the historical check, unchanged.
+    _prospective_layer_check(False, 128, "ProspectiveSSM layer (fallback)")
+    # Exact mode (the derivation verbatim): same scan/conv path, A = Lambda.
+    # T is short because this arm diverges — see exact_failure.py.
+    _prospective_layer_check(True, 8, "ProspectiveSSM layer (exact)")
 
 
 def main() -> None:

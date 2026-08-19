@@ -35,6 +35,9 @@ class SequenceClassifier(nn.Module):
     n_classes: int = 10
     dropout_rate: float = 0.1
     scan_impl: str = "assoc"       # "assoc" | "lax" (CPU training accelerator)
+    exact: bool = True             # prospective arm: run the derivation
+                                   # verbatim (diverges). False = documented
+                                   # stability fallback (trains).
     rho_init: float = 0.1          # prospective friction rho at init; the
                                    # physical mode is ~ (1 - rho), so the
                                    # memory horizon is ~ 1/rho_init tokens.
@@ -61,6 +64,7 @@ class SequenceClassifier(nn.Module):
                 ssm = ProspectiveSSM(state_size=self.state_size,
                                      d_model=self.d_model,
                                      scan_impl=self.scan_impl,
+                                     exact=self.exact,
                                      log_ratio_init=float(np.log(self.rho_init)))
             else:
                 raise ValueError(f"unknown model_type: {self.model_type}")
@@ -81,9 +85,10 @@ def build_model(model_type: str, d_model: int = 96, state_size: int = 64,
                 n_layers: int = 3, n_classes: int = 10,
                 dropout_rate: float = 0.1,
                 scan_impl: str = "assoc",
+                exact: bool = True,
                 rho_init: float = 0.1) -> SequenceClassifier:
     """Convenience constructor."""
     return SequenceClassifier(
         model_type=model_type, d_model=d_model, state_size=state_size,
         n_layers=n_layers, n_classes=n_classes, dropout_rate=dropout_rate,
-        scan_impl=scan_impl, rho_init=rho_init)
+        scan_impl=scan_impl, exact=exact, rho_init=rho_init)

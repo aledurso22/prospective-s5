@@ -51,7 +51,7 @@ Expected output:
 python test_scan.py
 ```
 
-8/8 tests: the prospective 2x2 affine associative scan agrees with the
+9/9 tests: the prospective 2x2 affine associative scan agrees with the
 sequential reference to float32 tolerance (~1e-6), including the HiPPO-form
 transition and the full layer-vs-sequential check. The scan is NOT the
 problem — the recurrence is.
@@ -105,7 +105,9 @@ clamps regardless.
 - `ssm/shared/` — identical in both arms: `hippo.py` (HiPPO init),
   `params.py` (complex params + S5 initializers), `block.py` (`S5Block`)
 - `ssm/model.py` — the classifier and the single arm switch
-- `test_scan.py` — 8/8 correctness suite
+- `test_scan.py` — 9/9 correctness suite (both layer modes)
+- `exact_failure.py` — the derivation verbatim: companion spectrum,
+  overflow step, and the fallback's cost, at the real HiPPO init
 - `train.py` — sequential-MNIST training, both arms
 - `results/` — `metrics_{baseline,prospective}.json` from the original
   sandbox run; new runs are written here too

@@ -117,7 +117,14 @@ class ProspectiveSSM(nn.Module):
     [(1+rho), -1] acting on the B-transformed inputs (the kernel taps
     multiply [Bx_{t-1}, Bx_{t-2}]).
 
-    DOCUMENTED STABILITY FALLBACK (see README.md): the prospective Euler
+    TWO MODES. ``exact=True`` (the default) runs the derivation verbatim:
+    A = Lambda, B unscaled, no clamps. It DIVERGES at the HiPPO init, and
+    that divergence is the scientific result (see ``exact_failure.py``).
+    ``exact=False`` enables the fallback described next, which trains but
+    flattens the spectrum.
+
+    DOCUMENTED STABILITY FALLBACK, opt-in via exact=False (see README.md):
+    the prospective Euler
     recurrence is a second-order difference equation; the eigenvalues of
     M_i = [[a1_i, a2_i], [1, 0]] satisfy mu1 * mu2 = -a2_i = A_i, so the
     recurrence has a parasitic mode with |mu| ~ |A_i|. With the (S5/DPLR)
@@ -140,15 +147,23 @@ class ProspectiveSSM(nn.Module):
     long-sequence tasks such as sMNIST (L = 784): use log_ratio_init =
     log(1e-3) (horizon ~1000) there — exposed as --rho-init in train.py.
 
-    Params: log_step = log Delta (per-channel, trainable, S5-style),
-    log_ratio = log(Delta t / tau) (per-channel, trainable), Lambda (HiPPO
-    init, trainable real/imag), B, C, D.
+    Params: log_ratio = log(Delta t / tau) (per-channel, trainable), Lambda
+    (HiPPO init, trainable real/imag), B, C, D — plus log_step = log Delta
+    ONLY when exact=False (it has no counterpart in the derivation).
     """
     state_size: int = 64     # N
     d_model: int = 96        # H
+    # exact=True (DEFAULT): the derivation verbatim — A = Lambda, B unscaled,
+    # no clamps, the only free parameter being rho = Delta t / tau. This is
+    # the arm that exhibits the failure (max |mu| = 1433.60 at the HiPPO init:
+    # it overflows within a few steps). exact=False enables the documented
+    # stability fallback (A := Delta*Lambda + the clamps) that makes the layer
+    # trainable at the cost of flattening the spectrum — see the class
+    # docstring and README "Stability note".
+    exact: bool = True
     # rho0 = exp(log_ratio_init); see README for the stability discussion.
     log_ratio_init: float = float(np.log(0.1))
-    # Documented stability fallback clamps (see class docstring).
+    # Stability-fallback clamps — used only when exact=False.
     clip_log_step: tuple = (float(np.log(1e-5)), float(np.log(5e-4)))
     clip_log_ratio: tuple = (float(np.log(1e-3)), float(np.log(0.25)))
     scan_impl: str = "assoc"  # "assoc" (associative_scan) | "lax" (lax.scan)
@@ -172,15 +187,24 @@ class ProspectiveSSM(nn.Module):
             "log_ratio",
             lambda key, shape, dtype=jnp.float32: jnp.full(shape, self.log_ratio_init),
             (H,))
-        log_step = self.param("log_step", log_step_init_prospective, (H,))
-        # Documented stability fallback clamps (see class docstring).
-        log_ratio = jnp.clip(log_ratio, *self.clip_log_ratio)
-        log_step = jnp.clip(log_step, *self.clip_log_step)
-        rho = jnp.exp(log_ratio)                                   # (H,)
-        Delta = jnp.exp(log_step)                                  # (H,)
-
-        # A := Delta * Lambda (Delta t-scaled diagonal operator), (H, N)
-        A = Delta[:, None] * Lambda[None, :]
+        if self.exact:
+            # ---- THE DERIVATION VERBATIM ----------------------------------
+            # f_theta(s, t) = A s + B x with A the SSM matrix itself. No
+            # Delta t-scaling of A, no clamps: rho = Delta t / tau is the only
+            # free parameter, exactly as written. At the HiPPO init this gives
+            # max |mu| = 1433.60 (mu1*mu2 = -a2 = A), i.e. it diverges — that
+            # is the result, not a bug.
+            rho = jnp.exp(log_ratio)                               # (H,)
+            A = jnp.broadcast_to(Lambda[None, :], (H, N))          # A = Lambda
+        else:
+            # ---- documented stability fallback (opt-in) --------------------
+            log_step = self.param("log_step", log_step_init_prospective, (H,))
+            log_ratio = jnp.clip(log_ratio, *self.clip_log_ratio)
+            log_step = jnp.clip(log_step, *self.clip_log_step)
+            rho = jnp.exp(log_ratio)                               # (H,)
+            Delta = jnp.exp(log_step)                              # (H,)
+            # A := Delta * Lambda (Delta t-scaled diagonal operator), (H, N)
+            A = Delta[:, None] * Lambda[None, :]
 
         # M = [[a1, a2], [1, 0]] per (channel h, state n); assembled per
         # channel inside run_channel.

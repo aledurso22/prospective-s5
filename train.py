@@ -175,6 +175,12 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--standardize", action="store_true",
                    help="standardize pixel intensities (zero mean, unit var)")
+    p.add_argument("--stabilized", action="store_true",
+                   help="prospective arm only: enable the documented stability "
+                        "fallback (A := Delta*Lambda, clamps on Delta and rho). "
+                        "DEFAULT IS OFF — the layer then runs the derivation "
+                        "verbatim and diverges, which is the point. The "
+                        "results/ metrics were produced WITH this flag.")
     p.add_argument("--rho-init", type=float, default=0.1,
                    help="prospective friction rho at init (prospective model "
                         "only). Physical mode ~ (1 - rho): memory horizon "
@@ -233,7 +239,7 @@ def main() -> None:
     model = build_model(model_type=args.model, d_model=args.d_model,
                         state_size=args.state_size, n_layers=args.n_layers,
                         dropout_rate=args.dropout, scan_impl=args.scan,
-                        rho_init=args.rho_init)
+                        exact=not args.stabilized, rho_init=args.rho_init)
     key = jax.random.PRNGKey(args.seed)
     init_rng, dropout_rng = jax.random.split(key)
     dummy = jnp.ones((1, x_train.shape[1]), jnp.float32)
@@ -257,6 +263,8 @@ def main() -> None:
                   scan_impl=args.scan, downsample=args.downsample,
                   rho_init=(args.rho_init if args.model == "prospective"
                             else None),
+                  exact=(not args.stabilized if args.model == "prospective"
+                         else None),
                   seq_len=int(x_train.shape[1]))
 
     # ---------------- training loop ----------------

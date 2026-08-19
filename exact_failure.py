@@ -1,0 +1,109 @@
+"""The derivation as written, run verbatim — and where it breaks.
+
+No stability fallback, no clamps: f_theta(s,t) = A s + B x with A = Lambda
+(the HiPPO/S5 matrix itself), exactly as in the derivation. This script
+reports, at the real S5 initialization:
+
+  1. the companion spectrum  mu^2 - a1 mu - a2 = 0,  mu1*mu2 = -a2 = A;
+  2. the step at which the state overflows float32;
+  3. the same quantities under the documented fallback (A := Delta*Lambda
+     with the clamps), for contrast — showing the price it pays.
+
+Run:  python exact_failure.py
+"""
+from __future__ import annotations
+
+import importlib.util
+import numpy as np
+
+_spec = importlib.util.spec_from_file_location("_hippo", "ssm/shared/hippo.py")
+_h = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_h)
+
+
+def companion_roots(A: np.ndarray, rho: float) -> np.ndarray:
+    """Roots of mu^2 - a1 mu - a2 with a1 = (1-rho) + (1+rho)A, a2 = -A."""
+    a1 = (1.0 - rho) + (1.0 + rho) * A
+    a2 = -A
+    return np.array([np.roots([1.0, -x, -y]) for x, y in zip(a1, a2)])
+
+
+def rollout(A: np.ndarray, rho: float, T: int = 784, seed: int = 0):
+    """Run s_t = a1 s_{t-1} + a2 s_{t-2} + x~_t on white-noise input.
+
+    Returns the first step at which |s| leaves float32 range (or None).
+    """
+    rng = np.random.RandomState(seed)
+    N = A.shape[0]
+    a1 = (1.0 - rho) + (1.0 + rho) * A
+    a2 = -A
+    x = rng.randn(T).astype(np.float32)
+    s1 = np.zeros(N, np.complex128)
+    s2 = np.zeros(N, np.complex128)
+    peak = 0.0
+    with np.errstate(over="ignore", invalid="ignore"):
+        for t in range(T):
+            xt = (1.0 + rho) * (x[t - 1] if t >= 1 else 0.0) - (x[t - 2] if t >= 2 else 0.0)
+            s = a1 * s1 + a2 * s2 + xt
+            s2, s1 = s1, s
+            m = np.max(np.abs(s))
+            peak = max(peak, m) if np.isfinite(m) else peak
+            if not np.isfinite(m) or m > np.finfo(np.float32).max:
+                return t, m, peak
+    return None, np.max(np.abs(s1)), peak
+
+
+def report(name: str, A: np.ndarray, rho: float) -> None:
+    mu = companion_roots(A, rho)
+    # The PHYSICAL root is the one approximating the continuous mode, i.e. the
+    # one nearest (1 - rho); the other is the parasitic/companion root created
+    # by the two-step discretisation. Selecting by magnitude would mislabel
+    # them whenever the parasitic root is the larger one — which is exactly
+    # what happens in the exact case.
+    i = np.argmin(np.abs(mu - (1.0 - rho)), axis=1)
+    phys = mu[np.arange(len(A)), i]
+    ghost = mu[np.arange(len(A)), 1 - i]
+    step, val, peak = rollout(A, rho)
+    print(f"  {name}")
+    print(f"    |A| max            : {np.abs(A).max():.4e}")
+    print(f"    max |mu|           : {np.abs(mu).max():.6f}"
+          f"   {'UNSTABLE' if np.abs(mu).max() > 1 else 'stable'}")
+    print(f"    physical root range: [{np.abs(phys).min():.6f}, {np.abs(phys).max():.6f}]"
+          f"   (1-rho = {1 - rho:.6f})")
+    print(f"    parasitic |mu| max : {np.abs(ghost).max():.4e}"
+          f"   {'<-- the ghost' if np.abs(ghost).max() > 1 else ''}")
+    if step is None:
+        print(f"    rollout T=784      : finite, final |s| = {val:.3e}")
+    else:
+        print(f"    rollout T=784      : OVERFLOWED float32 at step {step}"
+              f"  (|s| = {val:.3e})")
+
+
+def main() -> None:
+    N = 64
+    Lambda, _, _ = _h.hippo_init(N)
+    print("=" * 72)
+    print("The prospective SSM derivation at the real S5/HiPPO init (N=64)")
+    print("=" * 72)
+    print(f"HiPPO spectrum: Re(lambda) = {Lambda.real[0]:.3f} for every mode, "
+          f"|lambda| in [{np.abs(Lambda).min():.4f}, {np.abs(Lambda).max():.2f}]")
+    print()
+    print("EXACT — the derivation verbatim (A = Lambda, no clamps):")
+    for rho in (0.5, 0.1, 1e-3):
+        report(f"rho = Delta t/tau = {rho}", Lambda, rho)
+    print()
+    print("mu1*mu2 = A, so |mu| ~ sqrt(|A|) ~ sqrt(1303) — no rho can fix it:")
+    print("  the instability is set by the spectrum, not by the step size.")
+    print()
+    print("FALLBACK — A := Delta*Lambda with the clamps (exact=False):")
+    for D, rho in ((5e-4, 0.1), (2e-4, 0.1), (5e-4, 1e-3)):
+        report(f"Delta = {D:.0e}, rho = {rho}", D * Lambda, rho)
+    print()
+    print("The fallback is stable, but every physical root collapses onto")
+    print("(1 - rho): the HiPPO spectrum (3 orders of magnitude) moves the")
+    print("pole by <1e-3. It trains because it is no longer an S5.")
+    print("=" * 72)
+
+
+if __name__ == "__main__":
+    main()
