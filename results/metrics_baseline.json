@@ -1,0 +1,41 @@
+{
+  "config": {
+    "model": "baseline",
+    "d_model": 64,
+    "state_size": 32,
+    "n_layers": 2,
+    "dropout": 0.1,
+    "batch_size": 32,
+    "lr": 0.001,
+    "schedule": "cosine->0",
+    "optimizer": "adam",
+    "epochs": 1,
+    "train_samples": 10000,
+    "test_samples": 2000,
+    "seed": 0,
+    "standardized": false,
+    "scan_impl": "lax",
+    "downsample": 2,
+    "seq_len": 196
+  },
+  "params": 34570,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 2.034369482825964,
+      "train_acc": 0.2509014423076923,
+      "test_loss": 1.8548283472061158,
+      "test_acc": 0.32899999237060545,
+      "eval_samples": 1000,
+      "epoch_time_sec": 322.46955156326294
+    }
+  ],
+  "final_test_acc": 0.32250000166893006,
+  "final_test_loss": 1.8551894721984863,
+  "final_eval_samples": 2000,
+  "per_epoch_eval_samples": 1000,
+  "wall_time_sec": 340.0266082286835,
+  "total_steps": 312,
+  "steps_per_sec": 0.917575249846817,
+  "device": "cpu:0"
+}

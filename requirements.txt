@@ -1,0 +1,6 @@
+# Base requirements (CPU). For GPU run setup.sh or see REPRODUCE_GHOST.md.
+# Versions below are the exact ones all results in this repo were produced with.
+numpy>=1.26
+jax==0.11.0
+flax==0.12.8
+optax==0.2.8

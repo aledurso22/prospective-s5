@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.DS_Store
+
+# MNIST IDX files — train.py downloads them automatically on first run.
+data/
+
+# Machine-local Claude Code permissions.
+.claude/settings.local.json

@@ -1,0 +1,41 @@
+{
+  "config": {
+    "model": "prospective",
+    "d_model": 64,
+    "state_size": 32,
+    "n_layers": 2,
+    "dropout": 0.1,
+    "batch_size": 32,
+    "lr": 0.001,
+    "schedule": "cosine->0",
+    "optimizer": "adam",
+    "epochs": 1,
+    "train_samples": 10000,
+    "test_samples": 2000,
+    "seed": 0,
+    "standardized": false,
+    "scan_impl": "lax",
+    "downsample": 2,
+    "seq_len": 196
+  },
+  "params": 34698,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 2.077708145364737,
+      "train_acc": 0.23838141025641027,
+      "test_loss": 1.9467580060958862,
+      "test_acc": 0.24699999392032623,
+      "eval_samples": 1000,
+      "epoch_time_sec": 581.0675885677338
+    }
+  ],
+  "final_test_acc": 0.2544999964237213,
+  "final_test_loss": 1.940504777908325,
+  "final_eval_samples": 2000,
+  "per_epoch_eval_samples": 1000,
+  "wall_time_sec": 598.5307667255402,
+  "total_steps": 312,
+  "steps_per_sec": 0.5212764612033209,
+  "device": "cpu:0"
+}
