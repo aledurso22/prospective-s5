@@ -18,7 +18,7 @@ sequential MNIST.
 The package is split three ways so the contribution is isolated:
 
 ```
-prospective-ssm-minimal/
+prospective-s5/
 ├── ssm/
 │   ├── shared/              ── SHARED: identical in both arms ──────────────
 │   │   ├── hippo.py           HiPPO-LegS matrix + S5/DPLR diagonalization
