@@ -11,10 +11,10 @@ from .scan import (
     prospective_scan, prospective_scan_sequential,
     prospective_scan_flat, prospective_scan_companion_lax, select_scan,
 )
-from .layer import ProspectiveSSM, causal_conv1d_time, log_step_init_prospective
+from .layer import ProspectiveSSM, causal_conv1d_time
 
 __all__ = [
     "prospective_scan", "prospective_scan_sequential",
     "prospective_scan_flat", "prospective_scan_companion_lax", "select_scan",
-    "ProspectiveSSM", "causal_conv1d_time", "log_step_init_prospective",
+    "ProspectiveSSM", "causal_conv1d_time",
 ]

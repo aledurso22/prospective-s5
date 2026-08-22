@@ -9,9 +9,9 @@ Contents
     hippo_lambda_init / hippo_B_init / C_init / log_step_init
                     the S5 initializers (HiPPO-LegS, DPLR route)
 
-The prospective arm reuses all of these except ``log_step_init``, which it
-overrides with a narrower range for stability (see
-``ssm.prospective.layer.log_step_init_prospective``).
+The prospective arm reuses all of these except ``log_step_init``: the
+prospective derivation contains no Delta, so that initializer has no
+counterpart there.
 """
 
 from __future__ import annotations

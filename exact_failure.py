@@ -6,8 +6,9 @@ reports, at the real S5 initialization:
 
   1. the companion spectrum  mu^2 - a1 mu - a2 = 0,  mu1*mu2 = -a2 = A;
   2. the step at which the state overflows float32;
-  3. the same quantities under the documented fallback (A := Delta*Lambda
-     with the clamps), for contrast — showing the price it pays.
+  3. the same spectrum under partial prospection (--gamma), showing the
+     failure survives even at gamma = 0 — explicit Euler cannot integrate
+     the HiPPO spectrum, prospective term or not.
 
 Run:  python exact_failure.py
 """
@@ -96,16 +97,10 @@ def main() -> None:
     for rho in (0.5, 0.1, 1e-3):
         report(f"rho = Delta t/tau = {rho}", Lambda, rho)
     print()
-    print("mu1*mu2 = A, so |mu| ~ sqrt(|A|) ~ sqrt(1303) — no rho can fix it:")
-    print("  the instability is set by the spectrum, not by the step size.")
-    print()
-    print("FALLBACK — A := Delta*Lambda with the clamps (exact=False):")
-    for D, rho in ((5e-4, 0.1), (2e-4, 0.1), (5e-4, 1e-3)):
-        report(f"Delta = {D:.0e}, rho = {rho}", D * Lambda, rho)
-    print()
-    print("The fallback is stable, but every physical root collapses onto")
-    print("(1 - rho): the HiPPO spectrum (3 orders of magnitude) moves the")
-    print("pole by <1e-3. It trains because it is no longer an S5.")
+    print("mu1*mu2 = A: for the stiff modes the roots split into the physical")
+    print("  ~1/(1+rho) and the parasitic ~(1+rho)*A (measured 1433.60 at")
+    print("  rho=0.1, |A|max ~ 1303) — the instability is set by the spectrum,")
+    print("  not by the step size, so no rho can fix it.")
     print()
     print("TURNING PROSPECTION OFF (--gamma), exact A = Lambda, rho = 0.1:")
     print(f"    {'gamma':>7} {'max|mu|':>14}   {'mu1*mu2 = gamma*A':>18}")
@@ -121,8 +116,8 @@ def main() -> None:
     print("  rho=0.1, |Lambda|max=1303. So explicit Euler cannot integrate the")
     print("  HiPPO spectrum even with no prospective term at all — a THIRD")
     print("  failure, independent of both the cancellation and the parasite.")
-    print("  A trainable control therefore needs --gamma 0 --stabilized, where")
-    print("  the Delta-scaling shrinks A enough for Euler to be stable.")
+    print("  There is no trainable variant of this scheme: the only control")
+    print("  that trains is the bilinear baseline (--model baseline).")
     print("=" * 72)
 
 

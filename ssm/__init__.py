@@ -34,9 +34,7 @@ from .prospective.scan import (
     prospective_scan, prospective_scan_sequential,
     prospective_scan_flat, prospective_scan_companion_lax,
 )
-from .prospective.layer import (
-    ProspectiveSSM, causal_conv1d_time, log_step_init_prospective,
-)
+from .prospective.layer import ProspectiveSSM, causal_conv1d_time
 from .model import SequenceClassifier, count_params, build_model
 
 __all__ = [
@@ -51,7 +49,7 @@ __all__ = [
     # prospective
     "prospective_scan", "prospective_scan_sequential",
     "prospective_scan_flat", "prospective_scan_companion_lax",
-    "ProspectiveSSM", "causal_conv1d_time", "log_step_init_prospective",
+    "ProspectiveSSM", "causal_conv1d_time",
     # model
     "SequenceClassifier", "count_params", "build_model",
 ]

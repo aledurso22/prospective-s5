@@ -38,7 +38,7 @@ prospective-s5/
 │   └── model.py             ── SHARED: SequenceClassifier, the arm switch ──
 │
 ├── train.py                 sMNIST training loop, --model {baseline,prospective}
-├── test_scan.py             9 correctness checks: every scan == sequential ref
+├── test_scan.py             8 correctness checks: every scan == sequential ref
 ├── ghost_demo.py            standalone numpy diagnosis of the instability
 ├── exact_failure.py         the derivation verbatim + where it overflows
 ├── data/                    MNIST IDX .gz files (auto-downloaded)
@@ -72,8 +72,8 @@ block, the pooling, the head, the optimizer and the training loop.
 | discretization | bilinear / Tustin | Euler (of the prospective ODE) |
 | input term | `B_bar x_t` | `x~_t = (1+rho) B x_{t-1} - B x_{t-2}` (2-tap causal conv) |
 | extra params | — | `log_ratio = log(rho)`, per channel |
-| `A` used as | `Lambda_bar` (bilinear) | **`Lambda`** (default, verbatim) / `Delta * Lambda` clamped (`--stabilized`) |
-| init | `log_step ~ U[log 1e-3, log 1e-1]` | `log_step ~ U[log 1e-4, log 5e-4]` |
+| `A` used as | `Lambda_bar` (bilinear) | **`Lambda`** — verbatim, unscaled |
+| init | `log_step ~ U[log 1e-3, log 1e-1]` | `log_ratio = log(rho0)`, rho0 = 0.1 (no `log_step` — the derivation has no Delta) |
 | shared | HiPPO init, `Lambda/B/C/D`, block, classifier, training loop | same |
 
 ---
@@ -156,14 +156,14 @@ with `Re(V .)` — i.e. the diagonal-basis contract of the SPEC holds with a
 perfectly conditioned V, exactly as in S5
 (`ssm/shared/hippo.py: make_dplr_hippo`).
 
-### Stability note (documented fallback)
+### Why it fails (the scientific result)
 
-The prospective Euler recurrence is a *second-order* difference equation; the
-companion matrix `M_i = [[a1_i, a2_i], [1, 0]]` has a parasitic mode with
-`|eig| ~ |A_i|` (the product of its two eigenvalues equals `-a2_i = A_i`).
-With the HiPPO eigenvalues (`|Lambda|` up to ~1.3e3 at N=64) the recurrence is
-**unstable for every rho** if A is used unscaled. Measured at the real
-DPLR/HiPPO init, N=64 (`python exact_failure.py`):
+There is no stabilizer in the code, on purpose. Run verbatim — `A = Lambda`,
+`B` unscaled, no clamps, `rho = Delta t/tau` the only free parameter — the
+prospective layer **does not train**: the forward pass overflows float32
+within ~14 of the 784 recurrence steps, at every rho. That divergence is the
+headline result of this repo, and it is a property of the scheme, not of the
+tuning. Measured at the real DPLR/HiPPO init, N=64 (`python exact_failure.py`):
 
 | rho = Delta t/tau | physical root | parasitic root | float32 overflow |
 |---|---|---|---|
@@ -171,29 +171,36 @@ DPLR/HiPPO init, N=64 (`python exact_failure.py`):
 | 0.1   | ~0.90-0.91 | **1433.60** | step 14 |
 | 1e-3  | ~0.999     | **1304.58** | step 14 |
 
-The physical root behaves exactly as intended (`~ 1 - rho`); it is the
-parasitic root, `|mu| ~ |A|`, that destroys the run — and shrinking `rho`
-does not touch it, because `mu1*mu2 = A` is set by the spectrum, not the
-step size.
+Three independent things are wrong with the explicit scheme, and only one of
+them is really about prospection:
 
-**As of the `exact` flag, this fallback is OPT-IN and off by default.** The
-prospective layer now runs the derivation verbatim (`A = Lambda`, `B`
-unscaled, no clamps) and diverges — `python exact_failure.py` measures the
-companion spectrum and the overflow step. Pass `--stabilized` to `train.py`
-to enable the fallback below, which is what the numbers in `results/` were
-produced with.
+* **The discretization introduces a mode the continuous equation never
+  had.** A two-step recurrence carries a parasitic root per mode
+  (Dahlquist): the eigenvalues of `M_i = [[a1_i, a2_i], [1, 0]]` satisfy
+  `mu1*mu2 = -a2_i = A_i`, so alongside the physical root there is a second
+  root whose magnitude is set by the HiPPO spectrum (`|Lambda|` up to ~1.3e3
+  at N=64), not by anything trainable.
+* **No step size can remove it.** The physical root sits at `~ 1 - rho`,
+  exactly as the derivation intends — the failure is not in the continuous
+  dynamics. But shrinking rho moves only the physical root; the parasite
+  tracks `~(1+rho)|A|` (measured 1433.60 at rho=0.1), so the run overflows
+  regardless of the step size.
+* **Even prospection-off fails.** At `--gamma 0` the prospective term is
+  gone and the recurrence collapses to first-order explicit-Euler S5 — which
+  is *still* unstable (max `|mu|` = 130.33: the surviving root is
+  `a1 = (1-rho) + rho*A`, and `|rho*A| = 130` on this spectrum). Explicit
+  Euler cannot integrate the HiPPO spectrum even with no prospective term at
+  all — a third failure, independent of both the cancellation and the
+  parasite.
 
-Fallback (opt-in, `--stabilized`):
-
-* `A := Delta * Lambda` with a **trainable log-Delta** exactly like S5 — the
-  consistent discrete-time reading of the derivation's `f_theta` — while
-  `B` is used **unscaled**, exactly as written in the derivation;
-* the trainable ranges are clamped to `Delta in [1e-5, 5e-4]` and
-  `rho in [1e-3, 0.25]`, for which `max |eig(M_i)| <= 0.90` at
-  initialization (measured; the clamp is a `jnp.clip` on the log-parameters,
-  transparent to the optimizer).
-
-Everything else in the update is implemented EXACTLY as derived above.
+Making the scheme train at all requires scaling `A` down (e.g.
+`A := Delta*Lambda` with a small clamped Delta), which collapses every
+physical root onto `(1 - rho)`: the three-decade HiPPO spectrum moves the
+pole by < 1e-3. It trains because it is no longer an S5 — the long memory
+is exactly what had to be sacrificed. That variant was removed from the
+code so the failure is what you see; the trainable control here is the
+bilinear baseline, and the actual fix is not in the recurrence but in the
+solver metric (`ghost_demo.py` part D, and the PESM appendix below).
 
 ---
 
@@ -212,9 +219,11 @@ s_t = [(1-rho)I + (rho+gamma)A] s_{t-1} - gamma*A s_{t-2}
   first-order **explicit-Euler S5**: same parameters, same code path, same
   discretization.
 
-This is a cleaner control than `--model baseline`, which is also plain S5 but
-uses **bilinear** discretization — so it changes the integrator and the
-prospective term at once.
+Analytically this is a cleaner control than `--model baseline`, which is also
+plain S5 but uses **bilinear** discretization — so it changes the integrator
+and the prospective term at once. It is an analysis knob, not a trainable
+arm: explicit Euler diverges on this spectrum too (measured below), so the
+control that actually trains is the bilinear baseline.
 
 Since `mu1*mu2 = gamma*A`, gamma scales the parasitic root linearly. Measured
 at `rho=0.1`, exact `A = Lambda` (from `exact_failure.py`):
@@ -227,8 +236,8 @@ Note the floor: at `gamma = 0` there is no prospective term and no parasitic
 root, and it is **still unstable** — the surviving physical root is
 `a1 = (1-rho) + rho*A`, and `|rho*A| = 130` at the HiPPO spectrum. Explicit
 Euler cannot integrate this spectrum at all. That is a *third* failure,
-independent of both the continuous cancellation and the parasitic root, and
-it is why a trainable control needs `--gamma 0 --stabilized`.
+independent of both the continuous cancellation and the parasitic root —
+see "Why it fails" above.
 
 ---
 
@@ -237,7 +246,7 @@ it is why a trainable control needs `--gamma 0 --stabilized`.
 ```bash
 pip install -r requirements.txt      # or: bash setup.sh   (GPU auto-detect)
 
-# 1. correctness of both associative scans (must pass, 9/9)
+# 1. correctness of both associative scans (must pass, 8/8)
 python test_scan.py
 
 # 1b. the derivation run verbatim, and exactly where it breaks
@@ -250,6 +259,11 @@ python ghost_demo.py
 python train.py --model baseline    --epochs 3 --subset 20000
 python train.py --model prospective --epochs 3 --subset 20000
 ```
+
+The baseline trains normally; the prospective arm runs the derivation
+verbatim, so its loss goes NaN from the first step (float32 overflow in the
+forward pass) — that divergence IS the experiment, not a misconfiguration.
+There is no stabilizer flag to turn on.
 
 `train.py` downloads the four MNIST IDX `.gz` files directly from
 `https://storage.googleapis.com/cvdf-datasets/mnist/` into `data/` and parses
@@ -283,7 +297,7 @@ cores.
 ```bash
 git clone https://github.com/aledurso22/prospective-s5.git && cd prospective-s5
 bash setup.sh                    # builds .venv, auto-detects the GPU
-python test_scan.py              # 9/9 must pass before trusting any run
+python test_scan.py              # 8/8 must pass before trusting any run
 
 sbatch -p <partition> -A <account> scripts/train.sbatch baseline
 sbatch -p <partition> -A <account> scripts/train.sbatch prospective "--rho-init 1e-3 --tag _rho1e-3"
@@ -303,9 +317,9 @@ Both models share the same budget: `H (d_model) = 96`, `N (state) = 64`,
 
 * `baseline` — `S5SSM`: bilinear-discretized diagonal SSM, trainable
   `log-Delta`, `Lambda` (real/imag, HiPPO init), `B`, `C`, `D`.
-* `prospective` — `ProspectiveSSM`: the prospective update above; trainable
-  `log-Delta` and `log(Delta t / tau)` (per channel), `Lambda`, `B`, `C`,
-  `D`.
+* `prospective` — `ProspectiveSSM`: the prospective update above, verbatim;
+  trainable `log(Delta t / tau)` (per channel), `Lambda`, `B`, `C`, `D`.
+  There is no `log-Delta` — the derivation contains no Delta.
 
 Block: `LayerNorm -> SSM -> dropout -> GLU -> dropout -> residual`.
 Classifier: linear encoder -> `L` blocks -> mean pool over time -> LayerNorm
@@ -337,23 +351,31 @@ column does not**: the JSONs report `steps_per_sec` 0.918 and 0.521, i.e.
 by that measure. Left as-is pending a decision on which measurement the
 column was meant to report.
 
+**The prospective number predates the verbatim layer**: it was produced with
+a since-removed stabilized variant (`A := Delta*Lambda` + clamps on Delta
+and rho). The current prospective arm runs the derivation as written and
+diverges — it produces no metrics. The JSON is kept only as a historical
+record of what rescuing the scheme used to cost.
+
 Interpretation: both models are severely undertrained at this budget (312
 steps; loss ~2.0 vs ln(10)=2.30 at chance), so the accuracy gap is NOT a
-meaningful scientific comparison — it is a smoke test showing both variants
-train stably end-to-end. The prospective layer is ~5x slower per step on
-XLA-CPU (second-order recurrence + doubled state). A real comparison needs
-the lab GPU (full 784-length sMNIST, multi-epoch, tuned rho/Delta ranges).
+meaningful scientific comparison — at the time it was a smoke test that both
+variants trained end-to-end (the prospective one via the removed clamps).
+The prospective layer is ~5x slower per step on XLA-CPU (second-order
+recurrence + doubled state).
 
 ### Key scientific finding
 
-(see "Stability note" above and `ghost_demo.py`) The Euler-discretized
-prospective update `s_t = [(1-rho)I + (1+rho)A] s_{t-1} - A s_{t-2} + ...`
-has a parasitic mode with `|mu| ~ |A_i|`; with raw HiPPO eigenvalues it is
-unconditionally unstable for any `rho = Delta t/tau`. The documented fallback
-(`A := Delta * Lambda` with trainable clamped log-Delta, `rho` clamped to
-`[1e-3, 0.25]`) keeps `max |eig(M_i)| <= 0.90` at init. In other words: the
-prospective arm only trains with its long-memory eigenvalues clamped away —
-the clamps are the empirical footprint of the ghost.
+(see "Why it fails" above, `exact_failure.py`, and `ghost_demo.py`) The
+Euler-discretized prospective update
+`s_t = [(1-rho)I + (1+rho)A] s_{t-1} - A s_{t-2} + ...` has a parasitic mode
+per channel with `|mu| ~ |A_i|`; with the raw HiPPO eigenvalues it is
+unconditionally unstable for any `rho = Delta t/tau`, and even `gamma = 0`
+(plain explicit Euler, no prospective term) overflows on this spectrum. The
+scheme as derived cannot be trained at all, and the only rescues (scaling or
+clamping `A`) work by flattening the spectrum — i.e. by removing the long
+memory that was the point of the model. The instability, not any accuracy
+number, is the result.
 
 ---
 

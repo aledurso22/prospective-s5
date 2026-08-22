@@ -179,15 +179,9 @@ def parse_args() -> argparse.Namespace:
                    help="prospective arm only: partial-prospection strength. "
                         "1.0 (default) = the derivation as written; 0.0 turns "
                         "the prospective term OFF and the layer collapses to "
-                        "first-order explicit-Euler S5 — the matched control "
-                        "(same params, same code path, same discretization, "
-                        "unlike --model baseline which is bilinear).")
-    p.add_argument("--stabilized", action="store_true",
-                   help="prospective arm only: enable the documented stability "
-                        "fallback (A := Delta*Lambda, clamps on Delta and rho). "
-                        "DEFAULT IS OFF — the layer then runs the derivation "
-                        "verbatim and diverges, which is the point. The "
-                        "results/ metrics were produced WITH this flag.")
+                        "first-order explicit-Euler S5. Analysis knob, not a "
+                        "trainable control: every gamma diverges at the HiPPO "
+                        "init (see exact_failure.py).")
     p.add_argument("--rho-init", type=float, default=0.1,
                    help="prospective friction rho at init (prospective model "
                         "only). Physical mode ~ (1 - rho): memory horizon "
@@ -246,8 +240,7 @@ def main() -> None:
     model = build_model(model_type=args.model, d_model=args.d_model,
                         state_size=args.state_size, n_layers=args.n_layers,
                         dropout_rate=args.dropout, scan_impl=args.scan,
-                        exact=not args.stabilized, gamma=args.gamma,
-                        rho_init=args.rho_init)
+                        gamma=args.gamma, rho_init=args.rho_init)
     key = jax.random.PRNGKey(args.seed)
     init_rng, dropout_rng = jax.random.split(key)
     dummy = jnp.ones((1, x_train.shape[1]), jnp.float32)
@@ -255,6 +248,11 @@ def main() -> None:
                         dummy, train=False)
     n_params = count_params(params)
     print(f"model: {args.model}  params: {n_params:,}")
+    if args.model == "prospective":
+        print("note: the prospective arm runs the derivation verbatim and is "
+              "expected to DIVERGE (float32 overflow ~14 steps into the "
+              "784-step recurrence) — that divergence is the result. "
+              "See exact_failure.py.")
 
     schedule = optax.cosine_decay_schedule(args.lr, total_steps)
     tx = optax.adam(schedule)
@@ -271,8 +269,6 @@ def main() -> None:
                   scan_impl=args.scan, downsample=args.downsample,
                   rho_init=(args.rho_init if args.model == "prospective"
                             else None),
-                  exact=(not args.stabilized if args.model == "prospective"
-                         else None),
                   gamma=(args.gamma if args.model == "prospective" else None),
                   seq_len=int(x_train.shape[1]))
 

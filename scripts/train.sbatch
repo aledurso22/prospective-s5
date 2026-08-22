@@ -6,11 +6,12 @@
 #
 # Then submit one job per arm:
 #     sbatch -p <partition> -A <account> scripts/train.sbatch baseline
-#     sbatch -p <partition> -A <account> scripts/train.sbatch prospective "--stabilized --rho-init 1e-3 --tag _rho1e-3"
+#     sbatch -p <partition> -A <account> scripts/train.sbatch prospective "--rho-init 1e-3 --tag _rho1e-3"
 #
-# NOTE: the prospective arm needs --stabilized to train at all. Without it
-# the layer runs the derivation verbatim and overflows within ~14 steps
-# (see exact_failure.py) — which is the scientific result, not a run.
+# NOTE: the prospective arm runs the derivation verbatim — there is no
+# stabilizer — so its loss goes NaN within the first steps (the forward
+# pass overflows float32 ~14 steps into the 784-step recurrence; see
+# exact_failure.py). That divergence IS the experiment, not a failed run.
 #
 # The 2nd argument is appended verbatim to train.py, so it can override any
 # flag set below (later flags win in argparse).

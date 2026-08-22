@@ -84,7 +84,10 @@ def test_prospective_scan_hippo() -> None:
     N = 64
     Lambda, _, B_tilde = hippo_init(N)
     rho = 0.1        # Delta t / tau
-    Delta = 2e-4     # documented stability fallback: A := Delta * Lambda
+    # A stable companion is needed for a T=784 correctness check, so the
+    # HiPPO spectrum is scaled down BY HAND here. The layer itself applies
+    # no such scaling — run verbatim it diverges, by design (exact_failure.py).
+    Delta = 2e-4
     A = Delta * Lambda
     a1 = (1.0 - rho) + (1.0 + rho) * A               # (N,)
     a2 = -A                                          # (N,)
@@ -121,6 +124,8 @@ def test_companion_scans() -> None:
                                       prospective_scan_companion_lax)
     T, N = 784, 64
     Lambda, _, _ = hippo_init(N)
+    # scaled-down spectrum as in [3]: a stable companion for the long-window
+    # check (the layer itself runs A = Lambda and diverges, by design)
     rho, Delta = 0.1, 2e-4
     A = Delta * Lambda
     a1 = (1.0 - rho) + (1.0 + rho) * A
@@ -191,18 +196,17 @@ def test_s5_layer_end_to_end() -> None:
     check("S5SSM layer", got, jax.vmap(ref_batch)(x))
 
 
-def _prospective_layer_check(exact: bool, T: int, label: str) -> None:
-    """ProspectiveSSM (either mode) vs a fully sequential reference.
+def _prospective_layer_check(T: int, label: str) -> None:
+    """ProspectiveSSM (the derivation verbatim) vs a fully sequential reference.
 
-    ``exact=True`` is the derivation verbatim (A = Lambda, no clamps); it
-    diverges, so it is checked over a short window where the state is still
-    finite. ``exact=False`` is the documented stability fallback.
+    The layer runs A = Lambda with no scaling and no clamps, so it diverges —
+    the check runs over a short window where the state is still finite.
     """
     from ssm.prospective.layer import ProspectiveSSM
     H, N = 4, 16
     rng = np.random.RandomState(2)
     x = jnp.asarray(rng.randn(2, T, H).astype(np.float32))
-    layer = ProspectiveSSM(state_size=N, d_model=H, exact=exact)
+    layer = ProspectiveSSM(state_size=N, d_model=H)
     variables = layer.init(jax.random.PRNGKey(0), x)
     params = variables["params"]
     got = layer.apply(variables, x)
@@ -211,14 +215,9 @@ def _prospective_layer_check(exact: bool, T: int, label: str) -> None:
     B = _get_complex(params, "B")
     C = _get_complex(params, "C")
     D = params["D"]
-    if exact:
-        assert "log_step" not in params, "exact mode must not create log_step"
-        rho = jnp.exp(params["log_ratio"])                                  # (H,)
-        A = jnp.broadcast_to(Lambda[None, :], (H, N))                       # A = Lambda
-    else:
-        rho = jnp.exp(jnp.clip(params["log_ratio"], *layer.clip_log_ratio))
-        Delta = jnp.exp(jnp.clip(params["log_step"], *layer.clip_log_step))
-        A = Delta[:, None] * Lambda[None, :]                                # (H, N)
+    assert "log_step" not in params, "the derivation has no Delta parameter"
+    rho = jnp.exp(params["log_ratio"])                                      # (H,)
+    A = jnp.broadcast_to(Lambda[None, :], (H, N))                           # A = Lambda
     B_eff = B.T                                                             # (H, N) unscaled
     a1 = (1.0 - rho)[:, None] + (1.0 + rho)[:, None] * A
     a2 = -A
@@ -241,11 +240,9 @@ def _prospective_layer_check(exact: bool, T: int, label: str) -> None:
 
 def test_prospective_layer_end_to_end() -> None:
     print("[6] ProspectiveSSM layer (scan+conv path) vs fully sequential ref")
-    # Fallback mode (exact=False): the historical check, unchanged.
-    _prospective_layer_check(False, 128, "ProspectiveSSM layer (fallback)")
-    # Exact mode (the derivation verbatim): same scan/conv path, A = Lambda.
-    # T is short because this arm diverges — see exact_failure.py.
-    _prospective_layer_check(True, 8, "ProspectiveSSM layer (exact)")
+    # The derivation verbatim (A = Lambda); T is short because this arm
+    # diverges — see exact_failure.py.
+    _prospective_layer_check(8, "ProspectiveSSM layer")
 
 
 def main() -> None:
