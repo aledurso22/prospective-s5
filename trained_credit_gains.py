@@ -52,6 +52,7 @@ SEEDS = [0, 1, 2]
 LR = 1e-3
 ARMS = ["online", "prospective", "oracle", "oracle_B", "calibrated", "bptt"]
 CLIP = 1.0
+M_IN = 1                      # input channels (task-dependent)
 RESULTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                            "results")
 
@@ -77,7 +78,7 @@ def init_params(seed):
     u0 = np.linspace(0.90, 0.995, N)
     rho = [np.log(u0 / (1 - u0)) for _ in range(L)]
     theta = [rng.uniform(-np.pi, np.pi, N) for _ in range(L)]
-    B = [cplx(N, 1)] + [cplx(N, N) * (1 - MAG) for _ in range(L - 1)]
+    B = [cplx(N, M_IN)] + [cplx(N, N) * (1 - MAG) for _ in range(L - 1)]
     c = cplx(N).reshape(-1)
     params = dict(rho=rho, theta=theta, b=B, c=c)
     params["a"] = a_of(params)
@@ -88,7 +89,7 @@ def forward(params, x):
     """x: (T, B) real. Returns h per layer (T, B, N) and yhat (T, B)."""
     a, B, c = params["a"], params["b"], params["c"]
     h = []
-    inp = x[..., None]
+    inp = x[..., None] if x.ndim == 2 else x
     for l in range(L):
         hl = np.zeros((T, x.shape[1], N), np.complex128)
         sp = np.zeros((x.shape[1], N), np.complex128)
@@ -113,7 +114,7 @@ def spatial_q(params, h, r):
 
 def sensitivities(params, h, x):
     a, B = params["a"], params["b"]
-    xs = [x[..., None]] + [h[l].real for l in range(L - 1)]
+    xs = [x[..., None] if x.ndim == 2 else x] + [h[l].real for l in range(L - 1)]
     Sa, Sb = [], []
     for l in range(L):
         M = xs[l].shape[2]
@@ -149,7 +150,7 @@ def exact_lambda(params, q):
 def assemble(params, h, x, r, err, Sa, Sb, direct=False):
     """direct=False: S-slot (online family); direct=True: J-slot (exact)."""
     a, B, c = params["a"], params["b"], params["c"]
-    xs = [x[..., None]] + [h[l].real for l in range(L - 1)]
+    xs = [x[..., None] if x.ndim == 2 else x] + [h[l].real for l in range(L - 1)]
     Ga, Gb = [], []
     for l in range(L):
         ce = np.conj(err[l])
@@ -217,17 +218,15 @@ def err_of(arm, q, a_l, w_l):
     return q * w_l[None, None, :]
 
 
-def fit_gains(params, rng):
+def fit_gains(params, x, r):
     """Oracle per-mode complex gains: LS of the online (S-slot) block
-    against the exact (J-slot) block, per layer per mode, one probe batch."""
-    x = rng.randn(T, BATCH)
-    y = np.concatenate([np.zeros((DELAY, BATCH)), x[:-DELAY]], axis=0)
+    against the exact (J-slot) block, per layer per mode, on the probe
+    batch (x, r) supplied by the caller."""
     h, yhat = forward(params, x)
-    r = yhat - y
     q = spatial_q(params, h, r)
     lam = exact_lambda(params, q)
     Sa, Sb = sensitivities(params, h, x)
-    xs = [x[..., None]] + [h[l].real for l in range(L - 1)]
+    xs = [x[..., None] if x.ndim == 2 else x] + [h[l].real for l in range(L - 1)]
     w = []
     for l in range(L):
         h_prev = np.concatenate([np.zeros((1, BATCH, N)), h[l][:-1]],
@@ -245,6 +244,16 @@ def fit_gains(params, rng):
             wl[j] = np.conj(alpha)
         w.append(wl)
     return w
+
+
+def probe_batch(rng):
+    """Default probe batch (delayed copy) for gain fitting."""
+    x = rng.randn(T, BATCH)
+    y = np.concatenate([np.zeros((DELAY, BATCH)), x[:-DELAY]], axis=0)
+    h, yhat = forward(init_params(0), x)
+    r = yhat - y
+    r[:DELAY] = 0.0
+    return x, r
 
 
 # ---------------------------------------------------------------------------
@@ -267,8 +276,8 @@ def train_arm(arm, seed):
     params = init_params(seed)
     rng = np.random.RandomState(1000 + seed)
     probe_rng = np.random.RandomState(77)
-    w = fit_gains(params, probe_rng) if arm in ("oracle", "oracle_B",
-                                                "calibrated") else None
+    w = fit_gains(params, *probe_batch(probe_rng)) \
+        if arm in ("oracle", "oracle_B", "calibrated") else None
 
     flat = flatten(params)
     m = np.zeros_like(flat)
@@ -290,7 +299,7 @@ def train_arm(arm, seed):
             G = dict(a=G_on["a"], b=G_w["b"], c=G_on["c"])
         else:
             if arm == "calibrated" and step % CAL_EVERY == 0:
-                w = fit_gains(params, probe_rng)
+                w = fit_gains(params, *probe_batch(probe_rng))
             err = [err_of(arm, q[l], params["a"][l],
                           w[l] if w is not None else None)
                    for l in range(L)]
