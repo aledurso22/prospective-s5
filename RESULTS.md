@@ -64,15 +64,20 @@ the latent trajectory itself is the deliverable.**
   filter per mode + transfer check. Apparent positive: in the rig's
   dense-loss setting, per-mode gains beat online RTRL by +0.3-0.45 cosine
   and transfer across data realizations of the same task.
-- `trained_credit_gains.py` (this branch): the training race that
-  RETRACTS the apparent positive. (i) On the copy task the gains make
-  global alignment WORSE at init (0.58 vs 0.77) — the rig's win was
-  regime-dependent (dense loss, per-mode median accounting), not a
-  property of the credit problem. (ii) In training, gain-corrected rules
-  diverge (loss 1e9-1e29, clip or no clip) while exact BPTT trains to
-  1e-4: the correction amplifies slow-mode credit and drives |a| past 1
-  by step ~50 (measured directly); the online rule's weakness acts as a
-  stabilizer. Alignment is not descent. Credit lane closed.
+- `trained_credit_gains.py` (this branch): the training races. v1
+  (unconstrained modes): gain arms explode; v2 (legal parametrization,
+  a = sigmoid(rho) e^{i theta}): nothing explodes, registered bar NO WIN
+  (oracle 0.042 vs online 0.024; bptt 0.00003). Two audit findings:
+  (i) the rig's alignment win was regime-dependent (dense loss, per-mode
+  median accounting) and reverses on the copy task at init (0.58 vs
+  0.77); (ii) the instability mechanism was directly measured (gain arms
+  push |a| past 1 by step ~50 in v1; BPTT approaches 0.999 and retreats).
+  Exploratory signal, not predeclared: the oracle_B ablation (gains on
+  the B-gradients only, recurrence untouched) is stable AND the best
+  online rule (0.0096, 2.5x below online) — the a-channel correction
+  hurts even bounded (boundary saturation freezes modes), the B-channel
+  correction is safe. Awaiting a registered confirmation (more seeds,
+  second task) before it counts as a positive.
 
 ## What the mechanism is, one sentence
 
