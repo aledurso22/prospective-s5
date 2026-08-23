@@ -236,6 +236,123 @@ def gate_G2_G3_one_step(a, b, u):
 
 
 # ---------------------------------------------------------------------------
+# Solver showdown: prospective Newton vs the field's solvers on the S5
+# spectrum. Picard/Anderson/Broyden ported from prospective-deq/solvers.py
+# under its uniform NFE contract: 1 gradient evaluation per step per arm
+# (nfe = K + 1 counting the initial residual); the Newton arm's tridiagonal
+# solves (3 scans each) are logged as structure, not hidden. The state is
+# treated as ONE flat (T*N)-dim problem instance, as a DEQ user would.
+# ---------------------------------------------------------------------------
+
+def _flat_energy_grad(a, b, u, beta):
+    shape = b.shape
+    aj, bj, uj = jnp.asarray(a), jnp.asarray(b), jnp.asarray(u)
+
+    def gfun(sf):
+        return np.asarray(energy_grad(jnp.asarray(sf.reshape(shape)),
+                                      aj, bj, uj, beta)).reshape(-1)
+    return gfun
+
+
+def anderson_solve(gfun, s0, K, m=5, eta=ETA):
+    """Anderson mixing (depth m) on the gradient map f(s) = s - eta*gradE.
+    Plain numpy loop: standalone solver comparison, no tracing needed."""
+    D = s0.size
+    S = np.zeros((m, D))
+    G = np.zeros((m, D))
+    s = s0.copy()
+    for k in range(K):
+        g = eta * gfun(s)                  # residual s - f(s)
+        S = np.roll(S, -1, axis=0)
+        S[-1] = s
+        G = np.roll(G, -1, axis=0)
+        G[-1] = g
+        count = min(k + 1, m)
+        valid = np.arange(m) >= m - count
+        Gram = G @ G.T
+        valid2 = valid[:, None] & valid[None, :]
+        Gram_m = np.where(valid2, Gram, np.eye(m)) + 1e-8 * np.eye(m)
+        alpha = np.linalg.solve(Gram_m, np.ones(m))
+        alpha = np.where(valid, alpha, 0.0)
+        asum = alpha.sum()
+        if abs(asum) > 1e-30:
+            alpha = alpha / asum
+        s = np.sum(alpha[:, None] * (S - G), axis=0)
+    return s
+
+
+def broyden_solve(gfun, s0, K, m=5):
+    """Limited-memory Broyden root-find on gradE = 0 (Bai et al. DEQ style):
+    B = I + U V^T with m secant updates, Woodbury step (one m x m solve).
+    Plain numpy loop."""
+    D = s0.size
+    s = s0.copy()
+    g_prev = np.zeros(D)
+    ds = np.zeros(D)
+    U = np.zeros((m, D))
+    V = np.zeros((m, D))
+    for k in range(K):
+        g = gfun(s)
+        dg = g - g_prev
+        B_ds = ds + U.T @ (V @ ds)
+        denom = float(np.dot(ds, ds))
+        if denom > 1e-24:
+            U = np.roll(U, -1, axis=0)
+            U[-1] = (dg - B_ds) / denom
+            V = np.roll(V, -1, axis=0)
+            V[-1] = ds
+        Mm = np.eye(m) + V @ U.T
+        p = g - U.T @ np.linalg.solve(Mm, V @ g)
+        s_new = s - p
+        g_prev, ds, s = g, s_new - s, s_new
+    return s
+
+
+def solver_showdown():
+    """Residual vs NFE for all four solvers, on the real S5 spectrum."""
+    print("\n[solver showdown] rel residual ||gradE||/||gradE(s0)|| "
+          "after K steps (NFE = K+1, uniform contract)")
+    print("  (newton also performs K tridiagonal solves = 3K scans — "
+          "logged as structure)")
+    cells = [(1e-2, 0.0), (1e-2, 0.5), (0.1, 0.5)]
+    out = []
+    for Delta, beta in cells:
+        a = s5_multipliers(Delta)
+        rng = np.random.RandomState(3)
+        b, u = make_drivers(a, beta, rng)
+        gfun = _flat_energy_grad(a, np.asarray(b), np.asarray(u), beta)
+        s0 = np.zeros(b.size)
+        g0n = np.linalg.norm(gfun(s0))
+        row = dict(Delta=Delta, beta=beta,
+                   kappa_max=float(np.max(kappa(a))), arms={})
+        for arm in ["newton", "gd", "anderson", "broyden"]:
+            residuals = {}
+            for K in K_LIST:
+                if arm == "newton":
+                    sK, _ = solve_cell(jnp.asarray(a), b, u, beta, 1.0, ETA,
+                                       K, jnp.zeros_like(b))
+                elif arm == "gd":
+                    sK, _ = solve_cell(jnp.asarray(a), b, u, beta, 0.0, ETA,
+                                       K, jnp.zeros_like(b))
+                elif arm == "anderson":
+                    sK = anderson_solve(gfun, s0, K)
+                else:
+                    sK = broyden_solve(gfun, s0, K)
+                res = float(np.linalg.norm(gfun(np.asarray(sK).reshape(-1)))
+                            / g0n)
+                residuals[K] = res
+            row["arms"][arm] = residuals
+        out.append(row)
+        print(f"\n  Delta={Delta:g} beta={beta} "
+              f"(kappa_max={row['kappa_max']:.2e})")
+        for arm in ["newton", "gd", "anderson", "broyden"]:
+            r = row["arms"][arm]
+            print(f"    {arm:<9s} " + "  ".join(f"K={K}: {r[K]:.2e}"
+                                                for K in K_LIST))
+    return out
+
+
+# ---------------------------------------------------------------------------
 # Sweep
 # ---------------------------------------------------------------------------
 
@@ -310,6 +427,8 @@ def main() -> None:
             cell = run_cell(a, Delta, beta, rng)
             cells.append(dict(Delta=Delta, beta=beta, **cell))
 
+    showdown = solver_showdown()
+
     # the long-run contrast: stiffest cell, gamma=0 to K=4096
     a = s5_multipliers(1e-2)
     b, u = make_drivers(a, 0.5, np.random.RandomState(2))
@@ -334,6 +453,7 @@ def main() -> None:
                                  median_K32=float(np.median(rl[32])),
                                  median_K1024=float(np.median(rl[1024])),
                                  median_K4096=float(np.median(rl[4096]))),
+               solver_showdown=showdown,
                cells=cells)
     path = os.path.join(RESULTS_DIR, "pesm_s5_spectrum.json")
     with open(path, "w") as f:
