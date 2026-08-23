@@ -1,0 +1,808 @@
+{
+  "git": "ac6a55fd4f71d2ac7751774d24d48f1723c1ca7d",
+  "branch": "research/pesm-s5-spectrum",
+  "config": {
+    "lambdas": [
+      0.99,
+      0.999,
+      0.9999
+    ],
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "target_res": 1e-08,
+    "max_steps": 2000,
+    "cap_lam": 0.99999,
+    "cap_T": 1000,
+    "rate0": 5.0
+  },
+  "kalman_gate": {
+    "lam": 0.999,
+    "sig_v2": 0.25,
+    "rel_diff": 2.839058034609583e-15
+  },
+  "capability": {
+    "newton": {
+      "res": 9.957359885092422e-12,
+      "nfe": 1,
+      "wall": 0.0029709339141845703,
+      "status": "converged",
+      "false_converged": false,
+      "E": 39999.99932910102,
+      "rmse": 0.00015572754344993795
+    },
+    "lbfgs": {
+      "res": 0.7122097411366155,
+      "nfe": 3,
+      "wall": 0.0007598400115966797,
+      "status": "failed",
+      "false_converged": true,
+      "E": 39999.999998997315,
+      "rmse": null
+    }
+  },
+  "gradient_corruption": {
+    "lam": 0.9999,
+    "res_conv": 2.5152312149591735e-11,
+    "res_loose": 73.61685051638146,
+    "g_conv": 220.6729596023085,
+    "g_loose": 1.1527163218387908,
+    "rel_err": 0.9947763589888122
+  },
+  "rows": [
+    {
+      "lam": 0.99,
+      "kappa": 39600.999999999935,
+      "seed": 0,
+      "newton": {
+        "res": 3.096692149284296e-11,
+        "nfe": 3,
+        "wall": 0.002317190170288086,
+        "status": "converged",
+        "false_converged": false,
+        "E": 20429.20271749926,
+        "rmse": 0.04510200511336171
+      },
+      "gd": {
+        "res": 0.08274610436396192,
+        "nfe": 2000,
+        "wall": 0.047204017639160156,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20438.48773130468,
+        "rmse": null
+      },
+      "anderson": {
+        "res": 0.04892322944562802,
+        "nfe": 2000,
+        "wall": 0.18596887588500977,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20431.89512306396,
+        "rmse": null
+      },
+      "broyden": {
+        "res": NaN,
+        "nfe": 2000,
+        "wall": 0.12136340141296387,
+        "status": "diverged",
+        "false_converged": false,
+        "E": null,
+        "rmse": null
+      },
+      "lbfgs": {
+        "res": 0.036496304874769125,
+        "nfe": 218,
+        "wall": 0.055526018142700195,
+        "status": "failed",
+        "false_converged": true,
+        "E": 20429.206422320072,
+        "rmse": null
+      }
+    },
+    {
+      "lam": 0.99,
+      "kappa": 39600.999999999935,
+      "seed": 1,
+      "newton": {
+        "res": 1.7392995920252517e-11,
+        "nfe": 3,
+        "wall": 0.0024671554565429688,
+        "status": "converged",
+        "false_converged": false,
+        "E": 20416.496024879543,
+        "rmse": 0.045683767419821726
+      },
+      "gd": {
+        "res": 0.09589803189101029,
+        "nfe": 2000,
+        "wall": 0.049835205078125,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20428.77400631902,
+        "rmse": null
+      },
+      "anderson": {
+        "res": 0.04417221061780844,
+        "nfe": 2000,
+        "wall": 0.18801593780517578,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20417.899094778473,
+        "rmse": null
+      },
+      "broyden": {
+        "res": NaN,
+        "nfe": 2000,
+        "wall": 0.12278985977172852,
+        "status": "diverged",
+        "false_converged": false,
+        "E": null,
+        "rmse": null
+      },
+      "lbfgs": {
+        "res": 0.008013971837212806,
+        "nfe": 243,
+        "wall": 0.061921119689941406,
+        "status": "loose",
+        "false_converged": false,
+        "E": 20416.49747248667,
+        "rmse": 0.04564765142503783
+      }
+    },
+    {
+      "lam": 0.99,
+      "kappa": 39600.999999999935,
+      "seed": 2,
+      "newton": {
+        "res": 2.390975499804146e-12,
+        "nfe": 3,
+        "wall": 0.0023381710052490234,
+        "status": "converged",
+        "false_converged": false,
+        "E": 20445.294199389264,
+        "rmse": 0.03846025627245401
+      },
+      "gd": {
+        "res": 0.06687919812276688,
+        "nfe": 2000,
+        "wall": 0.04741191864013672,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20451.043024976483,
+        "rmse": null
+      },
+      "anderson": {
+        "res": 0.04988685391390355,
+        "nfe": 2000,
+        "wall": 0.18133974075317383,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20448.500533063536,
+        "rmse": null
+      },
+      "broyden": {
+        "res": NaN,
+        "nfe": 2000,
+        "wall": 0.12383508682250977,
+        "status": "diverged",
+        "false_converged": false,
+        "E": null,
+        "rmse": null
+      },
+      "lbfgs": {
+        "res": 0.01695967855752931,
+        "nfe": 236,
+        "wall": 0.06038713455200195,
+        "status": "failed",
+        "false_converged": true,
+        "E": 20445.295286416986,
+        "rmse": null
+      }
+    },
+    {
+      "lam": 0.99,
+      "kappa": 39600.999999999935,
+      "seed": 3,
+      "newton": {
+        "res": 4.491084143371892e-11,
+        "nfe": 3,
+        "wall": 0.002318143844604492,
+        "status": "converged",
+        "false_converged": false,
+        "E": 20429.88943317577,
+        "rmse": 0.044515501102895975
+      },
+      "gd": {
+        "res": 0.08100997606482017,
+        "nfe": 2000,
+        "wall": 0.04715609550476074,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20439.146809062768,
+        "rmse": null
+      },
+      "anderson": {
+        "res": 0.047127128170599,
+        "nfe": 2000,
+        "wall": 0.1798839569091797,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20432.451740264434,
+        "rmse": null
+      },
+      "broyden": {
+        "res": NaN,
+        "nfe": 2000,
+        "wall": 0.12064218521118164,
+        "status": "diverged",
+        "false_converged": false,
+        "E": null,
+        "rmse": null
+      },
+      "lbfgs": {
+        "res": 0.017966435891644962,
+        "nfe": 242,
+        "wall": 0.06048107147216797,
+        "status": "failed",
+        "false_converged": true,
+        "E": 20429.89086155799,
+        "rmse": null
+      }
+    },
+    {
+      "lam": 0.99,
+      "kappa": 39600.999999999935,
+      "seed": 4,
+      "newton": {
+        "res": 8.415719201125525e-12,
+        "nfe": 3,
+        "wall": 0.002338886260986328,
+        "status": "converged",
+        "false_converged": false,
+        "E": 20435.762315210926,
+        "rmse": 0.04501794469035169
+      },
+      "gd": {
+        "res": 0.07821167331936836,
+        "nfe": 2000,
+        "wall": 0.04777789115905762,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20444.298784732742,
+        "rmse": null
+      },
+      "anderson": {
+        "res": 0.055026405995297054,
+        "nfe": 2000,
+        "wall": 0.17963314056396484,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20439.84535467386,
+        "rmse": null
+      },
+      "broyden": {
+        "res": NaN,
+        "nfe": 2000,
+        "wall": 0.12034082412719727,
+        "status": "diverged",
+        "false_converged": false,
+        "E": null,
+        "rmse": null
+      },
+      "lbfgs": {
+        "res": 0.008083349905404224,
+        "nfe": 238,
+        "wall": 0.06046605110168457,
+        "status": "loose",
+        "false_converged": false,
+        "E": 20435.76331570654,
+        "rmse": 0.04504935795593699
+      }
+    },
+    {
+      "lam": 0.999,
+      "kappa": 3996000.9999999935,
+      "seed": 0,
+      "newton": {
+        "res": 4.909608566220351e-12,
+        "nfe": 2,
+        "wall": 0.0015361309051513672,
+        "status": "converged",
+        "false_converged": false,
+        "E": 20478.900446741973,
+        "rmse": 0.009544467402477316
+      },
+      "gd": {
+        "res": 0.08028748038975152,
+        "nfe": 2000,
+        "wall": 0.04750800132751465,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20479.749860418142,
+        "rmse": null
+      },
+      "anderson": {
+        "res": 0.10853749839074543,
+        "nfe": 2000,
+        "wall": 0.17974090576171875,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20479.854885041248,
+        "rmse": null
+      },
+      "broyden": {
+        "res": NaN,
+        "nfe": 2000,
+        "wall": 0.12052488327026367,
+        "status": "diverged",
+        "false_converged": false,
+        "E": null,
+        "rmse": null
+      },
+      "lbfgs": {
+        "res": 0.05055921373403549,
+        "nfe": 313,
+        "wall": 0.07847309112548828,
+        "status": "failed",
+        "false_converged": true,
+        "E": 20478.902281916904,
+        "rmse": null
+      }
+    },
+    {
+      "lam": 0.999,
+      "kappa": 3996000.9999999935,
+      "seed": 1,
+      "newton": {
+        "res": 1.843318341309872e-12,
+        "nfe": 2,
+        "wall": 0.0015406608581542969,
+        "status": "converged",
+        "false_converged": false,
+        "E": 20479.011320444464,
+        "rmse": 0.010885999975404955
+      },
+      "gd": {
+        "res": 0.07681398170032615,
+        "nfe": 2000,
+        "wall": 0.047545671463012695,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20479.77162786416,
+        "rmse": null
+      },
+      "anderson": {
+        "res": 0.09966306947119952,
+        "nfe": 2000,
+        "wall": 0.17905402183532715,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20479.86138046213,
+        "rmse": null
+      },
+      "broyden": {
+        "res": NaN,
+        "nfe": 2000,
+        "wall": 0.12060093879699707,
+        "status": "diverged",
+        "false_converged": false,
+        "E": null,
+        "rmse": null
+      },
+      "lbfgs": {
+        "res": 0.08927162787675856,
+        "nfe": 324,
+        "wall": 0.08140015602111816,
+        "status": "failed",
+        "false_converged": true,
+        "E": 20479.02193592206,
+        "rmse": null
+      }
+    },
+    {
+      "lam": 0.999,
+      "kappa": 3996000.9999999935,
+      "seed": 2,
+      "newton": {
+        "res": 2.911902411610599e-13,
+        "nfe": 2,
+        "wall": 0.001544952392578125,
+        "status": "converged",
+        "false_converged": false,
+        "E": 20479.408193864383,
+        "rmse": 0.0085073009684461
+      },
+      "gd": {
+        "res": 0.061209391144883406,
+        "nfe": 2000,
+        "wall": 0.047701120376586914,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20479.812379219908,
+        "rmse": null
+      },
+      "anderson": {
+        "res": 0.08860547466747996,
+        "nfe": 2000,
+        "wall": 0.179764986038208,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20479.876189616065,
+        "rmse": null
+      },
+      "broyden": {
+        "res": NaN,
+        "nfe": 2000,
+        "wall": 0.12056970596313477,
+        "status": "diverged",
+        "false_converged": false,
+        "E": null,
+        "rmse": null
+      },
+      "lbfgs": {
+        "res": 0.16645190585692712,
+        "nfe": 309,
+        "wall": 0.07880806922912598,
+        "status": "failed",
+        "false_converged": true,
+        "E": 20479.409924579057,
+        "rmse": null
+      }
+    },
+    {
+      "lam": 0.999,
+      "kappa": 3996000.9999999935,
+      "seed": 3,
+      "newton": {
+        "res": 9.851381110468154e-13,
+        "nfe": 2,
+        "wall": 0.0016107559204101562,
+        "status": "converged",
+        "false_converged": false,
+        "E": 20478.963041250063,
+        "rmse": 0.009437657933903228
+      },
+      "gd": {
+        "res": 0.08302709923924173,
+        "nfe": 2000,
+        "wall": 0.047987937927246094,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20479.74195526722,
+        "rmse": null
+      },
+      "anderson": {
+        "res": 0.1083401122732729,
+        "nfe": 2000,
+        "wall": 0.17946815490722656,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20479.85125166472,
+        "rmse": null
+      },
+      "broyden": {
+        "res": NaN,
+        "nfe": 2000,
+        "wall": 0.12051701545715332,
+        "status": "diverged",
+        "false_converged": false,
+        "E": null,
+        "rmse": null
+      },
+      "lbfgs": {
+        "res": 0.04895639468192115,
+        "nfe": 308,
+        "wall": 0.07805275917053223,
+        "status": "failed",
+        "false_converged": true,
+        "E": 20478.96756158633,
+        "rmse": null
+      }
+    },
+    {
+      "lam": 0.999,
+      "kappa": 3996000.9999999935,
+      "seed": 4,
+      "newton": {
+        "res": 6.696923782939404e-12,
+        "nfe": 2,
+        "wall": 0.0015380382537841797,
+        "status": "converged",
+        "false_converged": false,
+        "E": 20478.617952032717,
+        "rmse": 0.008342884620767292
+      },
+      "gd": {
+        "res": 0.08663176979528513,
+        "nfe": 2000,
+        "wall": 0.048050880432128906,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20479.738641380252,
+        "rmse": null
+      },
+      "anderson": {
+        "res": 0.11023378138180147,
+        "nfe": 2000,
+        "wall": 0.17972898483276367,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20479.854050635262,
+        "rmse": null
+      },
+      "broyden": {
+        "res": NaN,
+        "nfe": 2000,
+        "wall": 0.12073612213134766,
+        "status": "diverged",
+        "false_converged": false,
+        "E": null,
+        "rmse": null
+      },
+      "lbfgs": {
+        "res": 0.2032996985763775,
+        "nfe": 305,
+        "wall": 0.07644796371459961,
+        "status": "failed",
+        "false_converged": true,
+        "E": 20478.624376594827,
+        "rmse": null
+      }
+    },
+    {
+      "lam": 0.9999,
+      "kappa": 399960001.00008804,
+      "seed": 0,
+      "newton": {
+        "res": 3.0885580321323443e-09,
+        "nfe": 1,
+        "wall": 0.0007770061492919922,
+        "status": "converged",
+        "false_converged": false,
+        "E": 20479.986782269803,
+        "rmse": 0.0011225938138805628
+      },
+      "gd": {
+        "res": 0.08394437776680679,
+        "nfe": 2000,
+        "wall": 0.0477902889251709,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20479.997544821286,
+        "rmse": null
+      },
+      "anderson": {
+        "res": 0.10817709490528347,
+        "nfe": 2000,
+        "wall": 0.17959308624267578,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20479.998634467906,
+        "rmse": null
+      },
+      "broyden": {
+        "res": NaN,
+        "nfe": 2000,
+        "wall": 0.12100505828857422,
+        "status": "diverged",
+        "false_converged": false,
+        "E": null,
+        "rmse": null
+      },
+      "lbfgs": {
+        "res": 0.5215236004313032,
+        "nfe": 4,
+        "wall": 0.0006427764892578125,
+        "status": "failed",
+        "false_converged": true,
+        "E": 20479.99991873011,
+        "rmse": null
+      }
+    },
+    {
+      "lam": 0.9999,
+      "kappa": 399960001.00008804,
+      "seed": 1,
+      "newton": {
+        "res": 2.1045306692080075e-09,
+        "nfe": 1,
+        "wall": 0.0008070468902587891,
+        "status": "converged",
+        "false_converged": false,
+        "E": 20479.99055315361,
+        "rmse": 0.0012046077051264706
+      },
+      "gd": {
+        "res": 0.07311809700759232,
+        "nfe": 2000,
+        "wall": 0.04979705810546875,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20479.997727282498,
+        "rmse": null
+      },
+      "anderson": {
+        "res": 0.09958854349381209,
+        "nfe": 2000,
+        "wall": 0.19072484970092773,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20479.99858396868,
+        "rmse": null
+      },
+      "broyden": {
+        "res": NaN,
+        "nfe": 2000,
+        "wall": 0.1201620101928711,
+        "status": "diverged",
+        "false_converged": false,
+        "E": null,
+        "rmse": null
+      },
+      "lbfgs": {
+        "res": 0.5215148105912966,
+        "nfe": 4,
+        "wall": 0.0005581378936767578,
+        "status": "failed",
+        "false_converged": true,
+        "E": 20479.999922008123,
+        "rmse": null
+      }
+    },
+    {
+      "lam": 0.9999,
+      "kappa": 399960001.00008804,
+      "seed": 2,
+      "newton": {
+        "res": 1.945128621544912e-09,
+        "nfe": 1,
+        "wall": 0.0008108615875244141,
+        "status": "converged",
+        "false_converged": false,
+        "E": 20479.991203931106,
+        "rmse": 0.0009563126624633672
+      },
+      "gd": {
+        "res": 0.0695892785681655,
+        "nfe": 2000,
+        "wall": 0.05011582374572754,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20479.997982790406,
+        "rmse": null
+      },
+      "anderson": {
+        "res": 0.09637784339616391,
+        "nfe": 2000,
+        "wall": 0.1906909942626953,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20479.998770316073,
+        "rmse": null
+      },
+      "broyden": {
+        "res": NaN,
+        "nfe": 2000,
+        "wall": 0.1203010082244873,
+        "status": "diverged",
+        "false_converged": false,
+        "E": null,
+        "rmse": null
+      },
+      "lbfgs": {
+        "res": 0.5190866055469727,
+        "nfe": 4,
+        "wall": 0.0005421638488769531,
+        "status": "failed",
+        "false_converged": true,
+        "E": 20479.999922011346,
+        "rmse": null
+      }
+    },
+    {
+      "lam": 0.9999,
+      "kappa": 399960001.00008804,
+      "seed": 3,
+      "newton": {
+        "res": 3.3336821982640067e-09,
+        "nfe": 1,
+        "wall": 0.00080108642578125,
+        "status": "converged",
+        "false_converged": false,
+        "E": 20479.98589090721,
+        "rmse": 0.0011507942308462938
+      },
+      "gd": {
+        "res": 0.08134414157132705,
+        "nfe": 2000,
+        "wall": 0.04968094825744629,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20479.997517525215,
+        "rmse": null
+      },
+      "anderson": {
+        "res": 0.10558558553991271,
+        "nfe": 2000,
+        "wall": 0.19060611724853516,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20479.998553728157,
+        "rmse": null
+      },
+      "broyden": {
+        "res": NaN,
+        "nfe": 2000,
+        "wall": 0.12020516395568848,
+        "status": "diverged",
+        "false_converged": false,
+        "E": null,
+        "rmse": null
+      },
+      "lbfgs": {
+        "res": 0.5437337915821473,
+        "nfe": 4,
+        "wall": 0.0005402565002441406,
+        "status": "failed",
+        "false_converged": true,
+        "E": 20479.999918793197,
+        "rmse": null
+      }
+    },
+    {
+      "lam": 0.9999,
+      "kappa": 399960001.00008804,
+      "seed": 4,
+      "newton": {
+        "res": 3.3905946599926377e-09,
+        "nfe": 1,
+        "wall": 0.0008137226104736328,
+        "status": "converged",
+        "false_converged": false,
+        "E": 20479.985486973306,
+        "rmse": 0.0009832411772050485
+      },
+      "gd": {
+        "res": 0.08524286224326441,
+        "nfe": 2000,
+        "wall": 0.04985308647155762,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20479.997419784857,
+        "rmse": null
+      },
+      "anderson": {
+        "res": 0.10947008390725668,
+        "nfe": 2000,
+        "wall": 0.19051003456115723,
+        "status": "failed",
+        "false_converged": false,
+        "E": 20479.998544653936,
+        "rmse": null
+      },
+      "broyden": {
+        "res": NaN,
+        "nfe": 2000,
+        "wall": 0.12004995346069336,
+        "status": "diverged",
+        "false_converged": false,
+        "E": null,
+        "rmse": null
+      },
+      "lbfgs": {
+        "res": 0.5331608918883802,
+        "nfe": 4,
+        "wall": 0.0005288124084472656,
+        "status": "failed",
+        "false_converged": true,
+        "E": 20479.99991815301,
+        "rmse": null
+      }
+    }
+  ]
+}
