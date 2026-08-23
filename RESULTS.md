@@ -61,14 +61,18 @@ the latent trajectory itself is the deliverable.**
   ±ω mixing identified; all four nulls gated and pass. Registered as a
   clean negative.
 - `optimal_credit_filter.py`: closed-form optimal causal K-tap credit
-  filter per mode + transfer check. **Positive:** in the deep/slow regime
-  (L≥4, |a|≥0.9), a per-mode complex scalar gain — fit once, transferred
-  to fresh data — beats online RTRL by +0.3–0.45 cosine (e.g. narrowband
-  L=8, |a|=0.99: 0.425 → 0.878 transferred). The prospective (1,−a) taps
-  are far from optimal. Interpretation: the online rule's defect is
-  mode-dependent and data-stable (the spectral defect law), so a fixed
-  per-mode gain/rotation repairs it — the VLE "learnable gain" slot,
-  validated. One-layer null intact (nothing beats exact RTRL at L=1).
+  filter per mode + transfer check. Apparent positive: in the rig's
+  dense-loss setting, per-mode gains beat online RTRL by +0.3-0.45 cosine
+  and transfer across data realizations of the same task.
+- `trained_credit_gains.py` (this branch): the training race that
+  RETRACTS the apparent positive. (i) On the copy task the gains make
+  global alignment WORSE at init (0.58 vs 0.77) — the rig's win was
+  regime-dependent (dense loss, per-mode median accounting), not a
+  property of the credit problem. (ii) In training, gain-corrected rules
+  diverge (loss 1e9-1e29, clip or no clip) while exact BPTT trains to
+  1e-4: the correction amplifies slow-mode credit and drives |a| past 1
+  by step ~50 (measured directly); the online rule's weakness acts as a
+  stabilizer. Alignment is not descent. Credit lane closed.
 
 ## What the mechanism is, one sentence
 
