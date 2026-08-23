@@ -33,6 +33,18 @@ DIRECT Jacobian (h_{t-1} for a, x_t for B), and Lambda is the future filter
                      arbitrates the memo ambiguity.
     vle_oracle     = per-mode optimal real gain on prospective_J (closed form
                      vs the exact adjoint — the ceiling of the VLE correction)
+    pro_cascade    = cascade-Phi: phase-corrected SPATIAL backprop,
+                     s_l = Phi_l(U_l s_{l+1}), s_{L-1} = Phi_{L-1} q_{L-1}.
+                     Phases compose over the cascade, so s_l is phase-matched
+                     to the full missing Lambda-cascade (the actual defect in
+                     deep stacks); == prospective_J at L=1.
+
+REGIMES. "broadband": white-noise inputs/targets (maximally broad error
+spectrum — the gain distortion dominates and prospective loses). "narrowband":
+inputs/targets are sums of 3 sinusoids placed on mode resonances (FFT-grid
+quantized), so the error spectrum is concentrated where |1-conj(a)e^{iw}|^2
+is nearly constant — the one configuration where the phase theorem could
+convert into gradient alignment at L >= 2. (handoff §19/Phase 4.)
 
 THE STACK SUBTLETY (handoff §10). The exact adjoint of layer l is
 
@@ -264,6 +276,19 @@ def err_prospective(q, a, enabled=True):
     return q - a[None, :] * shift_back(q)
 
 
+def err_cascade(params, q, L: int):
+    """Cascade-Phi: phase-corrected spatial backprop. Surrogate s_l for the
+    exact adjoint lambda_l:  s_{L-1} = Phi_{L-1} q_{L-1},
+    s_l = Phi_l(U_l s_{l+1})  with U_l(v) = Re(B_{l+1}^T conj(v))."""
+    a, B = params["a"], params["B"]
+    s = [None] * L
+    s[L - 1] = err_prospective(q[L - 1], a[L - 1])
+    for l in range(L - 2, -1, -1):
+        down = np.einsum("jm,tj->tm", B[l + 1], np.conj(s[l + 1])).real
+        s[l] = err_prospective(down, a[l])
+    return s
+
+
 def assemble_grad(params, h, r, x, L, eps, accumulated: bool):
     """Real gradient vector: pair error signals eps[l] with sensitivities.
 
@@ -287,14 +312,11 @@ def assemble_grad(params, h, r, x, L, eps, accumulated: bool):
     return np.concatenate(parts)
 
 
-def grad_vle_oracle(params, h, r, x, L, q, lam):
-    """Prospective_J with the per-mode OPTIMAL real gain (closed form against
-    the exact gradient — the ceiling of the VLE scalar-gain correction,
-    not an online rule)."""
-    a = params["a"]
-    eps_pro = [err_prospective(q[l], a[l]) for l in range(L)]
+def vle_oracle(params, h, r, x, L, eps_pro, g_ref):
+    """Per-mode OPTIMAL real gain on the given error signals (closed form
+    against the exact gradient g_ref — the ceiling of the VLE scalar-gain
+    correction, not an online rule). Returns (gradient, gains per layer)."""
     g_pro = assemble_grad(params, h, r, x, L, eps_pro, accumulated=False)
-    g_ref = assemble_grad(params, h, r, x, L, lam, accumulated=False)
     # Flat layout per layer block: [Re Ga (N), Im Ga (N), Re Gb (N*M),
     # Im Gb (N*M)]. Gather the per-mode index set explicitly.
     eps_vle = []
@@ -391,24 +413,36 @@ def run_cell(params, x, ystar, L: int, mag: float):
     a = params["a"]
     out = {"loss": loss, "gate_ref_rel": gate}
     ests = {}
+    eps_pro = [err_prospective(q[l], a[l]) for l in range(L)]
+    eps_casc = err_cascade(params, q, L)
     for name, eps_fn, acc in [
         ("online_full", err_online, True),
         ("spatial", err_online, False),
         ("tbptt1", err_tbptt1, False),
-        ("prospective_J", err_prospective, False),
-        ("prospective_S", err_prospective, True),
     ]:
         t1 = time.perf_counter()
         ests[name] = assemble_grad(params, h, r, x, L,
                                    [eps_fn(q[l], a[l]) for l in range(L)],
                                    accumulated=acc)
         out.setdefault("times", {})[name] = time.perf_counter() - t1
+    t1 = time.perf_counter()
+    ests["prospective_J"] = assemble_grad(params, h, r, x, L, eps_pro,
+                                          accumulated=False)
+    ests["prospective_S"] = assemble_grad(params, h, r, x, L, eps_pro,
+                                          accumulated=True)
+    ests["pro_cascade_J"] = assemble_grad(params, h, r, x, L, eps_casc,
+                                          accumulated=False)
+    out["times"]["prospective"] = time.perf_counter() - t1
 
     t1 = time.perf_counter()
-    g_vle, gains = grad_vle_oracle(params, h, r, x, L, q, lam)
+    g_vle, gains = vle_oracle(params, h, r, x, L, eps_pro, g_man)
     ests["vle_oracle"] = g_vle
+    g_vlec, gains_c = vle_oracle(params, h, r, x, L, eps_casc, g_man)
+    ests["vle_cascade"] = g_vlec
     out["times"]["vle_oracle"] = time.perf_counter() - t1
     out["vle_gain_mean_per_layer"] = [float(np.mean(g)) for g in gains]
+    out["vle_cascade_gain_mean_per_layer"] = [float(np.mean(g))
+                                              for g in gains_c]
 
     # null 3: prospective correction disabled (S slot) == online_full exactly
     g_off = assemble_grad(params, h, r, x, L,
@@ -427,11 +461,11 @@ def run_cell(params, x, ystar, L: int, mag: float):
 
     # phase diagnostic (the handoff's phase claim, isolated from gain):
     # cross-spectral phase offset of each error signal vs the exact adjoint
-    eps_pro = [err_prospective(q[l], a[l]) for l in range(L)]
     eps_shuf = [err_prospective(q[l][perm], a[l]) for l in range(L)]
     out["phase"] = dict(
         q=[phase_offset(q[l], lam[l]) for l in range(L)],
         pro=[phase_offset(eps_pro[l], lam[l]) for l in range(L)],
+        casc=[phase_offset(eps_casc[l], lam[l]) for l in range(L)],
         shuf=[phase_offset(eps_shuf[l], lam[l]) for l in range(L)])
 
     for name, g in ests.items():
@@ -456,31 +490,56 @@ def main() -> None:
     ystar = rng.randn(T, D_OUT)
     B_all, C, phases = make_base_params(SEED)
 
+    # narrowband regime: inputs/targets concentrated on 3 temporal
+    # frequencies, FFT-quantized to mode resonances (handoff §19/Phase 4):
+    # |1-conj(a)e^{iw}|^2 is then nearly constant over the error spectrum,
+    # so the phase theorem — not the gain distortion — decides alignment.
+    ks = sorted(set(
+        int(round(th * T / (2 * np.pi))) % T
+        for th in np.angle(phases)[[0, 2, 5]]))
+    tt = np.arange(T)
+
+    def narrowband(D):
+        sig = np.zeros((T, D))
+        for d in range(D):
+            for k in ks:
+                sig[:, d] += np.sin(2 * np.pi * k * tt / T
+                                    + rng.uniform(0, 2 * np.pi))
+        return sig / np.sqrt(len(ks))
+
+    x_nb, ystar_nb = narrowband(D_IN), narrowband(D_OUT)
+    print(f"narrowband freq bins k = {ks} "
+          f"(omega = {['%.3f' % (2 * np.pi * k / T) for k in ks]})")
+
     cells = []
-    for L in L_SWEEP:
-        for mag in MAG_SWEEP:
-            params = cell_params(B_all, C, phases, L, mag)
-            out = run_cell(params, x, ystar, L, mag)
-            cells.append(dict(L=L, mag=mag, **out))
-            print(f"\nL={L}  |a|={mag}  loss={out['loss']:.4f}  "
-                  f"(ref gate rel err {out['gate_ref_rel']:.2e})")
-            print(f"  {'estimator':<14s} {'cos_full':>9s} {'cos_a':>9s} "
-                  f"{'rel_err':>9s} {'norm_ratio':>10s}")
-            for name in ["online_full", "spatial", "tbptt1",
-                         "prospective_J", "prospective_S", "vle_oracle",
-                         "pro_shuffled"]:
-                m = out[name]
-                print(f"  {name:<14s} {m['cos']:9.4f} {m['cos_a']:9.4f} "
-                      f"{m['rel_err']:9.4f} {m['norm_ratio']:10.4f}")
-            ph = out["phase"]
-            summ = lambda k: (float(np.mean([p[0] for p in ph[k]])),
-                              float(np.mean([p[1] for p in ph[k]])))
-            pq, pp, ps = summ("q"), summ("pro"), summ("shuf")
-            print(f"  phase |offset| vs lambda (coherence): "
-                  f"q {pq[0]:.3f} ({pq[1]:.2f}) | pro {pp[0]:.3f} "
-                  f"({pp[1]:.2f}) | shuf {ps[0]:.3f} ({ps[1]:.2f})")
-            print(f"  vle gain mean/layer: "
-                  f"{['%.3f' % g for g in out['vle_gain_mean_per_layer']]}")
+    for regime, x_r, y_r in [("broadband", x, ystar),
+                             ("narrowband", x_nb, ystar_nb)]:
+        for L in L_SWEEP:
+            for mag in MAG_SWEEP:
+                params = cell_params(B_all, C, phases, L, mag)
+                out = run_cell(params, x_r, y_r, L, mag)
+                cells.append(dict(regime=regime, L=L, mag=mag, **out))
+                print(f"\n[{regime}] L={L}  |a|={mag}  loss={out['loss']:.4f}"
+                      f"  (ref gate rel err {out['gate_ref_rel']:.2e})")
+                print(f"  {'estimator':<14s} {'cos_full':>9s} {'cos_a':>9s} "
+                      f"{'rel_err':>9s} {'norm_ratio':>10s}")
+                for name in ["online_full", "spatial", "tbptt1",
+                             "prospective_J", "pro_cascade_J", "prospective_S",
+                             "vle_oracle", "vle_cascade", "pro_shuffled"]:
+                    m = out[name]
+                    print(f"  {name:<14s} {m['cos']:9.4f} {m['cos_a']:9.4f} "
+                          f"{m['rel_err']:9.4f} {m['norm_ratio']:10.4f}")
+                ph = out["phase"]
+                summ = lambda k: (float(np.mean([p[0] for p in ph[k]])),
+                                  float(np.mean([p[1] for p in ph[k]])))
+                pq, pp, pc, ps = (summ("q"), summ("pro"), summ("casc"),
+                                  summ("shuf"))
+                print(f"  phase |offset| vs lambda (coherence): "
+                      f"q {pq[0]:.3f} ({pq[1]:.2f}) | pro {pp[0]:.3f} "
+                      f"({pp[1]:.2f}) | casc {pc[0]:.3f} ({pc[1]:.2f}) | "
+                      f"shuf {ps[0]:.3f} ({ps[1]:.2f})")
+                print(f"  vle gain mean/layer: "
+                      f"{['%.3f' % g for g in out['vle_gain_mean_per_layer']]}")
 
     os.makedirs(RESULTS_DIR, exist_ok=True)
     git = subprocess.run(["git", "rev-parse", "HEAD"],
@@ -490,6 +549,8 @@ def main() -> None:
     doc = dict(git=git, branch=branch, seed=SEED,
                config=dict(T=T, N=N, D_IN=D_IN, D_OUT=D_OUT,
                            L_sweep=L_SWEEP, mag_sweep=MAG_SWEEP,
+                           regimes=["broadband", "narrowband"],
+                           narrowband_bins=ks,
                            dtype="float64/complex128"),
                cells=cells)
     path = os.path.join(RESULTS_DIR, "gradient_alignment.json")
