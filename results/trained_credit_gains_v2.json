@@ -1,0 +1,29 @@
+{
+  "git": "026c6747acd6fd2bbd30815a2ea35fbcaca341de",
+  "config": {
+    "T": 128,
+    "delay": 50,
+    "L": 4,
+    "N": 16,
+    "batch": 32,
+    "steps": 1500,
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "lr": 0.001,
+    "clip": 1.0,
+    "cal_every": 200,
+    "version": "v2-constrained"
+  },
+  "medians": {
+    "online": 0.023840415810339896,
+    "prospective": 0.11126210015010436,
+    "oracle": 0.041732240628446486,
+    "oracle_B": 0.009621957491227164,
+    "calibrated": 0.06795776533338932,
+    "bptt": 4.2924633125788366e-05
+  },
+  "win": false
+}
