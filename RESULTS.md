@@ -237,6 +237,50 @@ the shallow phase does not accumulate additively down the stack; the
 connection reading is decoration. The symplectic/metriplectic
 vocabulary survives as framing only; nothing predictive emerged.
 
+## The field-theory round (`pac_deploy4.py`, `covariant_adam.py`)
+
+Applying the taxonomy back to physics tools:
+
+- **deploy4** (horizon-1 form c(1) = 1 + āρ(1), estimation rate,
+  frozen-periodic): c(1)-oracle 28% (no better than the comb); slower
+  EMA worse; **frozen-periodic (re-estimate every 200 steps) is the
+  best derived law: 40%** of the gap (median 0.0178). STABILITY bar:
+  frozen200 beats EMA ⇒ the deployment barrier is **variance, not
+  lag** — the GENERIC-degeneracy reading (the orientation channel must
+  not produce entropy) held.
+- **covariant Adam** (the gauge prediction): if the phase defect is
+  Adam's broken U(1) covariance, shared-modulus normalization should
+  reproduce the phase arm with no learned w. **BAR FAIL** (median frac
+  −0.15): covAdam rescues the pathological seed-0 plateau
+  (0.0727→0.0028 — variance normalization, not covariance) but degrades
+  both healthy seeds ~1.5x. Gauge reading rejected; routeA is robust
+  to the optimizer (0.0027 median). Per the preregistered branch, the
+  defect is **architectural** — the `.real` routing forced by
+  real-valued targets on complex SSMs. That closes the locus: not the
+  filter, not the optimizer, not the estimator — the causal-credit
+  structure of real-output complex SSMs itself, with the learned phase
+  as the right repair.
+- Unifications kept (framing, no new predictions): PAC's c* = Σāᵏρ(k)
+  IS the Mori–Zwanzig memory-kernel closure of the projected credit
+  dynamics (ρ = the eliminated fluctuation's autocorrelation, FDT; the
+  AR(1) closure = continued-fraction level 1; Analysis B's H=1 win =
+  short-ranged kernel). The deployment barrier IS physical causality
+  (MSR: exact credit = advanced propagator, causal = retarded,
+  G^A = (G^R)† = the phase theorem; a causal system cannot realize an
+  advanced propagator, only reconstruct its orientation from noise
+  statistics). "Making the mass rotate" needs a Hamiltonian sector in
+  the optimizer (Berry curvature lives in real-time dynamics), and
+  would rotate on principle, not at the credit-required angle — wrong
+  target.
+- **LR control** (`lr_control.py`): standard Adam across LR
+  {3e-4…1e-2} — best median 0.0136, nowhere near covAdam's seed-0
+  0.0028; the rescue is structural (shared-v normalization), not rate.
+  Protocol note: an inline re-implementation of cvm.adam reproduced
+  registered seed values only up to ~1e-13 — over 1500 steps in this
+  bistable landscape, float-operation ordering flips basins (seeds 1/2
+  differed, seed 0 matched). Within-script pairing is the robust unit;
+  cross-process bit-reproducibility is fragile at basin boundaries.
+
 ## What the mechanism is, one sentence
 
 Applied to signals (memory, recurrence, credit), the prospective operator

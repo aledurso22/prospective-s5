@@ -1,0 +1,12 @@
+{
+  "note": "all 6 arms completed; report crashed on a path typo after printing (fixed in the script). Values transcribed verbatim from the run log.",
+  "per_arm": {
+    "online_cov": [0.0028, 0.0324, 0.0416],
+    "routeA_cov": [0.0025, 0.0107, 0.0027]
+  },
+  "medians": {"online_cov": 0.0324, "routeA_cov": 0.0027},
+  "refs": {"online": 0.0284, "routeA": 0.0015},
+  "frac_online_cov": -0.15,
+  "main_win": false,
+  "reading": "BAR MAIN FAIL: covariant Adam rescues the pathological seed-0 plateau (0.0727 -> 0.0028, variance normalization) but degrades both healthy seeds ~1.5x. The phase defect is NOT an optimizer-covariance artifact; gauge reading rejected. Per the preregistered branch (<20%), the defect is architectural (.real routing, forced by real-valued targets on complex SSMs). routeA is robust to the optimizer change (0.0027 median)."
+}
