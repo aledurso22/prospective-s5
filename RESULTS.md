@@ -1,11 +1,13 @@
 # Prospective dynamics in sequence models — program state and evidence map
 
-**Date:** 2026-08-23 · **Branches:** `main` (S5 no-gos), `research/prospective-credit-s5` (credit lane), `research/pesm-s5-spectrum` (solver + inference) · **Status:** solver slot positive at solver level + real data; all other slots closed with mechanisms.
+**Date:** 2026-08-24 · **Branches:** `main` (S5 no-gos), `research/prospective-credit-s5` (credit lane), `research/pesm-s5-spectrum` (solver + inference) · **Status:** solver slot positive with derivation + real data; route A positive as a *learned* (not derived) per-mode phase mechanism; all other slots closed with mechanisms.
 
 The program: import prospective dynamics (Zucchet/Senn/Sacramento lineage —
 NLA, GLE, VLE) into S5-style state-space models, and find where — if
-anywhere — the mechanism helps. Answer, completed: **exactly one slot
-survives, and it is the solver metric.**
+anywhere — the mechanism helps. Answer, completed: **the only slot where
+the prospective mechanism is *derived* is the solver metric; the credit
+lane's positive is a learned per-mode rotation whose phase — not gain —
+does the work, and it has no closed form.**
 
 ## The four-slot map
 
@@ -80,34 +82,80 @@ the latent trajectory itself is the deliverable.**
   discriminator. Credit lane closed with complete coverage — EXCEPT the
   co-variational metric below.
 
-## The co-variational metric (`co_variational_metric.py`, this branch)
+## The co-variational metric arc (`co_variational_metric.py` → `derive_phase.py`, this branch)
 
-The prospective action's second Euler–Lagrange block: the per-(layer,
-mode) metric w is not given but *learned* online as a descent-field
-preconditioner (conj(w) on the gradient blocks; never a filter on the
-error signal). Two routes:
+The prospective action's freed metric slot: the per-(layer, mode) metric
+w is not given but *learned* online as a descent-field preconditioner
+(conj(w) on the gradient blocks; never a filter on the error signal).
 
 - **route A (meta-gradient)** — w descends the one-step-lookahead loss on
   the same batch through the analytic chain. **Registered positive**:
   median final loss 0.0016 vs online RTRL's 0.0224 (**14x better**, all 5
-  seeds finite, no boundary-pushing — amax_end ~ online's). The first
-  registered positive in the learning-rule lane: the geometry of learning
-  can itself be learned, when learned by the action's meta-gradient.
-- **route B (consistency residual)** — the self-supervised residual
-  metric learning diverges on every seed (nan). Clean negative: the
-  consistency objective is not a usable metric-learning signal here.
+  seeds finite, no boundary-pushing — amax_end ~ online's). bptt 0.0001
+  remains the exact-credit ceiling.
+- **route B (consistency residual)** — diverges on every seed (nan).
+  Clean negative.
 
-(A stale-flat bug in the first version of this script — adam's output
-never written back — was found by debugging the bptt arm stalling at 0.30
-and fixed in e538eb6; all numbers above are post-fix.)
+(A stale-flat bug in the first version — adam's output never written
+back — was fixed in e538eb6; all numbers above are post-fix.)
+
+The mechanism audit, four experiments, each with a preregistered bar:
+
+1. **Not the curvature mass** (`recheck_curvature.py`,
+   `recheck_curvature_matrix.py`). Scalar: corr(|w|, 1/curv_a) = −0.03.
+   Matrix: W_j = uI + vJ vs the action's mobility (I+τH_j)⁻¹, τ swept.
+   The Hessian block is real-symmetric ⇒ the mobility has *exactly zero*
+   rotational part, yet layer 0 carries 71% of W's energy in rotation —
+   structurally unreachable at any τ. The gain profile is ANTI-
+   correlated with the mass (corr down to −0.90). "The action derives
+   the metric" is dead at the level of shape, scale, and fit.
+2. **The phase is the mechanism** (`factorize_w.py`). Frozen-factor
+   arms: phase-only e^{i·arg w} closes **113%** of the online→full gap
+   (medians: online 0.0284, phase 0.0053, mag-only 0.0080, full-frozen
+   0.0080) and beats the frozen full metric on every seed. The gain is
+   redundant with Adam; the rotation is the part no diagonal optimizer
+   can express.
+3. **Specific, but task-bound** (`transfer_phase.py`, unseen
+   D=200/T=256). Random phases HURT (+14% vs online) — the learned
+   phase is structured, not a generic regularizer. But the frozen phase
+   ties online (0.0935 vs 0.0932): the *number* does not transfer.
+   Confound noted for any future protocol: D=200 may be capacity- rather
+   than credit-limited; a BPTT headroom arm is mandatory on any new
+   transfer task (headroom at D=50 was 0.996).
+4. **Not derivable** (`derive_phase.py`). The zero-parameter spectral
+   phase ψ_j = arg∫W_j(ω)·conj(D_j(ω)) dω, W_j = mode power response,
+   is **identically zero**: a symmetric real weighting of an odd-phase
+   filter around its resonance cancels (equivalently, the pole of D⁻¹
+   lies outside the unit circle for |a|<1, so the average returns the
+   DC coefficient, 1). The scalar phase does not live in the operator
+   alone. Arms: phase_theory ≈ online (20% of gap); phase fitted from
+   exact credit *at init* also fails (11%) — the useful phase is
+   end-of-training structure. And the learned phase matches the fitted
+   correction α only in deep layers (0.03–0.05 rad) while departing
+   1–2 rad in shallow layers; since alpha_init fails and learned wins,
+   **the load-bearing part of w is the part the credit-defect
+   interpretation does not explain.**
+
+Verdict: route A survives as a *learned* per-mode complex rotation of
+the online gradient — phase-not-gain, specific, task-bound, only
+partially interpreted. "The prospective action derives the algorithm"
+is dead at every level: no Euler–Lagrange equation for M exists in the
+action, the learned metric is not the curvature mass, and the phase has
+no closed form in D(ω). What survives as theory is the diagnosis, not
+the derivation: D⁻¹ = conj(D)/|D|² explains *why* causal credit has a
+phaseful defect and *why* a rotation is the repair Adam cannot supply —
+but the phase that repairs is learned, not computed.
 
 ## What the mechanism is, one sentence
 
 Applied to signals (memory, recurrence, credit), the prospective operator
 `1+τ∂ₜ` cancels poles, spawns parasites, or inverts gains — matched
-filter where an inverse is needed. Applied to the descent field, it is
-the metric `(I+τH)⁻¹` that flattens curvature — the only placement where
-the discretization is exact and the memory survives.
+filter where an inverse is needed. Applied to the descent field, the
+derived mass `(I+τH)⁻¹` flattens curvature — the only placement where
+the discretization is exact and the memory survives — while a *learned*
+per-mode rotation repairs the phaseful half of causal credit's defect
+(gain being Adam's job), a mechanism meta-learning discovered but no
+closed form yet derives.
 
 ## Reproduce
 
@@ -124,6 +172,11 @@ python s5_state_inference.py     # synthetic PLDS
 python plds_benchmark.py         # B1–B4 suite (Kalman gate, capability, B4)
 python plds_mcmaze.py            # real-data figure (needs data/nlb/, DANDI 000128)
 python plds_mcmaze_fit.py        # fit experiment
+python co_variational_metric.py  # route A registered positive (14x)
+python recheck_curvature.py && python recheck_curvature_matrix.py  # not the mass
+python factorize_w.py            # phase is the mechanism (113%)
+python transfer_phase.py         # specific, task-bound (random hurts)
+python derive_phase.py           # not derivable (zero-phase theorem)
 ```
 
 ## Next steps (in order)
@@ -134,10 +187,11 @@ python plds_mcmaze_fit.py        # fit experiment
 2. **Multi-seed fit comparison** (the loose-vs-tight learning effect),
    and held-out behavioral decoding on NLB (the "latents as deliverable"
    figure).
-3. **The trained-gain credit test**: learn the per-mode gains end-to-end
-   on a long-credit task (the oracle gains transfer; can they be learned
-   from the loss, not the exact gradient?). This is the remaining
-   credit-side question, now with a concrete target (the transfer taps).
+3. **The shallow-layer question** (credit lane's one open thread): the
+   learned phase's load-bearing part lives in shallow layers and matches
+   no per-mode credit defect — cross-layer coupling is the remaining
+   candidate mechanism. Any transfer revisit requires a BPTT headroom
+   arm on the target task first.
 4. **Write-up**: four-slot theory map + solver + inference benchmark;
    venue assessment honestly scoped (main-track if 1–2 land; workshops
    otherwise).

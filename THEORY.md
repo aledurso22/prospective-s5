@@ -87,33 +87,63 @@ prospective-deq's own review finding]. So the cell "cheap implicit step"
 is filled exactly where the structure exists and is provably closed
 elsewhere. This is the solver habitat we measured.
 
-**Cell 2 (genuinely open): the metric as a co-variational object.** Every
-member of the grid takes the mass matrix as *given* — identity, Hessian,
-or a fixed schedule. The action does not require this: the mass can be
-part of the variational problem itself,
+**Cell 2 (tested, with a corrected derivation status): the metric as a
+learned object.** Every member of the grid takes the mass matrix as
+*given* — identity, Hessian, or a fixed schedule. We tested making it
+learned. The verdict has three parts, and the middle one corrects an
+earlier over-claim in this document:
 
-```
-min over (q, M ∈ ℳ)  R[q̇, M],
-```
+1. **The action as written gives no learning rule for M.** In
+   `R = ½q̇ᵀMq̇ + (Φ(q+τq̇)−Φ(q))/τ`, M enters only through the
+   dissipation, so `∂R/∂M = ½q̇q̇ᵀ`, whose stationarity forces `q̇ = 0`.
+   The M-variation is degenerate: there is **no Euler–Lagrange equation
+   for the metric** in this functional. An earlier version of this file
+   advertised "Euler–Lagrange equations for both the flow and the
+   metric" — that was wrong.
 
-whose Euler–Lagrange equations produce *both* the flow and a learning
-rule for the metric. That is a principled derivation of "learned
-optimizers / learned preconditioners" from an action — a cell with no
-occupant. The neuroscience lineage points at it directly (VLE's
-"learnable backward couplings": the backward metric is learned, not
-derived). Nothing in this repo falsifies it — it was never tested. It is
-the one genuinely new question the unification opens:
+2. **What actually works is a meta-gradient — and only its phase does
+   work.** Route A: a per-mode complex metric `M = diag(w̄_j)` rescaling
+   the online gradient, learned by the one-step lookahead objective
+   `min_ϕ L(θ − ηM_ϕ g_online)` — MAML over the optimizer's geometry,
+   not stationarity of the action. It works: final loss 0.0016 vs 0.0224
+   online RTRL. The factorization (`factorize_w.py`) assigns the win to
+   the phase: frozen `e^{i·arg w}` alone closes 113% of the online→full
+   gap, while frozen `|w|` adds nothing beyond what Adam supplies.
 
-> Can the mass matrix of the prospective action be learned jointly with
-> the trajectory, so that *the geometry of learning is itself learned* —
-> and does that learned metric beat the derived ones (Hessian, diagonal,
-> per-mode) in regimes where the exact metric is unavailable?
+3. **But the phase is learned, not derived — three independent kills.**
+   (a) It is not the curvature mass: (I+τH)⁻¹ is real-symmetric and
+   cannot hold W's rotational part (71% of W's energy in layer 0), and
+   |w| is anti-correlated with the mass (to −0.90)
+   (`recheck_curvature_matrix.py`). (b) It is not derivable from the
+   credit operator alone: ψ_j = arg∫W_j conj(D_j) dω is *identically
+   zero* — a symmetric real weighting of an odd-phase filter around its
+   resonance cancels, equivalently the pole of D⁻¹ lies outside the
+   unit circle for |a|<1 so the average returns the DC coefficient
+   (`derive_phase.py`; the scalar phase lives in the signal spectrum,
+   not the operator). (c) It is task-bound: frozen to a new
+   delay/horizon it ties online (`transfer_phase.py`), though random
+   phases *hurt* (+14%) — it is specific structure, not noise.
 
-The prospective-credit experiments delimit where it cannot work: as a
-signal filter (matched ≠ inverse) and as a per-mode gain (regime-
-dependent, training-unstable). A co-variational metric is neither of
-those — it acts on the descent field, where the prospective mechanism
-survives.
+   What remains interpreted: the learned phase matches the fitted
+   per-mode credit correction α in deep layers (0.03–0.05 rad) — but
+   α-at-init fails as a deployed phase (11% of gap), so the load-bearing
+   shallow-layer components are exactly the ones the credit-defect
+   reading does not explain. Meta-learning discovered a real, specific
+   mechanism; no closed form currently derives it.
+
+The provenance, corrected after the audit: *the variational viewpoint
+identified the descent-field geometry as the right object, and the
+spectral analysis explains why the defect is phaseful (D⁻¹ =
+conj(D)/|D|² — orientation vs gain); but the phase that repairs is
+found by meta-learning, not computed.* "The prospective action derives
+the successful learning algorithm" is **not** supported at any level.
+
+A genuinely variational route to a metric-learning rule remains open but
+is new theory: make the metric dynamical in the action, e.g. add
+`κ/2‖Ṁ‖² + V(M,q,q̇)`, giving a real co-variational dynamics
+`κM̈ − ∂V/∂M + ½q̇q̇ᵀ = 0`. Whether its solution resembles the
+empirically successful metric is untested — and the transfer result
+(task-specificity) is evidence against forcing it.
 
 ## 5. Where SSMs sit in the unification
 
