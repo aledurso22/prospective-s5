@@ -60,57 +60,69 @@ the proximal subproblem's inner solve, and HMC's mass matrix all are.
 
 ## 3. The multiplier block — the time reversal the action already contains
 
-The chain action with a loss attached,
+The right variational object is the **constrained** action — loss plus
+Lagrange multipliers enforcing the recurrence (not a quadratic penalty
+on the residual: with the loss attached, penalty stationarity gives
+`r_t − A† r_{t+1} = q_t` on the residual, which is incompatible with
+the exact rollout `r = 0` unless q = 0):
 
 ```
-A[s] = Σ_t ½‖s_t − A s_{t−1} − B x_t‖² + Σ_t ℓ_t(s_t),
+A[s, λ] = Σ_t ℓ_t(s_t) + Σ_t λ_t† (s_t − A s_{t−1} − B x_t)
 ```
 
-has stationarity `r_t − A† r_{t+1} = q_t` (residual r, loss gradient
-q). A second-order equation needs two boundary conditions, and they
-factorize it into **two first-order blocks**:
+Its two stationarity conditions are exactly the two blocks:
 
 ```
-forward  (initial condition):  s_t = A s_{t−1} + B x_t    — the SSM rollout [proven: 1.5e-15]
-backward (terminal condition): λ_t = q_t + A† λ_{t+1}     — the exact credit recursion (BPTT adjoint) [known]
+δ/δλ:  s_t = A s_{t−1} + B x_t      — the forward rollout
+δ/δs:  λ_t = q_t + A† λ_{t+1}       — the exact credit recursion (BPTT adjoint), q = −∇ℓ
 ```
 
-The time-reversed operator A† is not an addition to the action; it is
-the action's second boundary condition. The prospective move on this
-block — replace the anti-causal resolvent by its causal adjoint —
-gives, per mode in Fourier,
+The multiplier *is* the credit variable; the time-reversed operator A†
+is not an addition to the action — it is the action's second
+stationarity block. (The loss-free quadratic chain is the degenerate
+special case whose minimizer is the rollout [proven: 1.5e-15] — that
+gate belongs to the solver line, where no loss competes.)
+
+**Why the prospective approximation of this block is conj(D) — a
+derivation, not a hindsight match.** Write the multiplier equation as
+the operator equation `Dλ = q`, per mode `D(ω) = 1 − āe^{iω}`, and
+give it the least-squares action `E(λ) = ½‖Dλ − q‖²`. Its gradient at
+λ = 0 is `−D†q`: the adjoint (matched) operator applied to the signal
+is the *first descent direction of the multiplier's own variational
+problem* — the cheapest causal object in it. The exact solution
+satisfies the normal equations `λ⋆ = (D†D)⁻¹ D†q`, so
 
 ```
-Λᵖʳᵒ(ω) = conj(D) Q(ω),  D = 1 − āe^{iω}
-   ⇒  arg Λᵖʳᵒ = arg Λᵉˣᵃᶜᵗ (phase-exact),  |Λᵖʳᵒ|/|Λᵉˣᵃᶜᵗ| = |D|² (gain inverted)
+λ⋆ = (D†D)⁻¹ λᵖʳᵒ,   λᵖʳᵒ = D† q
+   ⇒  arg λ⋆ = arg λᵖʳᵒ  per frequency   (D†D = |D|² is positive real)
 ```
 
-[proven: `gradient_alignment.py` to machine precision; three-line
-derivation above]. Since `D⁻¹ = conj(D)·|D|⁻²`:
-
-```
-exact credit = (action's multiplier-block output) × (positive real gain)
-```
+The prospective multiplier is phase-exact by construction, and its
+entire defect is a positive modal gain [also verified directly:
+`gradient_alignment.py` to machine precision]. Equivalently: exact
+credit = (prospective direction) × (curvature of the multiplier
+energy), and that curvature is a *positive scalar per mode*.
 
 **Complementarity** [empirical: `factorize_w.py`]: the action's factor
-conj(D) is a rotation in each mode's (Re, Im) plane — the one object a
-diagonal optimizer cannot express. The missing factor |D|⁻² is a
+D† is a rotation in each mode's (Re, Im) plane — the one object a
+diagonal optimizer cannot express. The missing factor (D†D)⁻¹ is a
 positive real gain — exactly what Adam supplies. Frozen phase-only
 rotation closes 113% of the online→full gap; frozen gain adds nothing.
-*The prospective action derives the orientation of credit; the optimizer
-derives the rest.* This is the precise, surviving form of "the action
-derives the learning algorithm" — false in the metric reading (§5,
-Cell 2), true in the multiplier reading.
+*The prospective principle derives the orientation of credit; the
+optimizer derives the rest.* This is the precise, surviving form of
+"the action derives the learning algorithm" — false in the metric
+reading (§5, Cell 2), true in the multiplier reading.
 
 **Boundary** [proven]: the action's output is a filter, not a scalar —
-collapsing conj(D) to one phase per mode under any symmetric weighting
-is identically zero (`derive_phase.py`: odd-phase cancellation around
-resonance; pole of D⁻¹ outside the unit circle). The scalar reduction
-needs the *realized* signal spectrum, and the learned metric's
-load-bearing shallow-layer phases match no per-mode object [open —
-cross-layer coupling is outside this block]. Closure test [open]:
-`ψ_j = arg∫Ŵ_j conj(D_j) dω` with Ŵ measured causally from the online
-gradient stream.
+collapsing D† to one phase per mode under any symmetric weighting is
+identically zero (`derive_phase.py`: odd-phase cancellation around
+resonance; pole of D⁻¹ outside the unit circle). This kills the
+*isolated-mode* scalar derivation only; it does **not** kill the full
+stacked operator `D_full` (temporal recurrence ⊗ inter-layer
+Jacobians), whose matched part carries cross-layer structure — the
+natural candidate for the learned metric's load-bearing shallow-layer
+phases [open]. Closure test [open]: `ψ_j = arg∫Ŵ_j D_full†` reduced
+per mode, Ŵ measured causally from the online gradient stream.
 
 ## 4. The stability law
 
