@@ -1,0 +1,23 @@
+{
+  "git": "dadc2d6e2338708a7ca83358195ad27fb8e13e2d",
+  "config": {
+    "meta_delays": [
+      25,
+      50,
+      100
+    ],
+    "eval_delay": 200,
+    "steps": 1500,
+    "seeds": [
+      0,
+      1,
+      2
+    ]
+  },
+  "medians": {
+    "online": 0.09317249796247877,
+    "frozen_w": 0.09585086122383371,
+    "bptt": 0.07439318139956741
+  },
+  "win": false
+}
