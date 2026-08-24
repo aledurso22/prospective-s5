@@ -225,6 +225,42 @@ real because spatial_q returns real arrays there — was caught by
 numpy's ComplexWarning and fixed; committed numbers are the clean
 rerun. G6 honored.)
 
+## The Wiener–Hopf verdict (`wiener_oracle.py`, this branch)
+
+The causal-credit problem restated in its classical form: best causal
+approximation of an anti-causal estimator. Measurements, all at trained
+params (3 seeds, preregistered deploy bar):
+
+- **Static ceiling (Wiener–Hopf):** credit cosine vs exact rises
+  monotonically with filter horizon — top layer 0.32 (K=1) → 0.73
+  (K=96), unsaturated; residual 0.90 → 0.47. The "90–99% unexplained"
+  of the scalar era was a short-filter artifact. The big gains arrive
+  at K ≈ 64, the task's own predictability horizon (delayed copy: the
+  future target is in the observer's past up to the delay).
+- **Hankel/Nehari floor:** per-mode H∞ distance to the best causal
+  approximant, σ = |a|/(1−|a|²) (numeric Hankel SVD matches the closed
+  form, corr 0.98–0.99): median 10–14, max ~62 at the slowest modes.
+  **The cost of causal credit diverges as modes slow** — theorem-grade
+  quantification of where and why online credit fails.
+- **Block Procrustes:** U(1) ≈ U(2) ≈ U(4) residuals — the orientation
+  defect is per-mode, not a subspace rotation.
+- **Deployment (bar):** frozen K=64 filter (estimated at trained
+  params) deployed from scratch: median 0.216, frac **−6.97**, one seed
+  26× blow-up. The estimator's power is its poison out of regime —
+  scalar bounded phase fails mildly, raw phase 10×, 64-tap Wiener
+  catastrophically.
+
+**The law of the credit lane, final form:** the advanced propagator's
+causal shadow is state-dependent; any frozen linear reconstruction of
+it breaks the trajectory it was estimated on. The stable causal
+remnant is the bounded per-mode phase; the learned phase
+(meta-gradient, co-adapted with the trajectory) is the unique object
+that is both correctly oriented and stable along training — it sits in
+the gap between the Wiener ceiling (static, reachable) and the Hankel
+floor (causal, paid per slow mode). routeA is not an approximation of
+the adjoint; it is the trajectory-co-adapted orientation the barrier
+leaves available.
+
 ## Directive-04 tests (`test_holonomy.py`)
 
 Pontryagin identification accepted as framing (THEORY.md §3 names the

@@ -18,11 +18,18 @@ gates; post-hoc changes logged. Final-loss metric: mean of last 100 of
 | 2 credit filters | 5 | 1 (retracted) | 5 |
 | 3 co-variational metric + audit | 9 | 2 (routeA; factorization) | 7 |
 | 4 PAC (derive the phase) | 8 | 1 (probe, 8/8 bars) | 7 (deployment ≤40%) |
-| 5 baselines & controls | 4 | — | 4 (all decisive) |
+| 5 baselines & controls | 5 | — | 5 (all decisive) |
 
 The two standing positives: **the PESM solver** (derived, real data)
 and **routeA** (learned, 14×, mechanism identified). Everything else is
-closed with a named mechanism.
+closed with a named mechanism. The credit lane's final theory: causal
+credit's missing piece is the anti-causal part of the adjoint operator,
+whose H∞ (Hankel) distance is |a|/(1−|a|²) per mode — diverging with
+mode slowness; linear causal reconstructions reach cosine 0.7+ with
+horizon but destroy training out of regime (deploy K=64: −6.97); the
+bounded per-mode phase is the stable remnant, and the learned phase is
+the unique object both correctly oriented and stable along the
+trajectory.
 
 ---
 
@@ -85,6 +92,7 @@ closed with a named mechanism.
 
 | script | question | result | verdict |
 |---|---|---|---|
+| `wiener_oracle.py` | is causal credit a Wiener–Hopf problem — what is the LTI ceiling and does it deploy? | static cosine rises 0.32→0.73 (L3) with K=1→96, unsaturated; Hankel floor σ ≈ 11–14/mode (max ~62), corr 0.99 with \|a\|/(1−\|a\|²); Procrustes U1≈U2≈U4 (per-mode, not subspace); **deploy K=64: −6.97 of gap, one seed 26× blow-up** | **ceiling real but fixed-point; LTI deployment catastrophic — barrier confirmed at training level** |
 | `tbptt_baseline.py` | does buffering W steps of exact credit beat the streaming rule? | medians: tbptt1 0.178, tbptt4 0.152, tbptt16 0.118 (all worse than online 0.0284); **tbptt64 0.0003 (works, beats routeA 0.0015 ~5×)**; bptt ~0.00003. (Complex-dtype bug caught by ComplexWarning, fixed, rerun clean) | buffered-64 wins on loss; streaming edge = O(1) memory, no backward pass; truncation below delay always loses to online |
 | `test_holonomy.py` | is the shallow phase additive down the stack (holonomy)? | 0/3 seeds pass (increment concentrations 0.20–0.89 < 0.7 bar) | **NO HOLONOMY** — connection reading is decoration |
 | `covariant_adam.py` | is the defect Adam's broken U(1) covariance? | seed 0: 0.0727→0.0028 (variance normalization rescue); healthy seeds ~1.5× worse; median frac **−0.15** | **BAR FAIL — gauge reading rejected; defect architectural (.real routing)** |
@@ -127,4 +135,5 @@ python pac_probe2.py && python pac_analysis.py
 python pac_deploy.py && python pac_deploy2.py && python pac_deploy3.py && python pac_deploy4.py
 python tbptt_baseline.py && python test_holonomy.py
 python covariant_adam.py && python lr_control.py
+python wiener_oracle.py             # Wiener ceiling, Hankel floor, deploy barrier
 ```
