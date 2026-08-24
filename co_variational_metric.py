@@ -206,6 +206,7 @@ def train_route(arm, seed):
     return dict(arm=arm, seed=seed,
                 final_loss=float(losses[-100:].mean()),
                 finite=bool(np.all(np.isfinite(losses))),
+                w_final=[wl.copy() for wl in w],
                 amax_end=amax_hist[-1] if amax_hist else None,
                 w_abs_mean=float(np.mean([np.abs(wl).mean() for wl in w])),
                 wall_time_sec=time.time() - t0)
