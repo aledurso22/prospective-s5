@@ -77,7 +77,29 @@ the latent trajectory itself is the deliverable.**
   oracle_B advantage flips (copy: oracle_B 2.67x WORSE than online) —
   the v2 3-seed gap was seed variance. On the adding task all arms,
   including bptt, sit at the chance plateau (~0.083) — a degenerate
-  discriminator. Credit lane closed with complete coverage.
+  discriminator. Credit lane closed with complete coverage — EXCEPT the
+  co-variational metric below.
+
+## The co-variational metric (`co_variational_metric.py`, this branch)
+
+The prospective action's second Euler–Lagrange block: the per-(layer,
+mode) metric w is not given but *learned* online as a descent-field
+preconditioner (conj(w) on the gradient blocks; never a filter on the
+error signal). Two routes:
+
+- **route A (meta-gradient)** — w descends the one-step-lookahead loss on
+  the same batch through the analytic chain. **Registered positive**:
+  median final loss 0.0016 vs online RTRL's 0.0224 (**14x better**, all 5
+  seeds finite, no boundary-pushing — amax_end ~ online's). The first
+  registered positive in the learning-rule lane: the geometry of learning
+  can itself be learned, when learned by the action's meta-gradient.
+- **route B (consistency residual)** — the self-supervised residual
+  metric learning diverges on every seed (nan). Clean negative: the
+  consistency objective is not a usable metric-learning signal here.
+
+(A stale-flat bug in the first version of this script — adam's output
+never written back — was found by debugging the bptt arm stalling at 0.30
+and fixed in e538eb6; all numbers above are post-fix.)
 
 ## What the mechanism is, one sentence
 
