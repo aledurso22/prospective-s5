@@ -172,6 +172,10 @@ def run_grid():
     for task in TASKS:
         for arm in ARMS:
             for seed in SEEDS:
+                if os.path.exists(_path(task, arm, seed)):
+                    print(f"[skip] {arm:<9s} {task:<7s} s{seed} (done)",
+                          flush=True)
+                    continue
                 out = train_arm(task, arm, seed)
                 with open(_path(task, arm, seed), "w") as f:
                     json.dump(out, f, indent=2)
