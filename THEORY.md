@@ -58,7 +58,61 @@ metric choices of the same prospective action**. The prospective mass
 `M = (I + τH)⁻¹` is the common object — it is what Nesterov's lookahead,
 the proximal subproblem's inner solve, and HMC's mass matrix all are.
 
-## 3. The stability law
+## 3. The multiplier block — the time reversal the action already contains
+
+The chain action with a loss attached,
+
+```
+A[s] = Σ_t ½‖s_t − A s_{t−1} − B x_t‖² + Σ_t ℓ_t(s_t),
+```
+
+has stationarity `r_t − A† r_{t+1} = q_t` (residual r, loss gradient
+q). A second-order equation needs two boundary conditions, and they
+factorize it into **two first-order blocks**:
+
+```
+forward  (initial condition):  s_t = A s_{t−1} + B x_t    — the SSM rollout [proven: 1.5e-15]
+backward (terminal condition): λ_t = q_t + A† λ_{t+1}     — the exact credit recursion (BPTT adjoint) [known]
+```
+
+The time-reversed operator A† is not an addition to the action; it is
+the action's second boundary condition. The prospective move on this
+block — replace the anti-causal resolvent by its causal adjoint —
+gives, per mode in Fourier,
+
+```
+Λᵖʳᵒ(ω) = conj(D) Q(ω),  D = 1 − āe^{iω}
+   ⇒  arg Λᵖʳᵒ = arg Λᵉˣᵃᶜᵗ (phase-exact),  |Λᵖʳᵒ|/|Λᵉˣᵃᶜᵗ| = |D|² (gain inverted)
+```
+
+[proven: `gradient_alignment.py` to machine precision; three-line
+derivation above]. Since `D⁻¹ = conj(D)·|D|⁻²`:
+
+```
+exact credit = (action's multiplier-block output) × (positive real gain)
+```
+
+**Complementarity** [empirical: `factorize_w.py`]: the action's factor
+conj(D) is a rotation in each mode's (Re, Im) plane — the one object a
+diagonal optimizer cannot express. The missing factor |D|⁻² is a
+positive real gain — exactly what Adam supplies. Frozen phase-only
+rotation closes 113% of the online→full gap; frozen gain adds nothing.
+*The prospective action derives the orientation of credit; the optimizer
+derives the rest.* This is the precise, surviving form of "the action
+derives the learning algorithm" — false in the metric reading (§5,
+Cell 2), true in the multiplier reading.
+
+**Boundary** [proven]: the action's output is a filter, not a scalar —
+collapsing conj(D) to one phase per mode under any symmetric weighting
+is identically zero (`derive_phase.py`: odd-phase cancellation around
+resonance; pole of D⁻¹ outside the unit circle). The scalar reduction
+needs the *realized* signal spectrum, and the learned metric's
+load-bearing shallow-layer phases match no per-mode object [open —
+cross-layer coupling is outside this block]. Closure test [open]:
+`ψ_j = arg∫Ŵ_j conj(D_j) dω` with Ŵ measured causally from the online
+gradient stream.
+
+## 4. The stability law
 
 For the blended step `s ← s − [γH + (1−γ)/η · I]⁻¹ ∇E`, the prospective
 flow has an exact stability boundary
@@ -73,7 +127,7 @@ size is set by the mass of the metric, not by the curvature of the
 problem** — explicit Euler pays `1/λmax`, the prospective metric pays
 nothing (affine invariance for quadratics).
 
-## 4. The grid, and which cells are empty
+## 5. The grid, and which cells are empty
 
 Reading the dictionary as a grid — *implicitness* × *metric quality* ×
 *structure available* — exposes exactly two empty cells:
@@ -145,7 +199,7 @@ is new theory: make the metric dynamical in the action, e.g. add
 empirically successful metric is untested — and the transfer result
 (task-specificity) is evidence against forcing it.
 
-## 5. Where SSMs sit in the unification
+## 6. Where SSMs sit in the unification
 
 The SSM recurrence is the **first-order quadratic member** of the family:
 gradient flow on a quadratic chain energy, whose minimizer has a closed
