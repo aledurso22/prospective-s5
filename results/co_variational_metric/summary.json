@@ -1,0 +1,24 @@
+{
+  "git": "e538eb66ccb0fd0b25b62c605ef86ea682d97265",
+  "config": {
+    "steps": 1500,
+    "lr": 0.001,
+    "lr_m": 0.001,
+    "clip": 1.0,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "bar": "best route <= 0.5x online"
+  },
+  "medians": {
+    "online": 0.02242807737868163,
+    "routeA": 0.0016303822316347377,
+    "routeB": NaN,
+    "bptt": 8.572944656470155e-05
+  },
+  "win": false
+}

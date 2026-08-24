@@ -1,0 +1,9 @@
+{
+  "arm": "routeB",
+  "seed": 3,
+  "final_loss": NaN,
+  "finite": false,
+  "amax_end": NaN,
+  "w_abs_mean": NaN,
+  "wall_time_sec": 45.7440550327301
+}

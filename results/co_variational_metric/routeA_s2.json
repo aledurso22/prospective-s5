@@ -1,0 +1,9 @@
+{
+  "arm": "routeA",
+  "seed": 2,
+  "final_loss": 0.0016303822316347377,
+  "finite": true,
+  "amax_end": 0.995031323316202,
+  "w_abs_mean": 12.78725455130708,
+  "wall_time_sec": 99.46247625350952
+}

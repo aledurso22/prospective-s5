@@ -1,0 +1,9 @@
+{
+  "arm": "online",
+  "seed": 0,
+  "final_loss": 0.07271670593242449,
+  "finite": true,
+  "amax_end": 0.9955494526531826,
+  "w_abs_mean": 1.0,
+  "wall_time_sec": 40.99638295173645
+}

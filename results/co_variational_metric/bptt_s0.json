@@ -1,0 +1,9 @@
+{
+  "arm": "bptt",
+  "seed": 0,
+  "final_loss": 4.090782517471532e-05,
+  "finite": true,
+  "amax_end": 0.9941784820776898,
+  "w_abs_mean": 1.0,
+  "wall_time_sec": 102.45539402961731
+}
