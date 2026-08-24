@@ -72,12 +72,12 @@ the latent trajectory itself is the deliverable.**
   median accounting) and reverses on the copy task at init (0.58 vs
   0.77); (ii) the instability mechanism was directly measured (gain arms
   push |a| past 1 by step ~50 in v1; BPTT approaches 0.999 and retreats).
-  Exploratory signal, not predeclared: the oracle_B ablation (gains on
-  the B-gradients only, recurrence untouched) is stable AND the best
-  online rule (0.0096, 2.5x below online) — the a-channel correction
-  hurts even bounded (boundary saturation freezes modes), the B-channel
-  correction is safe. Awaiting a registered confirmation (more seeds,
-  second task) before it counts as a positive.
+  Exploratory signal, RETRACTED by its registered confirmation
+  (`registered_oracle_b.py`, bar fixed before running): at 5 seeds the
+  oracle_B advantage flips (copy: oracle_B 2.67x WORSE than online) —
+  the v2 3-seed gap was seed variance. On the adding task all arms,
+  including bptt, sit at the chance plateau (~0.083) — a degenerate
+  discriminator. Credit lane closed with complete coverage.
 
 ## What the mechanism is, one sentence
 
