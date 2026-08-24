@@ -146,6 +146,97 @@ the derivation: D⁻¹ = conj(D)/|D|² explains *why* causal credit has a
 phaseful defect and *why* a rotation is the repair Adam cannot supply —
 but the phase that repairs is learned, not computed.
 
+## The PAC arc — what the learned phase IS (`pac_probe2.py`, `pac_deploy*.py`, this branch)
+
+The prospective-adjoint-credit probe: measure the optimal scalar
+projection of exact credit onto causal credit and compare with the
+learned phase. Setup uses the rig's own validated objects: `spatial_q`
+(Γ-routed instantaneous credit), `exact_lambda` (stacked adjoint with
+the instantaneous cross-layer term, fd-gated). All 8 registered bars
+PASS:
+
+- **P5**: the error is not white at the modes (|ρ(1)| = 0.15–0.50) —
+  the derive_phase zero was a symmetric-weighting artifact; the phase
+  lives in the error's lag-1 autocorrelation.
+- **P1 + REL**: `arg w` matches `arg c*` (c* = Σ āᵏρ(k), exact under
+  stationarity) up to the learned phase's own cross-seed reliability
+  (R 0.92–0.96 vs ceiling 0.995 top layer; shallow layers track their
+  lower ceilings). **CTRL**: identical match at online-baseline params
+  — the phase structure is task+architecture, not a trajectory
+  artifact. This is the strongest result in the credit lane.
+- **P2**: the shallow-layer attenuation is the stacked adjoint's
+  instantaneous cross-layer term (identity residual ~1e-15 top, ~1.0
+  shallow — the old "gate failure" was the cross-layer signal, not a
+  bug).
+- **P3l**: the AR(1) closure `K = 1/(1 − āρ(1))` predicts `arg w` as
+  well as or better than the full optimal projection.
+- Ceiling: best scalar leaves 90–99% of credit variance unexplained;
+  3-tap FIRs recover nothing — w is a preconditioner aligning dominant
+  directions, not a credit reconstruction (an information ceiling, not
+  a method weakness).
+
+Deployment (P4, `pac_deploy.py` full-K; `pac_deploy2.py` phase-primary
++ oracle-β control, arms amended per review and logged): phase-oracle
+closes **36%** of the online→routeA gap (median 0.0188 vs online
+0.0284, routeA 0.0015); phase-EMA ~0%; full-K worse than online. Verdict
+per preregistered reading: **directionally right, not load-bearing** —
+the causal one-statistic law recovers the orientation's sign but not
+the learned phase's full content; meta-learning is the better estimator
+of the object the theory identifies. Orientation-scarce / gain-Adam's-
+job now holds at probe, frozen-arm, and live-deployment levels.
+
+Analyses A & B (preregistered 50879e3, `pac_analysis.py`):
+**A (pairing) FAIL** — the resolvent combination −arg(1−āρ(1)) does
+NOT beat bare arg ρ(1) at L2/L3 (0.817 vs 0.856; 0.987 vs 0.998); per
+the preregistered kill, the "resolvent of the adjoint generator"
+framing is dropped as the explanation of w's value.
+**B (horizon) PASS** — c(H) = Σ_{k≤H} āᵏρ(k) matches w best at H = 1
+with monotone decline (3/4 layers, no rise-then-fall): the action's τ
+reads as Route A's one-step lookahead horizon — the first structural
+explanation of why that meta-objective worked.
+Exploratory deploy3 (`pac_deploy3.py`, raw e^{i arg ρ(1)}): catastrophic
+(0.17–0.27, fracs −5 to −9, ~10× worse than online). The static winner
+is deployment poison: raw arg ρ(1) is unbounded and noisy per batch,
+while arg(1 − āβ) is phase-bounded by construction. Lesson recorded:
+the deployment barrier is stability — causal estimation trades lag
+(EMA, worse) against variance (oracle, better but noisy) — and the
+comb form, though it lost the static pairing, is the variance
+stabilizer that makes deployment possible at all.
+
+## The TBPTT baseline (`tbptt_baseline.py`, this branch)
+
+Windows {1, 4, 16, 64} + full BPTT, paired seeds, same protocol.
+Medians: online 0.0284; tbptt1 0.1776; tbptt4 0.1519; tbptt16 0.1180;
+tbptt64 **0.0003**; bptt ~0.00003. Predeclared reading confirmed:
+W = 16 fails, W = 64 works. Two structural findings:
+
+1. **Key cell:** buffered 64-step exact credit beats the streaming rule
+   on loss (tbptt64 0.0003 vs routeA 0.0015, ~5x). The streaming rule's
+   remaining advantage is O(1) memory and no backward pass, not
+   accuracy. This bounds the paper's claim honestly.
+2. **Truncation is worse than online at every window below the delay**
+   (0.118–0.188 vs 0.0284): the online rule is not "tbptt with W = 1" —
+   its S-slot carries exact state sensitivities and only its error
+   signal is truncated, so it beats 16-step exact-credit buffering.
+   The streaming family has a real, measured edge in its regime.
+
+(A complex-dtype bug in the first run — shallow-layer adjoints stored
+real because spatial_q returns real arrays there — was caught by
+numpy's ComplexWarning and fixed; committed numbers are the clean
+rerun. G6 honored.)
+
+## Directive-04 tests (`test_holonomy.py`)
+
+Pontryagin identification accepted as framing (THEORY.md §3 names the
+constrained action's blocks Hamilton's equations). Test A (rotational
+depth law): naive additive phase-variance models fail the measured
+fractions (0.71/0.37/0.06/0.01) by orders of magnitude — the growth is
+structured, not diffusive. Test B (phase additivity/holonomy): **NO
+HOLONOMY** (0/3 seeds; increment concentrations 0.20–0.89 < 0.7 bar) —
+the shallow phase does not accumulate additively down the stack; the
+connection reading is decoration. The symplectic/metriplectic
+vocabulary survives as framing only; nothing predictive emerged.
+
 ## What the mechanism is, one sentence
 
 Applied to signals (memory, recurrence, credit), the prospective operator
@@ -177,6 +268,11 @@ python recheck_curvature.py && python recheck_curvature_matrix.py  # not the mas
 python factorize_w.py            # phase is the mechanism (113%)
 python transfer_phase.py         # specific, task-bound (random hurts)
 python derive_phase.py           # not derivable (zero-phase theorem)
+python pac_probe2.py             # what the phase IS (8/8 bars, CTRL)
+python pac_deploy2.py            # causal law deploys 36% (directional)
+python pac_analysis.py           # A: resolvent dropped; B: horizon 1
+python tbptt_baseline.py         # buffered-64 beats streaming; W<delay fails
+python test_holonomy.py          # no additive phase accumulation
 ```
 
 ## Next steps (in order)
@@ -187,11 +283,14 @@ python derive_phase.py           # not derivable (zero-phase theorem)
 2. **Multi-seed fit comparison** (the loose-vs-tight learning effect),
    and held-out behavioral decoding on NLB (the "latents as deliverable"
    figure).
-3. **The shallow-layer question** (credit lane's one open thread): the
-   learned phase's load-bearing part lives in shallow layers and matches
-   no per-mode credit defect — cross-layer coupling is the remaining
-   candidate mechanism. Any transfer revisit requires a BPTT headroom
-   arm on the target task first.
+3. **Credit lane — closed with mechanism, no open threads.** The
+   learned phase is the optimal scalar credit projection (probe,
+   CTRL-controlled, horizon 1); deployment is stability-limited (36%
+   best); holonomy and resolvent framings tested and rejected;
+   tbptt64 bounds the streaming claim to memory/compute, not accuracy.
+   Remaining optional diagnostic: per-mode arg K vs arg w along the
+   deployment trajectory (is the derived phase systematically off or
+   merely noisy).
 4. **Write-up**: four-slot theory map + solver + inference benchmark;
    venue assessment honestly scoped (main-track if 1–2 land; workshops
    otherwise).

@@ -113,16 +113,34 @@ optimizer derives the rest.* This is the precise, surviving form of
 "the action derives the learning algorithm" — false in the metric
 reading (§5, Cell 2), true in the multiplier reading.
 
-**Boundary** [proven]: the action's output is a filter, not a scalar —
-collapsing D† to one phase per mode under any symmetric weighting is
-identically zero (`derive_phase.py`: odd-phase cancellation around
-resonance; pole of D⁻¹ outside the unit circle). This kills the
-*isolated-mode* scalar derivation only; it does **not** kill the full
-stacked operator `D_full` (temporal recurrence ⊗ inter-layer
-Jacobians), whose matched part carries cross-layer structure — the
-natural candidate for the learned metric's load-bearing shallow-layer
-phases [open]. Closure test [open]: `ψ_j = arg∫Ŵ_j D_full†` reduced
-per mode, Ŵ measured causally from the online gradient stream.
+**Boundary → resolution** [proven]: the action's output is a filter,
+not a scalar — collapsing D† to one phase per mode under any symmetric
+weighting is identically zero (`derive_phase.py`: odd-phase
+cancellation around resonance; pole of D⁻¹ outside the unit circle).
+The PAC probe (`pac_probe2.py`, all 8 registered bars PASS) located
+exactly what the symmetric weighting assumed away: the phase lives in
+the *lag-1 autocorrelation of the mode's error signal* (P5: |ρ(1)| =
+0.15–0.50, not white). The optimal scalar projection is
+`c* = Σ_k āᵏρ(k)` (exact under stationarity), and the learned Route-A
+phase matches `arg c*` up to its own seed-reliability ceiling (P1:
+R = 0.92–0.96 top layer vs R_w = 0.995; shallow layers track their
+lower ceilings) — including at online-baseline params the meta-gradient
+never touched (CTRL: the structure is task+architecture, not
+trajectory). The shallow-layer attenuation is the cross-layer term of
+the stacked adjoint (P2: identity residual ~1e-15 top, ~1.0 shallow).
+The AR(1) closure `K = 1/(1 − āρ(1))` predicts the learned phase as
+well as or better than the optimal projection (P3l).
+
+**Deployment** [measured, mixed: `pac_deploy.py`, `pac_deploy2.py`]:
+the causal law deployed end-to-end (phase-only, per the factorization)
+closes 36% of the online→routeA gap with oracle β and ~0 with EMA β;
+full-K (phase+gain) is worse than online — the factorization holds in
+deployment too. Verdict: *directionally right, not load-bearing* — the
+one-statistic closure recovers the orientation's sign but not the full
+learned phase (frozen learned phase closes 100%+). The remaining gap is
+content the closure does not express (full-lag structure, cross-layer
+corrections). Meta-learning remains the better estimator of the object
+the theory identifies.
 
 ## 4. The stability law
 
