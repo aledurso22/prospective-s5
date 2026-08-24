@@ -143,8 +143,8 @@ def train_route(arm, seed):
             G_use = G if arm == "online" else scale_by_w(G, w)
             g = tcg.flat_grads(G_use, params)
         g = clip(g)
-        new_flat, m, v = adam(flat, g, m, v, step)
-        params_next = tcg.pack(params, new_flat)
+        flat, m, v = adam(flat, g, m, v, step)
+        params_next = tcg.pack(params, flat)
 
         # ---- metric learning (only routeA/routeB) ----
         if arm == "routeA":
