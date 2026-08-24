@@ -1,0 +1,8 @@
+{
+  "arm": "oracle_B",
+  "task": "adding",
+  "seed": 2,
+  "final_loss": 0.08242410759612134,
+  "finite": true,
+  "wall_time_sec": 40.00547194480896
+}

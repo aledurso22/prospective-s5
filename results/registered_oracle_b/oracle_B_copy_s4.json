@@ -1,0 +1,8 @@
+{
+  "arm": "oracle_B",
+  "task": "copy",
+  "seed": 4,
+  "final_loss": 0.06324965273453191,
+  "finite": true,
+  "wall_time_sec": 51.04062628746033
+}

@@ -1,0 +1,8 @@
+{
+  "arm": "bptt",
+  "task": "adding",
+  "seed": 0,
+  "final_loss": 0.08500589896727498,
+  "finite": true,
+  "wall_time_sec": 43.182881116867065
+}

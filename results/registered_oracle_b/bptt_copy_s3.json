@@ -1,0 +1,8 @@
+{
+  "arm": "bptt",
+  "task": "copy",
+  "seed": 3,
+  "final_loss": 0.0003698938635853177,
+  "finite": true,
+  "wall_time_sec": 55.720449686050415
+}

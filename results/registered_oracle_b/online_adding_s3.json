@@ -1,0 +1,8 @@
+{
+  "arm": "online",
+  "task": "adding",
+  "seed": 3,
+  "final_loss": 0.08303767718833971,
+  "finite": true,
+  "wall_time_sec": 31.702598810195923
+}

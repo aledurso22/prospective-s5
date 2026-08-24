@@ -1,0 +1,8 @@
+{
+  "arm": "online",
+  "task": "copy",
+  "seed": 3,
+  "final_loss": 0.010873658372953494,
+  "finite": true,
+  "wall_time_sec": 41.158790826797485
+}
