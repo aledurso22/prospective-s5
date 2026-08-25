@@ -73,6 +73,19 @@ rates. Results (frac of online→routeA gap):
   each step, no meta-gradient) captures 65% of routeA's gain;
   meta-learning buys the final 7× — refinement, not orientation.
 
+## Method-gate diagnostic (`phase_track.py`): the phase barely moves
+
+Logging arg w along routeA training (every 25 steps, 3 seeds): RMS
+|Δφ| ≈ 0.07 rad per interval; hold-tracking error 0.0017 rad;
+increments weakly persistent (ac1 ≈ 0.4); momentum predictor beats hold
+by **6% < 20% bar → Simonetto-style prediction-correction KILLED**.
+Interpretation (consistent with frozen-phase-from-init working at 113%
+and CTRL): **the useful orientation is near-static along training** —
+the meta-gradient's role is fast robust CONVERGENCE to a fixed
+task+architecture property, not tracking a moving target. "Trajectory
+co-adaptation" amended accordingly: the loop must FIND the phase, not
+follow it.
+
 ## Directive 4 — exact stability counterexample: LANDED (`d4_stability.py`)
 
 Minimal exact model: single complex mode, quadratic loss, affine

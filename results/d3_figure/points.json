@@ -1,0 +1,173 @@
+{
+  "points": [
+    {
+      "arm": "wiener_full_K64",
+      "kind": "wiener_full",
+      "x": 0.4565860337388693,
+      "y": -6.97145144067864
+    },
+    {
+      "arm": "orient1",
+      "kind": "wiener_orient",
+      "x": 0.21265269951967256,
+      "y": -0.8982479555614078
+    },
+    {
+      "arm": "orient4",
+      "kind": "wiener_orient",
+      "x": 0.18771143821235425,
+      "y": -1.8876669212461243
+    },
+    {
+      "arm": "orient16",
+      "kind": "wiener_orient",
+      "x": 0.13576475162689108,
+      "y": -4.653269710387253
+    },
+    {
+      "arm": "orient32",
+      "kind": "wiener_orient",
+      "x": 0.11737560455813041,
+      "y": -4.56080023559691
+    },
+    {
+      "arm": "orient64",
+      "kind": "wiener_orient",
+      "x": 0.1326685254600912,
+      "y": -4.0155704402390695
+    },
+    {
+      "arm": "orient96",
+      "kind": "wiener_orient",
+      "x": 0.0962124841230129,
+      "y": -6.152334493709235
+    },
+    {
+      "arm": "clipK64",
+      "kind": "wiener_clip",
+      "x": 0.058581308513004714,
+      "y": -9.572089283783185
+    },
+    {
+      "arm": "frozen1",
+      "kind": "matched_frozen",
+      "x": null,
+      "y": -0.8982626876519575
+    },
+    {
+      "arm": "frozen4",
+      "kind": "matched_frozen",
+      "x": null,
+      "y": -0.8982192749718695
+    },
+    {
+      "arm": "frozen16",
+      "kind": "matched_frozen",
+      "x": null,
+      "y": -0.898227458006695
+    },
+    {
+      "arm": "frozen32",
+      "kind": "matched_frozen",
+      "x": null,
+      "y": -0.8982261464999243
+    },
+    {
+      "arm": "frozen64",
+      "kind": "matched_frozen",
+      "x": null,
+      "y": -0.6924207382933927
+    },
+    {
+      "arm": "frozen96",
+      "kind": "matched_frozen",
+      "x": null,
+      "y": 0.4101741518544309
+    },
+    {
+      "arm": "refresh1",
+      "kind": "matched_refresh",
+      "x": null,
+      "y": -1.1581948980123804
+    },
+    {
+      "arm": "refresh64",
+      "kind": "matched_refresh",
+      "x": null,
+      "y": -0.8079903359108433
+    },
+    {
+      "arm": "perbatch1",
+      "kind": "matched_perbatch",
+      "x": null,
+      "y": 0.6450584251826692
+    },
+    {
+      "arm": "pac_phase_oracle",
+      "kind": "pac_derived",
+      "x": 0.46067538036583966,
+      "y": 0.35583231619673145
+    },
+    {
+      "arm": "pac_phase_ema",
+      "kind": "pac_derived",
+      "x": 0.5174997802481485,
+      "y": -0.05604013710399838
+    },
+    {
+      "arm": "pac_full_oracle",
+      "kind": "pac_derived",
+      "x": 0.4451951716212798,
+      "y": -0.1813954312034929
+    },
+    {
+      "arm": "c1_oracle",
+      "kind": "pac_c1",
+      "x": null,
+      "y": 0.2760363522256204
+    },
+    {
+      "arm": "c1_ema01",
+      "kind": "pac_c1",
+      "x": null,
+      "y": 0.20678979262356856
+    },
+    {
+      "arm": "c1_ema005",
+      "kind": "pac_c1",
+      "x": null,
+      "y": 0.1162850799361939
+    },
+    {
+      "arm": "c1_frozen200",
+      "kind": "pac_c1",
+      "x": null,
+      "y": 0.39517425224908787
+    },
+    {
+      "arm": "online",
+      "kind": "baseline",
+      "x": null,
+      "y": 0.0
+    },
+    {
+      "arm": "routeA_live",
+      "kind": "learned",
+      "x": null,
+      "y": 1.0
+    },
+    {
+      "arm": "frozen_learned_phase",
+      "kind": "learned_frozen",
+      "x": null,
+      "y": 1.13
+    },
+    {
+      "arm": "bptt",
+      "kind": "exact",
+      "x": 1.0,
+      "y": 1.054646840148699
+    }
+  ],
+  "note": "x = static/in-loop credit cosine; y = frac of online->routeA gap closed when deployed"
+}
