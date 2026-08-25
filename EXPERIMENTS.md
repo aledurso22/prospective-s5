@@ -127,6 +127,8 @@ trajectory.
 | `check_routeA_meta.py` | is the new autodiff machinery correct? | rotation vs numpy rig 7e-16; w=1 bitwise 0.0 (float32); no-meta fallback bitwise 0.0; teacher remap 4e-8; nested meta-gradient vs float64 FD 1.6e-6 (norm-referenced) | **ALL 4 GATES PASS** |
 | `route_pc.py` | can the orientation be learned with ZERO BPTT — teacher replaced by the realized online gradient on the next batch (delayed correction; optional Simonetto prediction)? | medians: online 0.0224 / routeA 0.0016 / **PC0 0.0073** / PC1(β=.25) 0.0132 / PC1(β=.5) 0.0186; PC0 median R_gap **0.90**, beats online 4/5; BPTT_CALLS(PC) = 0 audited; caveat: \|w\| drifts to 30–1600 (Adam absorbs), and routeA itself basin-flips at seed 3 (0.0248) | **GATE PASS — causal orientation learning works on the toy**; prediction NOT load-bearing (correction-only retained; Simonetto stays dead) |
 | `pc_signal_audit.py` | frozen audit: do h_same = g_online(θ′; B) and h_next = g_online(θ′; B′) carry the BPTT teacher's phase signal at all? | h_next (routePC's rule): cos vs BPTT 0.811, phase sign agree 0.625, phase-energy 0.433, cos vs realized Δw_RA 0.287; h_same: 0.876 / 0.703 / 0.378 / 0.350; BPTT ref phase-energy 0.373 | **SIGNAL PRESENT for both** — the delayed-online correction has a real phase signal; PC0's win is mechanistically supported |
+| `route_pc_pro.py` | does TSS/Simonetto prospection of the META-RESIDUAL, r̂^pro = r̂ + κ(r̂ − r̂_{n−1}), beat correction-only? (NOT w-momentum — separate control arm) | synthetic fixed-w gate (corrected after review: the first version differenced across w and showed artifacts — κ-invariant drift lag, a fake κ stability boundary): e* = −v/α + κv exact, zero lag at κ=1/α, κ=50 overshoots but never diverges, sinusoid 32× at κ=1/α. SSM sweep: κ=0 **bitwise** reproduces PC0; stationary medians κ>0 ∈ [0.0069, 0.0145] vs PC0 0.0073 (wins ≤ 3/5, no coherence); moving-delay ramp: 0/5 wins for EVERY κ; wmom control 0.0132 (worse); zero BPTT calls audited | **CORRECTION ONLY** — the TSS term is correct-by-construction but there is no exploitable residual drift on this task class; third independent measurement of a static useful geometry (phase_track, optimum_track, now this) |
+| `route_pc_pro_drift.py` | registered pre-measurement: systematic residual drift vs batch-noise floor, complex-vector form | t_vec(Δr̂) = 0.00–0.02 (no systematic increment drift; noise floor ~1), ac1(Δr̂) +0.21 stat / +0.09 mov, while the residual itself is persistent (ac1(r̂) 0.84/0.91) | **drift buried in noise → κ*≈0 confirmed as the predicted outcome**; increments carry no extrapolable signal |
 
 ## What the ledger establishes, one paragraph
 
@@ -173,6 +175,7 @@ python tbptt_baseline.py && python test_holonomy.py
 python covariant_adam.py && python lr_control.py
 python wiener_oracle.py             # Wiener ceiling, Hankel floor, deploy barrier
 python route_pc.py && python pc_signal_audit.py   # lane 8: causal orientation
+python route_pc_pro.py && python route_pc_pro_drift.py  # TSS residual prospection (CORRECTION ONLY)
 python check_online_s5.py && python check_routeA_meta.py   # jax pipeline gates
 # cluster: bash scripts/bench_grid.sh <partition> <account> 0 1 2
 #          then python bench_report.py --gate && python bench_report.py
