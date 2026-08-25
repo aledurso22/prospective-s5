@@ -73,16 +73,29 @@ rates. Results (frac of online→routeA gap):
   each step, no meta-gradient) captures 65% of routeA's gain;
   meta-learning buys the final 7× — refinement, not orientation.
 
-## Method-gate diagnostic (`phase_track.py`): the phase barely moves
+## Method-gate diagnostics: `phase_track.py` + `optimum_track.py`
 
-Logging arg w along routeA training (every 25 steps, 3 seeds): RMS
-|Δφ| ≈ 0.07 rad per interval; hold-tracking error 0.0017 rad;
-increments weakly persistent (ac1 ≈ 0.4); momentum predictor beats hold
-by **6% < 20% bar**. Corrected record: *a predictor for the learned
-Route-A phase trajectory is not useful; moving-optimum tracking is
-unsupported so far* — the instantaneous optimum φ*(θ_n) was not yet
-measured; see `optimum_track.py` for the checkpoint diagnostic
-(Var_training vs Var_batch of φ*).
+`phase_track` (learned-phase trajectory): arg w nearly static along
+training (hold error 0.0017 rad/25 steps); momentum predictor 6% < 20%
+bar. Record: *a predictor for the learned Route-A phase trajectory is
+not useful.*
+
+`optimum_track` (instantaneous credit-projection optimum): the object
+measured is φ*_credit(θ) = arg(E[λq̄]/E|q|²) — the credit-MSE-optimal
+scalar phase, NOT the instantaneous post-update learning optimum.
+Result: **φ*_credit(θ) moves strongly along training** (Var_train ≈
+0.34 vs Var_batch ≈ 0.0017, ratio ~196, 40–200× the noise floor on
+every layer), while learned w is comparatively stable and sits
+~0.5–0.8 rad away from it. So routeA does not track the moving
+credit-projection optimum. Combined with D3/D4, the emerging
+distinction:
+
+  credit reconstruction optimum ≠ learning-useful update geometry.
+
+Simonetto is removed from the main mechanism story (tracking the moving
+credit-projection optimum is not what routeA does). NOT measured:
+whether the training-optimal phase moves, or whether the learning
+optimum is static — neither claim is made.
 
 ## Directive 4 — exact stability counterexample: LANDED (`d4_stability.py`)
 
