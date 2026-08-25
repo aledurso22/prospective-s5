@@ -119,6 +119,15 @@ trajectory.
 | `covariant_adam.py` | is the defect Adam's broken U(1) covariance? | seed 0: 0.0727→0.0028 (variance normalization rescue); healthy seeds ~1.5× worse; median frac **−0.15** | **BAR FAIL — gauge reading rejected; defect architectural (.real routing)** |
 | `lr_control.py` | is any win just a learning rate? | best standard-Adam LR median 0.0136 — nothing near 0.0028 | rescue is structural, not rate. Note: task is bistable; float-order noise flips basins across processes — within-script pairing is the robust unit |
 
+## Lane 8 — the applied benchmark harness + causal orientation learning (routePC)
+
+| script | question | result | verdict |
+|---|---|---|---|
+| `train_bench.py` + `scripts/bench.sbatch` + `bench_grid.sh` + `bench_report.py` | the cluster benchmark: arms {baseline, online, tbptt, routeA, scalarLive, routePC, frozenPhase, frozenMag} × tasks {sMNIST, psMNIST, copy} × seeds, paired streams, per-(task,seed) headroom gate h ≥ 0.2 inside the job, registered bars A/B/C | all 8 arms CPU-smoke-clean on both tasks; routeA startup self-checks bit-exact (w=1 meta == no meta; teacher == online forward) | **cluster-ready**; `train.py` untouched (recorded numbers reproducible) |
+| `check_routeA_meta.py` | is the new autodiff machinery correct? | rotation vs numpy rig 7e-16; w=1 bitwise 0.0 (float32); no-meta fallback bitwise 0.0; teacher remap 4e-8; nested meta-gradient vs float64 FD 1.6e-6 (norm-referenced) | **ALL 4 GATES PASS** |
+| `route_pc.py` | can the orientation be learned with ZERO BPTT — teacher replaced by the realized online gradient on the next batch (delayed correction; optional Simonetto prediction)? | medians: online 0.0224 / routeA 0.0016 / **PC0 0.0073** / PC1(β=.25) 0.0132 / PC1(β=.5) 0.0186; PC0 median R_gap **0.90**, beats online 4/5; BPTT_CALLS(PC) = 0 audited; caveat: \|w\| drifts to 30–1600 (Adam absorbs), and routeA itself basin-flips at seed 3 (0.0248) | **GATE PASS — causal orientation learning works on the toy**; prediction NOT load-bearing (correction-only retained; Simonetto stays dead) |
+| `pc_signal_audit.py` | frozen audit: do h_same = g_online(θ′; B) and h_next = g_online(θ′; B′) carry the BPTT teacher's phase signal at all? | h_next (routePC's rule): cos vs BPTT 0.811, phase sign agree 0.625, phase-energy 0.433, cos vs realized Δw_RA 0.287; h_same: 0.876 / 0.703 / 0.378 / 0.350; BPTT ref phase-energy 0.373 | **SIGNAL PRESENT for both** — the delayed-online correction has a real phase signal; PC0's win is mechanistically supported |
+
 ## What the ledger establishes, one paragraph
 
 The prospective principle's derived gifts are exactly two: the
@@ -135,8 +144,14 @@ per-mode phase rotation (routeA) is the repair for the one scarce
 resource — causal credit's orientation — found by meta-learning,
 identified as the optimal scalar credit projection, bounded by physical
 causality (MSR: advanced propagators unrealizable causally) and by
-buffered exact credit (tbptt64) on loss. Physics unifications kept as
-framing: Pontryagin/symplectic blocks, GENERIC split, Mori–Zwanzig/FDT
+buffered exact credit (tbptt64) on loss. New this lane: the orientation
+need not come from a BPTT teacher — a fully causal delayed correction
+off the realized online gradient (routePC, correction-only) closes ~90%
+of the toy gap with zero BPTT calls, and the frozen audit shows the
+delayed-online teacher carries the phase signal (cos 0.81 vs BPTT,
+sign agreement 0.63); prediction remains useless there too. Physics
+unifications kept as framing: Pontryagin/symplectic blocks, GENERIC
+split, Mori–Zwanzig/FDT
 (ρ is the eliminated fluctuation's autocorrelation), MSR
 (advanced = Hermitian conjugate of retarded = the phase theorem).
 
@@ -157,4 +172,8 @@ python pac_deploy.py && python pac_deploy2.py && python pac_deploy3.py && python
 python tbptt_baseline.py && python test_holonomy.py
 python covariant_adam.py && python lr_control.py
 python wiener_oracle.py             # Wiener ceiling, Hankel floor, deploy barrier
+python route_pc.py && python pc_signal_audit.py   # lane 8: causal orientation
+python check_online_s5.py && python check_routeA_meta.py   # jax pipeline gates
+# cluster: bash scripts/bench_grid.sh <partition> <account> 0 1 2
+#          then python bench_report.py --gate && python bench_report.py
 ```

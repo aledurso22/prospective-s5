@@ -172,7 +172,8 @@ def train_ablated(arm, seed):
     return dict(arm=arm, seed=seed,
                 final_loss=float(losses[-100:].mean()),
                 finite=bool(np.all(np.isfinite(losses))),
-                w_final=[wl.copy() for wl in w],
+                w_final=[[[float(z.real), float(z.imag)] for z in wl]
+                         for wl in w],
                 wall_time_sec=time.time() - t0)
 
 

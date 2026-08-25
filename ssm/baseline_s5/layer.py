@@ -23,7 +23,7 @@ from flax import linen as nn
 from ..shared.params import (
     ComplexParam, hippo_lambda_init, hippo_B_init, C_init, log_step_init,
 )
-from .scan import select_scan
+from .scan import select_scan, elementwise_scan_tbptt
 
 
 def discretize_bilinear(Lambda: jnp.ndarray, B_tilde: jnp.ndarray,
@@ -61,6 +61,10 @@ class S5SSM(nn.Module):
     state_size: int = 64     # N
     d_model: int = 96        # H
     scan_impl: str = "assoc"  # "assoc" (associative_scan) | "lax" (lax.scan)
+    tbptt_window: int = 0    # 0 = full BPTT (default). >0 = TBPTT: forward
+                            # unchanged, backward truncated to this many
+                            # steps (stop-gradient on the chunk-carried
+                            # state). Benchmark reference arm.
 
     @nn.compact
     def __call__(self, u: jnp.ndarray) -> jnp.ndarray:
@@ -88,7 +92,10 @@ class S5SSM(nn.Module):
             # x_h: (T,) real -> states (T, N) complex
             Bu = x_h[:, None].astype(jnp.complex64) * Bb_h[None, :]   # (T, N)
             a = jnp.broadcast_to(Lb_h[None, :], Bu.shape)
-            s = scan_fn(a, Bu)                                        # (T, N)
+            if self.tbptt_window > 0:
+                s = elementwise_scan_tbptt(a, Bu, self.tbptt_window)
+            else:
+                s = scan_fn(a, Bu)                                    # (T, N)
             y = jnp.einsum("n,tn->t", C_h, s).real                    # Re(C s_t)
             return y + D_h * x_h
 

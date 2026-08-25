@@ -95,3 +95,38 @@ def select_scan(scan_impl: str):
     if scan_impl == "lax":
         return elementwise_scan_lax
     raise ValueError(f"unknown scan_impl: {scan_impl}")
+
+
+def elementwise_scan_tbptt(a: jnp.ndarray, b: jnp.ndarray,
+                           window: int) -> jnp.ndarray:
+    """Truncated-BPTT scan: forward IDENTICAL to the full scan; the backward
+    is truncated to ``window`` steps by stop-gradient on the chunk-carried
+    state. Spatial (same-timestep) credit is untouched — this is standard
+    TBPTT with a W-step temporal window.
+
+    The input is zero-padded up to a multiple of ``window`` and sliced back;
+    causality means padded steps cannot alter earlier outputs, so the
+    forward values are exactly those of ``elementwise_scan``/``lax``.
+    """
+    T = b.shape[0]
+    K = (T + window - 1) // window
+    pad = K * window - T
+    if pad:
+        b = jnp.pad(b, ((0, pad),) + ((0, 0),) * (b.ndim - 1))
+        a = jnp.pad(a, ((0, pad),) + ((0, 0),) * (a.ndim - 1))
+    bc = b.reshape((K, window) + b.shape[1:])
+    ac = a.reshape((K, window) + a.shape[1:])
+
+    def step(ss, ab):
+        a_t, b_t = ab
+        ss = a_t * ss + b_t
+        return ss, ss
+
+    def chunk(s, ab):
+        s0 = jax.lax.stop_gradient(s)
+        _, ss = jax.lax.scan(step, s0, ab)
+        return ss[-1], ss
+
+    _, s_all = jax.lax.scan(chunk, jnp.zeros_like(b[0]), (ac, bc))
+    s = s_all.reshape((K * window,) + b.shape[1:])
+    return s[:T]

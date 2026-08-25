@@ -1,0 +1,83 @@
+seed 0: routeA retrain with frozen teacher audits...
+    seed 0 step 250: loss 0.0382
+    seed 0 step 500: loss 0.0043
+    seed 0 step 750: loss 0.0025
+    seed 0 step 1000: loss 0.0026
+    seed 0 step 1250: loss 0.0014
+    seed 0 step 1500: loss 0.0013
+  seed 0: final loss 0.0015 (7 checkpoints)
+seed 1: routeA retrain with frozen teacher audits...
+    seed 1 step 250: loss 0.0787
+    seed 1 step 500: loss 0.0279
+    seed 1 step 750: loss 0.0165
+    seed 1 step 1000: loss 0.0032
+    seed 1 step 1250: loss 0.0015
+    seed 1 step 1500: loss 0.0007
+  seed 1: final loss 0.0009 (7 checkpoints)
+seed 2: routeA retrain with frozen teacher audits...
+    seed 2 step 250: loss 0.0513
+    seed 2 step 500: loss 0.0194
+    seed 2 step 750: loss 0.0163
+    seed 2 step 1000: loss 0.0017
+    seed 2 step 1250: loss 0.0011
+    seed 2 step 1500: loss 0.0015
+  seed 2: final loss 0.0016 (7 checkpoints)
+seed 3: routeA retrain with frozen teacher audits...
+    seed 3 step 250: loss 0.0470
+    seed 3 step 500: loss 0.0233
+    seed 3 step 750: loss 0.0254
+    seed 3 step 1000: loss 0.0249
+    seed 3 step 1250: loss 0.0258
+    seed 3 step 1500: loss 0.0243
+  seed 3: final loss 0.0248 (7 checkpoints)
+seed 4: routeA retrain with frozen teacher audits...
+    seed 4 step 250: loss 0.0144
+    seed 4 step 500: loss 0.0069
+    seed 4 step 750: loss 0.0024
+    seed 4 step 1000: loss 0.0029
+    seed 4 step 1250: loss 0.0033
+    seed 4 step 1500: loss 0.0013
+  seed 4: final loss 0.0018 (7 checkpoints)
+------------------------------------------------------------------------------
+teacher   cos vs BPTT  sign agree  pearson phi  phase E  |phi| ratio   cos dW
+h_same         0.876       0.703        0.771    0.378        0.640    0.350   -> SIGNAL PRESENT
+h_next         0.811       0.625        0.740    0.433        0.656    0.287   -> SIGNAL PRESENT
+h_BPTT         (ref)                             0.373                 0.493
+per-checkpoint detail:
+  s0 n=   1  cos_same +0.635  sign_same 0.61  cos_next +0.607  sign_next 0.58
+  s0 n= 100  cos_same +0.666  sign_same 0.67  cos_next -0.371  sign_next 0.58
+  s0 n= 250  cos_same +0.801  sign_same 0.64  cos_next +0.767  sign_next 0.61
+  s0 n= 500  cos_same +0.581  sign_same 0.72  cos_next +0.623  sign_next 0.66
+  s0 n= 750  cos_same +0.924  sign_same 0.67  cos_next +0.882  sign_next 0.66
+  s0 n=1000  cos_same +0.924  sign_same 0.77  cos_next +0.867  sign_next 0.73
+  s0 n=1500  cos_same +0.938  sign_same 0.77  cos_next +0.905  sign_next 0.80
+  s1 n=   1  cos_same +0.989  sign_same 0.58  cos_next +0.982  sign_next 0.62
+  s1 n= 100  cos_same +0.975  sign_same 0.72  cos_next +0.973  sign_next 0.67
+  s1 n= 250  cos_same +0.660  sign_same 0.61  cos_next +0.563  sign_next 0.59
+  s1 n= 500  cos_same +0.868  sign_same 0.64  cos_next +0.869  sign_next 0.66
+  s1 n= 750  cos_same +0.711  sign_same 0.61  cos_next +0.507  sign_next 0.53
+  s1 n=1000  cos_same +0.938  sign_same 0.64  cos_next +0.876  sign_next 0.55
+  s1 n=1500  cos_same +0.958  sign_same 0.67  cos_next +0.948  sign_next 0.61
+  s2 n=   1  cos_same +0.996  sign_same 0.55  cos_next +0.989  sign_next 0.52
+  s2 n= 100  cos_same +0.407  sign_same 0.80  cos_next +0.377  sign_next 0.62
+  s2 n= 250  cos_same +0.876  sign_same 0.73  cos_next +0.811  sign_next 0.69
+  s2 n= 500  cos_same +0.829  sign_same 0.72  cos_next +0.762  sign_next 0.67
+  s2 n= 750  cos_same +0.931  sign_same 0.80  cos_next +0.839  sign_next 0.72
+  s2 n=1000  cos_same +0.990  sign_same 0.70  cos_next +0.952  sign_next 0.72
+  s2 n=1500  cos_same +0.955  sign_same 0.70  cos_next +0.952  sign_next 0.70
+  s3 n=   1  cos_same +0.975  sign_same 0.61  cos_next +0.974  sign_next 0.56
+  s3 n= 100  cos_same +0.980  sign_same 0.75  cos_next +0.966  sign_next 0.73
+  s3 n= 250  cos_same -0.489  sign_same 0.67  cos_next -0.652  sign_next 0.62
+  s3 n= 500  cos_same +0.906  sign_same 0.70  cos_next +0.408  sign_next 0.67
+  s3 n= 750  cos_same -0.842  sign_same 0.64  cos_next -0.873  sign_next 0.55
+  s3 n=1000  cos_same +0.902  sign_same 0.80  cos_next +0.900  sign_next 0.39
+  s3 n=1500  cos_same -0.197  sign_same 0.72  cos_next -0.176  sign_next 0.42
+  s4 n=   1  cos_same +0.998  sign_same 0.66  cos_next +0.989  sign_next 0.62
+  s4 n= 100  cos_same -0.165  sign_same 0.69  cos_next -0.109  sign_next 0.58
+  s4 n= 250  cos_same +0.949  sign_same 0.70  cos_next +0.970  sign_next 0.64
+  s4 n= 500  cos_same +0.575  sign_same 0.78  cos_next +0.586  sign_next 0.70
+  s4 n= 750  cos_same +0.531  sign_same 0.69  cos_next +0.642  sign_next 0.61
+  s4 n=1000  cos_same +0.673  sign_same 0.72  cos_next +0.763  sign_next 0.58
+  s4 n=1500  cos_same +0.350  sign_same 0.75  cos_next +0.310  sign_next 0.70
+GATE: h_same SIGNAL PRESENT;  h_next SIGNAL PRESENT
+wrote summary.json

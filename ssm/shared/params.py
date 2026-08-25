@@ -90,4 +90,6 @@ class ComplexParam(nn.Module):
 
         re = self.param("re", real_init, self.shape)
         im = self.param("im", imag_init, self.shape)
-        return re.astype(jnp.complex64) + 1j * im.astype(jnp.complex64)
+        # dtype follows the parameters (complex64 in float32 training;
+        # complex128 under x64 — used by the finite-difference checks).
+        return re + 1j * im

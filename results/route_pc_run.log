@@ -1,0 +1,239 @@
+==============================================================================
+routePC — causal prediction-correction orientation (BPTT-free)
+==============================================================================
+online s0...
+      online s0 step 200: loss 0.0717  max|a| 0.9949
+      online s0 step 400: loss 0.0466  max|a| 0.9952
+      online s0 step 600: loss 0.0179  max|a| 0.9952
+      online s0 step 800: loss 0.0188  max|a| 0.9953
+      online s0 step 1000: loss 0.0297  max|a| 0.9955
+      online s0 step 1200: loss 0.0160  max|a| 0.9956
+      online s0 step 1400: loss 0.0709  max|a| 0.9955
+  online s0: final 0.0727  finite True
+online s1...
+      online s1 step 200: loss 0.0895  max|a| 0.9951
+      online s1 step 400: loss 0.0723  max|a| 0.9950
+      online s1 step 600: loss 0.0757  max|a| 0.9952
+      online s1 step 800: loss 0.0407  max|a| 0.9952
+      online s1 step 1000: loss 0.0272  max|a| 0.9950
+      online s1 step 1200: loss 0.0095  max|a| 0.9952
+      online s1 step 1400: loss 0.0074  max|a| 0.9954
+  online s1: final 0.0224  finite True
+online s2...
+      online s2 step 200: loss 0.0980  max|a| 0.9953
+      online s2 step 400: loss 0.0591  max|a| 0.9955
+      online s2 step 600: loss 0.0278  max|a| 0.9955
+      online s2 step 800: loss 0.0333  max|a| 0.9952
+      online s2 step 1000: loss 0.0322  max|a| 0.9954
+      online s2 step 1200: loss 0.0192  max|a| 0.9955
+      online s2 step 1400: loss 0.0264  max|a| 0.9959
+  online s2: final 0.0284  finite True
+online s3...
+      online s3 step 200: loss 0.1003  max|a| 0.9951
+      online s3 step 400: loss 0.0538  max|a| 0.9956
+      online s3 step 600: loss 0.0313  max|a| 0.9960
+      online s3 step 800: loss 0.0311  max|a| 0.9960
+      online s3 step 1000: loss 0.0501  max|a| 0.9961
+      online s3 step 1200: loss 0.0149  max|a| 0.9961
+      online s3 step 1400: loss 0.0143  max|a| 0.9960
+  online s3: final 0.0109  finite True
+online s4...
+      online s4 step 200: loss 0.0316  max|a| 0.9952
+      online s4 step 400: loss 0.0334  max|a| 0.9949
+      online s4 step 600: loss 0.0320  max|a| 0.9949
+      online s4 step 800: loss 0.0130  max|a| 0.9950
+      online s4 step 1000: loss 0.0073  max|a| 0.9950
+      online s4 step 1200: loss 0.0100  max|a| 0.9949
+      online s4 step 1400: loss 0.0169  max|a| 0.9947
+  online s4: final 0.0118  finite True
+routeA s0...
+      routeA s0 step 200: loss 0.0588  max|a| 0.9951
+      routeA s0 step 400: loss 0.0064  max|a| 0.9948
+      routeA s0 step 600: loss 0.0035  max|a| 0.9948
+      routeA s0 step 800: loss 0.0033  max|a| 0.9948
+      routeA s0 step 1000: loss 0.0026  max|a| 0.9948
+      routeA s0 step 1200: loss 0.0015  max|a| 0.9949
+      routeA s0 step 1400: loss 0.0016  max|a| 0.9949
+  routeA s0: final 0.0015  finite True
+routeA s1...
+      routeA s1 step 200: loss 0.0844  max|a| 0.9950
+      routeA s1 step 400: loss 0.0300  max|a| 0.9949
+      routeA s1 step 600: loss 0.0231  max|a| 0.9949
+      routeA s1 step 800: loss 0.0133  max|a| 0.9948
+      routeA s1 step 1000: loss 0.0032  max|a| 0.9948
+      routeA s1 step 1200: loss 0.0014  max|a| 0.9948
+      routeA s1 step 1400: loss 0.0010  max|a| 0.9949
+  routeA s1: final 0.0009  finite True
+routeA s2...
+      routeA s2 step 200: loss 0.0626  max|a| 0.9953
+      routeA s2 step 400: loss 0.0201  max|a| 0.9953
+      routeA s2 step 600: loss 0.0202  max|a| 0.9951
+      routeA s2 step 800: loss 0.0155  max|a| 0.9949
+      routeA s2 step 1000: loss 0.0017  max|a| 0.9950
+      routeA s2 step 1200: loss 0.0012  max|a| 0.9950
+      routeA s2 step 1400: loss 0.0012  max|a| 0.9950
+  routeA s2: final 0.0016  finite True
+routeA s3...
+      routeA s3 step 200: loss 0.0717  max|a| 0.9950
+      routeA s3 step 400: loss 0.0262  max|a| 0.9950
+      routeA s3 step 600: loss 0.0271  max|a| 0.9950
+      routeA s3 step 800: loss 0.0246  max|a| 0.9950
+      routeA s3 step 1000: loss 0.0249  max|a| 0.9950
+      routeA s3 step 1200: loss 0.0246  max|a| 0.9950
+      routeA s3 step 1400: loss 0.0224  max|a| 0.9950
+  routeA s3: final 0.0248  finite True
+routeA s4...
+      routeA s4 step 200: loss 0.0205  max|a| 0.9954
+      routeA s4 step 400: loss 0.0080  max|a| 0.9951
+      routeA s4 step 600: loss 0.0038  max|a| 0.9950
+      routeA s4 step 800: loss 0.0066  max|a| 0.9950
+      routeA s4 step 1000: loss 0.0029  max|a| 0.9950
+      routeA s4 step 1200: loss 0.0043  max|a| 0.9950
+      routeA s4 step 1400: loss 0.0033  max|a| 0.9950
+  routeA s4: final 0.0018  finite True
+pc_b0.0 s0...
+      pc(b=0.0) s0 step 200: loss 0.0703  max|a| 0.9954
+      pc(b=0.0) s0 step 400: loss 0.0451  max|a| 0.9953
+      pc(b=0.0) s0 step 600: loss 0.0155  max|a| 0.9945
+      pc(b=0.0) s0 step 800: loss 0.0072  max|a| 0.9945
+      pc(b=0.0) s0 step 1000: loss 0.0059  max|a| 0.9946
+      pc(b=0.0) s0 step 1200: loss 0.0068  max|a| 0.9946
+      pc(b=0.0) s0 step 1400: loss 0.0188  max|a| 0.9946
+  pc_b0.0 s0: final 0.0167  finite True  |w| 30.649  corr|dw| 2.46e-02  pred|dw| 0.00e+00  clamps 0
+pc_b0.0 s1...
+      pc(b=0.0) s1 step 200: loss 0.0912  max|a| 0.9951
+      pc(b=0.0) s1 step 400: loss 0.0841  max|a| 0.9952
+      pc(b=0.0) s1 step 600: loss 0.0357  max|a| 0.9951
+      pc(b=0.0) s1 step 800: loss 0.0279  max|a| 0.9951
+      pc(b=0.0) s1 step 1000: loss 0.0356  max|a| 0.9951
+      pc(b=0.0) s1 step 1200: loss 0.0055  max|a| 0.9958
+      pc(b=0.0) s1 step 1400: loss 0.0036  max|a| 0.9963
+  pc_b0.0 s1: final 0.0031  finite True  |w| 32.345  corr|dw| 2.60e-02  pred|dw| 0.00e+00  clamps 0
+pc_b0.0 s2...
+      pc(b=0.0) s2 step 200: loss 0.0984  max|a| 0.9953
+      pc(b=0.0) s2 step 400: loss 0.0565  max|a| 0.9957
+      pc(b=0.0) s2 step 600: loss 0.0340  max|a| 0.9959
+      pc(b=0.0) s2 step 800: loss 0.0108  max|a| 0.9959
+      pc(b=0.0) s2 step 1000: loss 0.0070  max|a| 0.9962
+      pc(b=0.0) s2 step 1200: loss 0.0029  max|a| 0.9968
+      pc(b=0.0) s2 step 1400: loss 0.0023  max|a| 0.9969
+  pc_b0.0 s2: final 0.0025  finite True  |w| 103.334  corr|dw| 1.02e-01  pred|dw| 0.00e+00  clamps 0
+pc_b0.0 s3...
+      pc(b=0.0) s3 step 200: loss 0.0843  max|a| 0.9950
+      pc(b=0.0) s3 step 400: loss 0.0596  max|a| 0.9950
+      pc(b=0.0) s3 step 600: loss 0.0514  max|a| 0.9949
+      pc(b=0.0) s3 step 800: loss 0.0438  max|a| 0.9949
+      pc(b=0.0) s3 step 1000: loss 0.0425  max|a| 0.9950
+      pc(b=0.0) s3 step 1200: loss 0.0357  max|a| 0.9950
+      pc(b=0.0) s3 step 1400: loss 0.0373  max|a| 0.9950
+  pc_b0.0 s3: final 0.0889  finite True  |w| 1635.216  corr|dw| 1.23e+00  pred|dw| 0.00e+00  clamps 0
+pc_b0.0 s4...
+      pc(b=0.0) s4 step 200: loss 0.0382  max|a| 0.9955
+      pc(b=0.0) s4 step 400: loss 0.0193  max|a| 0.9952
+      pc(b=0.0) s4 step 600: loss 0.0090  max|a| 0.9950
+      pc(b=0.0) s4 step 800: loss 0.0112  max|a| 0.9948
+      pc(b=0.0) s4 step 1000: loss 0.0060  max|a| 0.9948
+      pc(b=0.0) s4 step 1200: loss 0.0083  max|a| 0.9949
+      pc(b=0.0) s4 step 1400: loss 0.0095  max|a| 0.9949
+  pc_b0.0 s4: final 0.0073  finite True  |w| 47.962  corr|dw| 4.23e-02  pred|dw| 0.00e+00  clamps 0
+pc_b0.25 s0...
+      pc(b=0.25) s0 step 200: loss 0.0752  max|a| 0.9955
+      pc(b=0.25) s0 step 400: loss 0.0482  max|a| 0.9955
+      pc(b=0.25) s0 step 600: loss 0.0238  max|a| 0.9957
+      pc(b=0.25) s0 step 800: loss 0.0075  max|a| 0.9957
+      pc(b=0.25) s0 step 1000: loss 0.0077  max|a| 0.9958
+      pc(b=0.25) s0 step 1200: loss 0.0024  max|a| 0.9963
+      pc(b=0.25) s0 step 1400: loss 0.0021  max|a| 0.9962
+  pc_b0.25 s0: final 0.0019  finite True  |w| 28.813  corr|dw| 2.20e-02  pred|dw| 6.07e-03  clamps 265
+pc_b0.25 s1...
+      pc(b=0.25) s1 step 200: loss 0.0834  max|a| 0.9950
+      pc(b=0.25) s1 step 400: loss 0.0785  max|a| 0.9950
+      pc(b=0.25) s1 step 600: loss 0.0684  max|a| 0.9950
+      pc(b=0.25) s1 step 800: loss 0.0478  max|a| 0.9950
+      pc(b=0.25) s1 step 1000: loss 0.0230  max|a| 0.9950
+      pc(b=0.25) s1 step 1200: loss 0.0172  max|a| 0.9951
+      pc(b=0.25) s1 step 1400: loss 0.0243  max|a| 0.9952
+  pc_b0.25 s1: final 0.0238  finite True  |w| 38.498  corr|dw| 2.54e-02  pred|dw| 4.64e-03  clamps 186
+pc_b0.25 s2...
+      pc(b=0.25) s2 step 200: loss 0.0983  max|a| 0.9953
+      pc(b=0.25) s2 step 400: loss 0.0535  max|a| 0.9956
+      pc(b=0.25) s2 step 600: loss 0.0519  max|a| 0.9959
+      pc(b=0.25) s2 step 800: loss 0.0329  max|a| 0.9959
+      pc(b=0.25) s2 step 1000: loss 0.0326  max|a| 0.9960
+      pc(b=0.25) s2 step 1200: loss 0.0255  max|a| 0.9960
+      pc(b=0.25) s2 step 1400: loss 0.0111  max|a| 0.9960
+  pc_b0.25 s2: final 0.0132  finite True  |w| 103.217  corr|dw| 6.75e-02  pred|dw| 1.27e-02  clamps 1122
+pc_b0.25 s3...
+      pc(b=0.25) s3 step 200: loss 0.0841  max|a| 0.9950
+      pc(b=0.25) s3 step 400: loss 0.0535  max|a| 0.9949
+      pc(b=0.25) s3 step 600: loss 0.0463  max|a| 0.9950
+      pc(b=0.25) s3 step 800: loss 0.0390  max|a| 0.9950
+      pc(b=0.25) s3 step 1000: loss 0.0385  max|a| 0.9950
+      pc(b=0.25) s3 step 1200: loss 0.0338  max|a| 0.9950
+      pc(b=0.25) s3 step 1400: loss 0.0393  max|a| 0.9950
+  pc_b0.25 s3: final 0.0480  finite True  |w| 70.568  corr|dw| 5.79e-02  pred|dw| 9.01e-03  clamps 919
+pc_b0.25 s4...
+      pc(b=0.25) s4 step 200: loss 0.0369  max|a| 0.9956
+      pc(b=0.25) s4 step 400: loss 0.0528  max|a| 0.9951
+      pc(b=0.25) s4 step 600: loss 0.0164  max|a| 0.9952
+      pc(b=0.25) s4 step 800: loss 0.0275  max|a| 0.9947
+      pc(b=0.25) s4 step 1000: loss 0.0049  max|a| 0.9947
+      pc(b=0.25) s4 step 1200: loss 0.0061  max|a| 0.9947
+      pc(b=0.25) s4 step 1400: loss 0.0031  max|a| 0.9947
+  pc_b0.25 s4: final 0.0078  finite True  |w| 73.859  corr|dw| 5.00e-02  pred|dw| 9.99e-03  clamps 448
+pc_b0.5 s0...
+      pc(b=0.5) s0 step 200: loss 0.0746  max|a| 0.9955
+      pc(b=0.5) s0 step 400: loss 0.0461  max|a| 0.9954
+      pc(b=0.5) s0 step 600: loss 0.0327  max|a| 0.9956
+      pc(b=0.5) s0 step 800: loss 0.0173  max|a| 0.9959
+      pc(b=0.5) s0 step 1000: loss 0.0194  max|a| 0.9961
+      pc(b=0.5) s0 step 1200: loss 0.0092  max|a| 0.9961
+      pc(b=0.5) s0 step 1400: loss 0.0068  max|a| 0.9961
+  pc_b0.5 s0: final 0.0087  finite True  |w| 77.511  corr|dw| 4.09e-02  pred|dw| 1.99e-02  clamps 984
+pc_b0.5 s1...
+      pc(b=0.5) s1 step 200: loss 0.0812  max|a| 0.9950
+      pc(b=0.5) s1 step 400: loss 0.0756  max|a| 0.9952
+      pc(b=0.5) s1 step 600: loss 0.0659  max|a| 0.9953
+      pc(b=0.5) s1 step 800: loss 0.0445  max|a| 0.9952
+      pc(b=0.5) s1 step 1000: loss 0.0259  max|a| 0.9952
+      pc(b=0.5) s1 step 1200: loss 0.0157  max|a| 0.9951
+      pc(b=0.5) s1 step 1400: loss 0.0225  max|a| 0.9952
+  pc_b0.5 s1: final 0.0202  finite True  |w| 68.832  corr|dw| 4.89e-02  pred|dw| 1.17e-02  clamps 519
+pc_b0.5 s2...
+      pc(b=0.5) s2 step 200: loss 0.1308  max|a| 0.9953
+      pc(b=0.5) s2 step 400: loss 0.1060  max|a| 0.9953
+      pc(b=0.5) s2 step 600: loss 0.0834  max|a| 0.9953
+      pc(b=0.5) s2 step 800: loss 0.0632  max|a| 0.9955
+      pc(b=0.5) s2 step 1000: loss 0.0425  max|a| 0.9955
+      pc(b=0.5) s2 step 1200: loss 0.0385  max|a| 0.9956
+      pc(b=0.5) s2 step 1400: loss 0.0344  max|a| 0.9956
+  pc_b0.5 s2: final 0.0317  finite True  |w| 1027.657  corr|dw| 8.37e-01  pred|dw| 3.48e-02  clamps 1376
+pc_b0.5 s3...
+      pc(b=0.5) s3 step 200: loss 0.0853  max|a| 0.9950
+      pc(b=0.5) s3 step 400: loss 0.0498  max|a| 0.9949
+      pc(b=0.5) s3 step 600: loss 0.0399  max|a| 0.9949
+      pc(b=0.5) s3 step 800: loss 0.0332  max|a| 0.9950
+      pc(b=0.5) s3 step 1000: loss 0.0350  max|a| 0.9950
+      pc(b=0.5) s3 step 1200: loss 0.0453  max|a| 0.9950
+      pc(b=0.5) s3 step 1400: loss 0.0205  max|a| 0.9950
+  pc_b0.5 s3: final 0.0186  finite True  |w| 105.536  corr|dw| 7.83e-02  pred|dw| 2.07e-02  clamps 1361
+pc_b0.5 s4...
+      pc(b=0.5) s4 step 200: loss 0.0371  max|a| 0.9957
+      pc(b=0.5) s4 step 400: loss 0.0201  max|a| 0.9954
+      pc(b=0.5) s4 step 600: loss 0.0232  max|a| 0.9952
+      pc(b=0.5) s4 step 800: loss 0.0309  max|a| 0.9953
+      pc(b=0.5) s4 step 1000: loss 0.0101  max|a| 0.9952
+      pc(b=0.5) s4 step 1200: loss 0.0118  max|a| 0.9951
+      pc(b=0.5) s4 step 1400: loss 0.0080  max|a| 0.9951
+  pc_b0.5 s4: final 0.0069  finite True  |w| 138.635  corr|dw| 9.30e-02  pred|dw| 2.64e-02  clamps 1335
+BPTT audit (calls per arm): {'online': {'exact_grad': 0, 'exact_lambda': 0}, 'routeA': {'exact_grad': 7500, 'exact_lambda': 7500}, 'pc_b0.0': {'exact_grad': 0, 'exact_lambda': 0}, 'pc_b0.25': {'exact_grad': 0, 'exact_lambda': 0}, 'pc_b0.5': {'exact_grad': 0, 'exact_lambda': 0}}
+------------------------------------------------------------------------------
+medians: {'online': 0.0224, 'routeA': 0.0016, 'pc_b0.0': 0.0073, 'pc_b0.25': 0.0132, 'pc_b0.5': 0.0186}
+  routeA     R_gap per seed ['1.00', '1.00', '1.00', '1.00', '1.00']  median 1.00
+  pc_b0.0    R_gap per seed ['0.79', '0.90', '0.97', '5.61', '0.45']  median 0.90
+  pc_b0.25   R_gap per seed ['0.99', '-0.06', '0.57', '2.67', '0.40']  median 0.57
+  pc_b0.5    R_gap per seed ['0.90', '0.11', '-0.12', '0.56', '0.49']  median 0.49
+beats online (of 5): {'routeA': 4, 'pc_b0.0': 4, 'pc_b0.25': 3, 'pc_b0.5': 3}
+GATE: best PC = pc_b0.0 (median R_gap 0.90, beats online 4/5)  ->  PASS — port winning arm to JAX as exploratory supplement
+prediction load-bearing: best PC1 = pc_b0.25 (beats PC0 2/5, median R_gap 0.57 vs PC0 0.90)  ->  NO — correction-only
+wrote summary.json
