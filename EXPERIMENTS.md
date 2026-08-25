@@ -88,7 +88,18 @@ trajectory.
 | `pac_deploy3.py` | raw e^{i arg ρ(1)} (exploratory) | 0.17–0.27, fracs −5 to −9 (~10× worse than online) | catastrophic — raw statistic unbounded/noisy; comb form is the variance stabilizer |
 | `pac_deploy4.py` | horizon-1 form + estimation rate + frozen-periodic | c(1)-oracle 28%; slower EMA worse; **frozen-periodic 40% — best derived law**; STABILITY bar: barrier is **variance, not lag** | named barrier confirmed |
 
-## Lane 5 — baselines and controls
+## Lane 6 — closed-loop temporal credit (the north star, CLOSED_LOOP.md)
+
+| script | question | result | verdict |
+|---|---|---|---|
+| `orient_wiener.py` | does Wiener orientation (gain removed) survive deployment? | all arms worse than online; deployed cosine collapses to 0.05–0.23 | static orientation doesn't transfer |
+| `matched_phase.py` | horizon vs granularity vs rate, in routeA's function class | frozen96 +0.41; refresh worse than frozen; **per-batch closed-form phase +0.65** | staleness is the barrier; meta-learning buys the final 7× |
+| `d4_stability.py` + `d4_controls.py` | does credit-MSE control stability? | corr(MSE, η_max) = −0.287; ordering reverses at slow modes; Adam absorbs gain; at \|a\|=0.995 phase GD converges where online diverges | **gate A landed (defensible form)** |
+| `d3_figure.py` | does static fidelity predict deployment? | best static objects at the bottom of deployment; best deployers statically modest | central figure data committed |
+| `phase_track.py` | is the learned phase a predictable moving object? | hold error 0.0017 rad; momentum +6% < 20% bar | learned-trajectory prediction not useful |
+| `optimum_track.py` | does the credit-projection optimum move? | Var_train/Var_batch ≈ 196; learned w doesn't follow it | **credit reconstruction optimum ≠ learning-useful geometry** |
+| `rot_rnn.py` + `rot_rnn_generality.py` | do the phenomena replicate in a real 2D-rotational RNN? | rig FD-gated to 1e-9; P1/P2 replicate; P3 uninterpretable (no headroom at D=50) | barrier phenomena generalize |
+| `rot_rnn_generality2.py` | same, headroom-gated (D=20, headroom 0.54) | routePhi < online all seeds but misses the 0.7× bar (0.0698 vs 0.057); frozenPhi ≈ online; scalarGain worse; perbatchOracle worst | **P3 FAIL — the win's magnitude is S5-specific; the ordering generalizes** |
 
 | script | question | result | verdict |
 |---|---|---|---|
