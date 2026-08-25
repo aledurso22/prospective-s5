@@ -78,13 +78,11 @@ rates. Results (frac of online→routeA gap):
 Logging arg w along routeA training (every 25 steps, 3 seeds): RMS
 |Δφ| ≈ 0.07 rad per interval; hold-tracking error 0.0017 rad;
 increments weakly persistent (ac1 ≈ 0.4); momentum predictor beats hold
-by **6% < 20% bar → Simonetto-style prediction-correction KILLED**.
-Interpretation (consistent with frozen-phase-from-init working at 113%
-and CTRL): **the useful orientation is near-static along training** —
-the meta-gradient's role is fast robust CONVERGENCE to a fixed
-task+architecture property, not tracking a moving target. "Trajectory
-co-adaptation" amended accordingly: the loop must FIND the phase, not
-follow it.
+by **6% < 20% bar**. Corrected record: *a predictor for the learned
+Route-A phase trajectory is not useful; moving-optimum tracking is
+unsupported so far* — the instantaneous optimum φ*(θ_n) was not yet
+measured; see `optimum_track.py` for the checkpoint diagnostic
+(Var_training vs Var_batch of φ*).
 
 ## Directive 4 — exact stability counterexample: LANDED (`d4_stability.py`)
 
