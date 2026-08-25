@@ -20,6 +20,7 @@ from flax import linen as nn
 from .shared.block import S5Block
 from .baseline_s5.layer import S5SSM
 from .prospective.layer import ProspectiveSSM
+from .online_s5.layer import OnlineS5SSM
 
 
 class SequenceClassifier(nn.Module):
@@ -28,7 +29,7 @@ class SequenceClassifier(nn.Module):
     Pipeline: per-timestep linear encoder (1 -> H) -> L stacked S5Blocks ->
     mean pooling over time -> linear classification head (H -> n_classes).
     """
-    model_type: str = "baseline"   # {"baseline", "prospective"}
+    model_type: str = "baseline"   # {"baseline", "prospective", "online"}
     d_model: int = 96              # H
     state_size: int = 64           # N
     n_layers: int = 3              # L
@@ -59,6 +60,9 @@ class SequenceClassifier(nn.Module):
             if self.model_type == "baseline":
                 ssm = S5SSM(state_size=self.state_size, d_model=self.d_model,
                             scan_impl=self.scan_impl)
+            elif self.model_type == "online":
+                ssm = OnlineS5SSM(state_size=self.state_size,
+                                  d_model=self.d_model)
             elif self.model_type == "prospective":
                 ssm = ProspectiveSSM(state_size=self.state_size,
                                      d_model=self.d_model,

@@ -157,7 +157,8 @@ def evaluate(state: TrainState, x: np.ndarray, y: np.ndarray,
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--model", choices=["baseline", "prospective"], required=True)
+    p.add_argument("--model", choices=["baseline", "prospective", "online"],
+                   required=True)
     p.add_argument("--epochs", type=int, default=3)
     p.add_argument("--subset", type=int, default=20000,
                    help="number of training samples (0 = full 60k)")
