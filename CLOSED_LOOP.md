@@ -121,14 +121,43 @@ correction's stability advantage emerges exactly as the Hankel floor
 diverges**. Slow modes are where causal credit is hardest to
 stabilize; orientation is the stabilizer. Measured, not asserted.
 
-## Directives 3–7 — status
+## Directive 6 — generality: RESOLVED (bar FAIL, structure replicates)
 
-- D3: assemble the static-cosine vs deployed-improvement plot from
-  existing arms (online / PAC phase / frozen learned / Wiener full /
-  Wiener orient / routeA). No new runs.
-- D4 (linear stability theory): exact learning-Jacobian spectral radius
-  in the quadratic model; counterexample construction — NEXT BUILD.
-- D5 (slow modes ↔ instability): from D4's machinery; Hankel floor
-  σ = |a|/(1−|a|²) already measured (corr 0.99).
-- D6 (generality): second recurrent family — deferred until A lands.
-- D7 (routeA complexity): covered by the audit above.
+**v1** (D=50, rot-RNN): P1 PASS (ceiling rises with horizon), P2 PASS
+(frozen long filter degrades training) — the barrier phenomena
+generalize; P3 uninterpretable (no headroom: bptt ≈ online).
+
+**v2** (`rot_rnn_generality2.py`, headroom gate first: D=10 → 0.10,
+D=20 → 0.54, D=30 → 0.24; mechanism arms at D=20, paired seeds):
+
+| arm | median |
+|---|---|
+| online | 0.0814 |
+| bptt | 0.0143 |
+| routePhi | 0.0698 |
+| frozenPhi | 0.0779 |
+| scalarGain | 0.1068 |
+| perbatchOracle | 0.1281 |
+
+**P3 FAIL** (routePhi 0.0698 > 0.7×online = 0.057). The win exists
+everywhere (routePhi < online on all seeds; orientation > gain:
+scalarGain 0.107 > routePhi 0.070; credit-projection oracle worst:
+0.128) but the magnitude is rig-specific (17% of the gap here vs 100%+
+in the S5 rig; frozen-learned gives 0% here vs 86% there). Per the
+directive's decision rule: **the broad closed-loop paper is not
+licensed; the claim scopes to an SSM-mechanism + general-barrier
+paper.** What generalizes across two unrelated recurrent families: the
+fidelity/deployment dissociation, the stability-margin logic, the
+orientation>gain ordering, and credit-projection ≠ learning geometry.
+
+## Final gates
+
+A. theory (fidelity ≠ stability margins): **LANDED** (d4, d4_controls).
+B. mechanism (near-static orientation, convergence-not-tracking):
+   **LANDED** (phase_track, optimum_track, matched_phase ladder).
+C. generality of the orientation win: **FAILED** (bar) — ordering
+   replicates, magnitude doesn't.
+D. method (cheap causal rule): **not found** — best causal-deployment
+   object is the frozen learned phase (0.0053, offline teacher);
+   fully-causal derived laws ≤ 65% with a per-step teacher, ≤ 40%
+   without.
