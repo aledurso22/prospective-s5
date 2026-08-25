@@ -53,6 +53,26 @@ Directive 3's accuracy-vs-stability non-monotonicity exists in the
 data (best static cosine ↔ worst deployment) — the paper's central
 figure, no new runs needed.
 
+## Directive 2b — matched-function-class control (`matched_phase.py`)
+
+The agent's correction: D2 conflated horizon with estimator granularity
+(per-timestep phase ≠ routeA's constant rotation), and frozen learned
+phase already preserves ~86% of routeA's gain. Control: reduce each
+Wiener K-filter to a single constant per-mode rotation
+w^K = e^{i arg c^K}, deployed exactly like routeA, at three estimation
+rates. Results (frac of online→routeA gap):
+
+- frozen K=1–32: −0.9 (horizon irrelevant); frozen64: −0.7;
+  **frozen96: +0.41** (horizon pays only at the task's predictability
+  horizon K≈96); anchor: frozen-learned-phase 0.0053 still 3× better.
+- **rate ladder is non-monotone**: frozen 0.0525 < refresh-200 0.0595
+  (staleness+noise is the worst cell) < **per-batch 0.0111 (+0.65)**.
+  The deployment barrier is STALENESS; variance is poison only when
+  also stale.
+- **algorithmic point**: per-batch closed-form optimal phase (teacher
+  each step, no meta-gradient) captures 65% of routeA's gain;
+  meta-learning buys the final 7× — refinement, not orientation.
+
 ## Directive 4 — exact stability counterexample: LANDED (`d4_stability.py`)
 
 Minimal exact model: single complex mode, quadratic loss, affine
