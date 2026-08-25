@@ -53,6 +53,30 @@ Directive 3's accuracy-vs-stability non-monotonicity exists in the
 data (best static cosine ↔ worst deployment) — the paper's central
 figure, no new runs needed.
 
+## Directive 4 — exact stability counterexample: LANDED (`d4_stability.py`)
+
+Minimal exact model: single complex mode, quadratic loss, affine
+gradients — every estimator's learning map is exactly M_E(b−b*) with
+machine-precision M_E. At |a| = 0.95 (Hankel σ = 9.7), same step size:
+
+| estimator | credit MSE | GD | ΔL at test step | P(ρ>1) |
+|---|---|---|---|---|
+| wiener64 | **0.540 (best)** | **diverges** | **+3.5e4** | 1.00 |
+| exact BPTT | 0.000 | diverges | +6.9e4 | 0.97 |
+| online | 0.899 | converges | −2.74e3 | 0.00 |
+| phase-only | 0.899 | converges | −2.72e3 | 0.00 |
+
+**Better approximation of backpropagated credit produces worse
+learning** — credit-MSE minimization and next-step-loss minimization
+are different objectives (Wiener's own η_opt would descend; its stable
+step is ~3× smaller). Under Adam nothing diverges (all ≈ 0.8): gain
+instability is absorbed by per-coordinate normalization — the exact
+form of "gain is Adam's job." D5 fell out: at |a| = 0.995 phase-only GD
+converges (2.9e-9) where online diverges (4.8e5) — **the orientation
+correction's stability advantage emerges exactly as the Hankel floor
+diverges**. Slow modes are where causal credit is hardest to
+stabilize; orientation is the stabilizer. Measured, not asserted.
+
 ## Directives 3–7 — status
 
 - D3: assemble the static-cosine vs deployed-improvement plot from
