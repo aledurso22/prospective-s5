@@ -1,0 +1,77 @@
+{
+  "git": "e9e16e20d919b0fe542514319d14d15d88423df9",
+  "delay": 50,
+  "seeds": [
+    0,
+    1
+  ],
+  "results": {
+    "online/s0": {
+      "final": 5.575327768559509e-05,
+      "finite": true,
+      "wall": 29.37216091156006
+    },
+    "online/s1": {
+      "final": 1.438082932465669e-05,
+      "finite": true,
+      "wall": 29.183636903762817
+    },
+    "bptt/s0": {
+      "final": 1.5190864364549554e-05,
+      "finite": true,
+      "wall": 70.42762422561646
+    },
+    "bptt/s1": {
+      "final": 2.4158302728703597e-05,
+      "finite": true,
+      "wall": 70.13019394874573
+    },
+    "routeA/s0": {
+      "final": 1.6564096153110077e-05,
+      "finite": true,
+      "wall": 68.74845600128174
+    },
+    "routeA/s1": {
+      "final": 3.247972980576134e-05,
+      "finite": true,
+      "wall": 68.85699892044067
+    },
+    "scalarOnly/s0": {
+      "final": 5.575327768559509e-05,
+      "finite": true,
+      "wall": 29.162977933883667
+    },
+    "scalarOnly/s1": {
+      "final": 1.438082932465669e-05,
+      "finite": true,
+      "wall": 29.07420802116394
+    },
+    "frozenPhase/s0": {
+      "final": 2.9448636940165578e-05,
+      "finite": true,
+      "wall": 29.454608917236328
+    },
+    "frozenPhase/s1": {
+      "final": 0.00021860923629775362,
+      "finite": true,
+      "wall": 29.659393072128296
+    }
+  },
+  "medians": {
+    "online": 3.506705350512589e-05,
+    "bptt": 1.9674583546626576e-05,
+    "routeA": 2.452191297943571e-05,
+    "scalarOnly": 3.506705350512589e-05,
+    "frozenPhase": 0.0001240289366189596
+  },
+  "R_gap": {
+    "routeA": 0.6850843661947467,
+    "scalarOnly": 0.0,
+    "frozenPhase": -5.779571657680015
+  },
+  "bars": {
+    "A": false,
+    "B": true,
+    "C": false
+  }
+}

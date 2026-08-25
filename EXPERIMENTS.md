@@ -88,6 +88,13 @@ trajectory.
 | `pac_deploy3.py` | raw e^{i arg ρ(1)} (exploratory) | 0.17–0.27, fracs −5 to −9 (~10× worse than online) | catastrophic — raw statistic unbounded/noisy; comb form is the variance stabilizer |
 | `pac_deploy4.py` | horizon-1 form + estimation rate + frozen-periodic | c(1)-oracle 28%; slower EMA worse; **frozen-periodic 40% — best derived law**; STABILITY bar: barrier is **variance, not lag** | named barrier confirmed |
 
+## Lane 7 — benchmark gates (CPU phase of the applied question)
+
+| script | question | result | verdict |
+|---|---|---|---|
+| `bench_copy.py` | copy task (encode 20 / gap D / readout 20): headroom + routeA arms | D=50: h=1.00 at 800 steps but **saturates by 1500** (online 0.0001 ≈ bptt 0.0000 — all arms converge); D=100: h = −5.1 (noise) | **degenerate discriminator** — the toy copy regime is exhausted; gates must measure headroom at convergence, not mid-training |
+| `bench_smnist.py` | sMNIST (T=196, subset 5k, N=32, L=2): online vs bptt credit gap | online 1.4212 / bptt 1.2492 train loss at 800 steps; **h = 0.12 < 0.2 bar**, but the absolute gap grows through the whole budget (0.017 → 0.30) | **no headroom at registered CPU budget**; trend positive — the real gate needs the cluster phase (bigger model/data/budget + faithful `online_full` reproduction) |
+
 ## Lane 6 — closed-loop temporal credit (the north star, CLOSED_LOOP.md)
 
 | script | question | result | verdict |
