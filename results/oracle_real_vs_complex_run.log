@@ -1,0 +1,50 @@
+seed 0: routeA retrain + probes...
+    s0 step 500: loss 0.0043
+    s0 step 1000: loss 0.0026
+    s0 step 1500: loss 0.0013
+  held-out cos: identity 0.548  real 0.764  complex 0.901
+    L0: MRL cg~zoracle 0.507  cg~learned 0.553  |.|corr cg~zoracle -0.109  cg~learned +0.263
+    L1: MRL cg~zoracle 0.351  cg~learned 0.724  |.|corr cg~zoracle +0.431  cg~learned -0.087
+    L2: MRL cg~zoracle 0.634  cg~learned 0.713  |.|corr cg~zoracle -0.271  cg~learned +0.657
+    L3: MRL cg~zoracle 0.886  cg~learned 0.887  |.|corr cg~zoracle +0.111  cg~learned +0.392
+seed 1: routeA retrain + probes...
+    s1 step 500: loss 0.0279
+    s1 step 1000: loss 0.0032
+    s1 step 1500: loss 0.0007
+  held-out cos: identity 0.596  real 0.765  complex 0.893
+    L0: MRL cg~zoracle 0.545  cg~learned 0.600  |.|corr cg~zoracle -0.267  cg~learned +0.245
+    L1: MRL cg~zoracle 0.470  cg~learned 0.096  |.|corr cg~zoracle -0.174  cg~learned +0.263
+    L2: MRL cg~zoracle 0.413  cg~learned 0.390  |.|corr cg~zoracle +0.753  cg~learned +0.553
+    L3: MRL cg~zoracle 0.896  cg~learned 0.887  |.|corr cg~zoracle -0.106  cg~learned +0.695
+seed 2: routeA retrain + probes...
+    s2 step 500: loss 0.0194
+    s2 step 1000: loss 0.0017
+    s2 step 1500: loss 0.0015
+  held-out cos: identity 0.609  real 0.885  complex 0.921
+    L0: MRL cg~zoracle 0.380  cg~learned 0.206  |.|corr cg~zoracle +0.404  cg~learned +0.202
+    L1: MRL cg~zoracle 0.810  cg~learned 0.912  |.|corr cg~zoracle -0.270  cg~learned +0.140
+    L2: MRL cg~zoracle 0.883  cg~learned 0.939  |.|corr cg~zoracle -0.059  cg~learned +0.386
+    L3: MRL cg~zoracle 0.940  cg~learned 0.930  |.|corr cg~zoracle -0.094  cg~learned +0.200
+seed 3: routeA retrain + probes...
+    s3 step 500: loss 0.0233
+    s3 step 1000: loss 0.0249
+    s3 step 1500: loss 0.0243
+  held-out cos: identity 0.775  real 0.850  complex 0.977
+    L0: MRL cg~zoracle 0.444  cg~learned 0.647  |.|corr cg~zoracle -0.152  cg~learned +0.133
+    L1: MRL cg~zoracle 0.982  cg~learned 0.916  |.|corr cg~zoracle +0.341  cg~learned +0.487
+    L2: MRL cg~zoracle 0.774  cg~learned 0.934  |.|corr cg~zoracle -0.451  cg~learned -0.193
+    L3: MRL cg~zoracle 0.943  cg~learned 0.942  |.|corr cg~zoracle +0.316  cg~learned -0.311
+seed 4: routeA retrain + probes...
+    s4 step 500: loss 0.0069
+    s4 step 1000: loss 0.0029
+    s4 step 1500: loss 0.0013
+  held-out cos: identity 0.466  real 0.673  complex 0.813
+    L0: MRL cg~zoracle 0.843  cg~learned 0.833  |.|corr cg~zoracle -0.160  cg~learned +0.026
+    L1: MRL cg~zoracle 0.529  cg~learned 0.108  |.|corr cg~zoracle +0.346  cg~learned +0.152
+    L2: MRL cg~zoracle 0.851  cg~learned 0.701  |.|corr cg~zoracle +0.053  cg~learned +0.252
+    L3: MRL cg~zoracle 0.678  cg~learned 0.697  |.|corr cg~zoracle -0.355  cg~learned +0.769
+------------------------------------------------------------------------------
+held-out cos medians: identity 0.596  real 0.765  complex 0.901
+held-out rel medians: identity 0.838  real 0.646  complex 0.434
+reading: complex ceiling higher — identification gap if learned w stays below
+wrote summary.json

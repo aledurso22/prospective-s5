@@ -1,0 +1,167 @@
+online s0...
+    online s0 step 500: loss 0.0129
+    online s0 step 1000: loss 0.0297
+    online s0 step 1500: loss 0.0621
+  final 0.0727  finite True  align [0.809, 0.57, 0.29, 1.0]
+online s1...
+    online s1 step 500: loss 0.0493
+    online s1 step 1000: loss 0.0272
+    online s1 step 1500: loss 0.1166
+  final 0.0224  finite True  align [0.974, 0.666, 0.99, 1.0]
+online s2...
+    online s2 step 500: loss 0.0449
+    online s2 step 1000: loss 0.0322
+    online s2 step 1500: loss 0.0244
+  final 0.0284  finite True  align [0.586, 0.193, 0.565, 1.0]
+online s3...
+    online s3 step 500: loss 0.0447
+    online s3 step 1000: loss 0.0501
+    online s3 step 1500: loss 0.0090
+  final 0.0109  finite True  align [0.396, 0.139, 0.519, 1.0]
+online s4...
+    online s4 step 500: loss 0.0299
+    online s4 step 1000: loss 0.0073
+    online s4 step 1500: loss 0.0379
+  final 0.0118  finite True  align [0.815, 0.721, 0.446, 1.0]
+gain s0...
+    gain s0 step 500: loss 0.0271
+    gain s0 step 1000: loss 0.0235
+    gain s0 step 1500: loss 0.0108
+  final 0.0116  finite True  align [0.178, 0.397, 0.297, 1.0]
+gain s1...
+    gain s1 step 500: loss 0.0478
+    gain s1 step 1000: loss 0.0522
+    gain s1 step 1500: loss 0.0365
+  final 0.0514  finite True  align [0.526, 0.072, 0.275, 1.0]
+gain s2...
+    gain s2 step 500: loss 0.0540
+    gain s2 step 1000: loss 0.0293
+    gain s2 step 1500: loss 0.0498
+  final 0.0434  finite True  align [0.688, 0.312, 0.18, 1.0]
+gain s3...
+    gain s3 step 500: loss 0.0997
+    gain s3 step 1000: loss 0.0165
+    gain s3 step 1500: loss 0.0314
+  final 0.0302  finite True  align [0.686, 0.655, 0.854, 1.0]
+gain s4...
+    gain s4 step 500: loss 0.0319
+    gain s4 step 1000: loss 0.0223
+    gain s4 step 1500: loss 0.0414
+  final 0.0334  finite True  align [0.235, 0.245, 0.064, 1.0]
+raw s0...
+    raw s0 step 500: loss 0.0706
+    raw s0 step 1000: loss 0.0752
+    raw s0 step 1500: loss 0.0309
+  final 0.0305  finite True  align [0.164, 0.148, 0.053, 1.0]
+raw s1...
+    raw s1 step 500: loss 0.0695
+    raw s1 step 1000: loss 0.0548
+    raw s1 step 1500: loss 0.0495
+  final 0.0422  finite True  align [0.196, 0.362, 0.399, 1.0]
+raw s2...
+    raw s2 step 500: loss 0.0251
+    raw s2 step 1000: loss 0.0481
+    raw s2 step 1500: loss 0.0411
+  final 0.0642  finite True  align [0.199, 0.123, 0.028, 1.0]
+raw s3...
+    raw s3 step 500: loss 0.0827
+    raw s3 step 1000: loss 0.0805
+    raw s3 step 1500: loss 0.0731
+  final 0.0696  finite True  align [0.568, 0.362, 0.032, 1.0]
+raw s4...
+    raw s4 step 500: loss 0.0514
+    raw s4 step 1000: loss 0.0581
+    raw s4 step 1500: loss 0.0540
+  final 0.0622  finite True  align [0.142, 0.123, 0.9, 1.0]
+matched s0...
+    matched s0 step 500: loss 0.0205
+    matched s0 step 1000: loss 0.0345
+    matched s0 step 1500: loss 0.0105
+  final 0.0112  finite True  align [0.493, 0.147, 0.147, 1.0]
+matched s1...
+    matched s1 step 500: loss 0.0428
+    matched s1 step 1000: loss 0.0303
+    matched s1 step 1500: loss 0.0461
+  final 0.0241  finite True  align [0.248, 0.602, 0.661, 1.0]
+matched s2...
+    matched s2 step 500: loss 0.0320
+    matched s2 step 1000: loss 0.0159
+    matched s2 step 1500: loss 0.0054
+  final 0.0083  finite True  align [0.891, 0.143, 0.468, 1.0]
+matched s3...
+    matched s3 step 500: loss 0.0553
+    matched s3 step 1000: loss 0.0226
+    matched s3 step 1500: loss 0.0379
+  final 0.0372  finite True  align [0.147, 0.319, 0.449, 1.0]
+matched s4...
+    matched s4 step 500: loss 0.0256
+    matched s4 step 1000: loss 0.0064
+    matched s4 step 1500: loss 0.0015
+  final 0.0035  finite True  align [0.732, 0.423, 0.24, 1.0]
+bestGlobal s0...
+    bestGlobal s0 step 500: loss 0.0522
+    bestGlobal s0 step 1000: loss 0.0256
+    bestGlobal s0 step 1500: loss 0.0079
+  final 0.0146  finite True  align [0.221, 0.271, 0.069, 1.0]
+bestGlobal s1...
+    bestGlobal s1 step 500: loss 0.0511
+    bestGlobal s1 step 1000: loss 0.0460
+    bestGlobal s1 step 1500: loss 0.0380
+  final 0.0514  finite True  align [0.917, 0.285, 0.203, 1.0]
+bestGlobal s2...
+    bestGlobal s2 step 500: loss 0.0639
+    bestGlobal s2 step 1000: loss 0.0312
+    bestGlobal s2 step 1500: loss 0.0347
+  final 0.0401  finite True  align [0.378, 0.101, 0.125, 1.0]
+bestGlobal s3...
+    bestGlobal s3 step 500: loss 0.0339
+    bestGlobal s3 step 1000: loss 0.0473
+    bestGlobal s3 step 1500: loss 0.0464
+  final 0.0461  finite True  align [0.138, 0.055, 0.089, 1.0]
+bestGlobal s4...
+    bestGlobal s4 step 500: loss 0.0311
+    bestGlobal s4 step 1000: loss 0.0256
+    bestGlobal s4 step 1500: loss 0.0347
+  final 0.0205  finite True  align [0.79, 0.247, 0.298, 1.0]
+oppphase s0...
+    oppphase s0 step 500: loss 0.0373
+    oppphase s0 step 1000: loss 0.0217
+    oppphase s0 step 1500: loss 0.0166
+  final 0.0135  finite True  align [0.743, 0.073, 0.532, 1.0]
+oppphase s1...
+    oppphase s1 step 500: loss 0.0306
+    oppphase s1 step 1000: loss 0.0256
+    oppphase s1 step 1500: loss 0.0200
+  final 0.0231  finite True  align [0.29, 0.987, 0.337, 1.0]
+oppphase s2...
+    oppphase s2 step 500: loss 0.0347
+    oppphase s2 step 1000: loss 0.0211
+    oppphase s2 step 1500: loss 0.0208
+  final 0.0216  finite True  align [0.528, 0.712, 0.402, 1.0]
+oppphase s3...
+    oppphase s3 step 500: loss 0.0650
+    oppphase s3 step 1000: loss 0.0392
+    oppphase s3 step 1500: loss 0.0464
+  final 0.0444  finite True  align [0.999, 0.395, 0.923, 1.0]
+oppphase s4...
+    oppphase s4 step 500: loss 0.0104
+    oppphase s4 step 1000: loss 0.0650
+    oppphase s4 step 1500: loss 0.0515
+  final 0.0442  finite True  align [0.556, 0.931, 0.251, 1.0]
+------------------------------------------------------------------------------
+medians: {'online': 0.0224, 'gain': 0.0334, 'raw': 0.0622, 'matched': 0.0112, 'bestGlobal': 0.0401, 'oppphase': 0.0231, 'PC0': 0.0073}
+  online     ['0.0727', '0.0224', '0.0284', '0.0109', '0.0118']
+  gain       ['0.0116', '0.0514', '0.0434', '0.0302', '0.0334']
+  raw        ['0.0305', '0.0422', '0.0642', '0.0696', '0.0622']
+  matched    ['0.0112', '0.0241', '0.0083', '0.0372', '0.0035']
+  bestGlobal ['0.0146', '0.0514', '0.0401', '0.0461', '0.0205']
+  oppphase   ['0.0135', '0.0231', '0.0216', '0.0444', '0.0442']
+  PC0        ['0.0167', '0.0031', '0.0025', '0.0889', '0.0073']
+per-layer alignment at final params (medians):
+  online     [0.809, 0.57, 0.519, 1.0]
+  gain       [0.526, 0.312, 0.275, 1.0]
+  raw        [0.196, 0.148, 0.053, 1.0]
+  matched    [0.493, 0.319, 0.449, 1.0]
+  bestGlobal [0.378, 0.247, 0.125, 1.0]
+  oppphase   [0.556, 0.712, 0.402, 1.0]
+wrote summary.json

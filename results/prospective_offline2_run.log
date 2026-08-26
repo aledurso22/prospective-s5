@@ -1,0 +1,54 @@
+seed 0: routeA retrain...
+    s0 step 500: loss 0.0043
+    s0 step 1000: loss 0.0026
+    s0 step 1500: loss 0.0013
+  D1 exactD factorization: cos 1.000000  rel 2.50e-15
+  arms (pooled cos): base 0.572  gain 0.094  raw 0.032  ema0.99 0.070  matched 0.085  oppphase 0.340  cstat 0.448  exactD 1.000
+  D2 oracle ceiling: cos 0.902  rel 0.431  per-layer [0.997, 0.833, 0.853, 1.0]
+seed 1: routeA retrain...
+    s1 step 500: loss 0.0279
+    s1 step 1000: loss 0.0032
+    s1 step 1500: loss 0.0007
+  D1 exactD factorization: cos 1.000000  rel 2.44e-15
+  arms (pooled cos): base 0.603  gain 0.093  raw 0.114  ema0.99 0.055  matched 0.095  oppphase 0.328  cstat 0.038  exactD 1.000
+  D2 oracle ceiling: cos 0.906  rel 0.423  per-layer [0.99, 0.621, 0.922, 1.0]
+seed 2: routeA retrain...
+    s2 step 500: loss 0.0194
+    s2 step 1000: loss 0.0017
+    s2 step 1500: loss 0.0015
+  D1 exactD factorization: cos 1.000000  rel 2.13e-15
+  arms (pooled cos): base 0.597  gain 0.080  raw 0.112  ema0.99 0.126  matched 0.074  oppphase 0.356  cstat 0.667  exactD 1.000
+  D2 oracle ceiling: cos 0.928  rel 0.373  per-layer [0.99, 0.918, 0.855, 1.0]
+seed 3: routeA retrain...
+    s3 step 500: loss 0.0233
+    s3 step 1000: loss 0.0249
+    s3 step 1500: loss 0.0243
+  D1 exactD factorization: cos 1.000000  rel 3.12e-15
+  arms (pooled cos): base 0.778  gain 0.584  raw 0.021  ema0.99 0.446  matched 0.491  oppphase 0.576  cstat 0.525  exactD 1.000
+  D2 oracle ceiling: cos 0.992  rel 0.128  per-layer [0.981, 0.993, 0.99, 1.0]
+seed 4: routeA retrain...
+    s4 step 500: loss 0.0069
+    s4 step 1000: loss 0.0029
+    s4 step 1500: loss 0.0013
+  D1 exactD factorization: cos 1.000000  rel 2.23e-15
+  arms (pooled cos): base 0.470  gain 0.255  raw 0.253  ema0.99 0.238  matched 0.248  oppphase 0.288  cstat 0.370  exactD 1.000
+  D2 oracle ceiling: cos 0.825  rel 0.566  per-layer [0.998, 0.749, 0.71, 1.0]
+------------------------------------------------------------------------------
+medians over seeds (pooled cos; per-seed in brackets):
+  base      0.597  [0.5722, 0.6034, 0.5972, 0.7782, 0.47]  per-layer [0.419, 0.347, 0.561, 1.0]
+  gain      0.094  [0.0936, 0.0934, 0.0797, 0.5841, 0.2551]  per-layer [0.423, 0.336, 0.492, 1.0]
+  raw       0.112  [0.0322, 0.1137, 0.1121, 0.0212, 0.2531]  per-layer [0.489, 0.444, 0.528, 1.0]
+  ema0.99   0.126  [0.0696, 0.0552, 0.1258, 0.446, 0.2377]  per-layer [0.267, 0.498, 0.51, 1.0]
+  matched   0.095  [0.0846, 0.0947, 0.0744, 0.4909, 0.2478]  per-layer [0.365, 0.336, 0.497, 1.0]
+  oppphase  0.340  [0.3402, 0.328, 0.3559, 0.576, 0.288]  per-layer [0.47, 0.241, 0.236, 1.0]
+  cstat     0.448  [0.4484, 0.0379, 0.6675, 0.5254, 0.3699]  per-layer [0.212, 0.476, 0.495, 1.0]
+  exactD    1.000  [1.0, 1.0, 1.0, 1.0, 1.0]  per-layer [1.0, 1.0, 1.0, 1.0]
+paired differences vs gain (per seed):
+  raw       ['-0.061', '+0.020', '+0.032', '-0.563', '-0.002']
+  ema0.99   ['-0.024', '-0.038', '+0.046', '-0.138', '-0.017']
+  matched   ['-0.009', '+0.001', '-0.005', '-0.093', '-0.007']
+  oppphase  ['+0.247', '+0.235', '+0.276', '-0.008', '+0.033']
+  cstat     ['+0.355', '-0.056', '+0.588', '-0.059', '+0.115']
+  exactD    ['+0.906', '+0.907', '+0.920', '+0.416', '+0.745']
+D2 oracle ceiling (median pooled cos): 0.906  per-seed [0.902, 0.906, 0.928, 0.992, 0.825]
+wrote summary.json

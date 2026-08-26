@@ -1,0 +1,20 @@
+seed 0: routeA retrain...
+  done; median |arg c*| 0.366
+seed 1: routeA retrain...
+  done; median |arg c*| 0.225
+seed 2: routeA retrain...
+  done; median |arg c*| 0.243
+seed 3: routeA retrain...
+  done; median |arg c*| 0.544
+seed 4: routeA retrain...
+  done; median |arg c*| 0.369
+------------------------------------------------------------------------------
+weighted mean |arg c*| 0.492 rad  (unweighted p90 0.788)
+weight fraction with |arg c*| < pi/8: 43.07%
+corr(|arg c*|, |nu|): -0.203
+  L0: mean|phi| 0.337  median|nu| 1.5638  median bw 0.5038  frac small 67.77%
+  L1: mean|phi| 0.472  median|nu| 1.7170  median bw 0.5038  frac small 36.95%
+  L2: mean|phi| 0.684  median|nu| 1.8616  median bw 0.5038  frac small 17.83%
+  L3: mean|phi| 0.429  median|nu| 1.7064  median bw 0.5038  frac small 52.09%
+READING: phase content is material — the tie is NOT explained by low effective frequency  (bar: weighted mean |arg c*| < 0.2 rad)
+wrote summary.json

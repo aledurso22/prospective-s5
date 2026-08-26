@@ -1,0 +1,56 @@
+seed 0: routeA retrain + probes...
+    s0 step 500: loss 0.0043
+    s0 step 1000: loss 0.0026
+    s0 step 1500: loss 0.0013
+  held-out cos: identity 0.548  cg^stat 0.381  z_oracle 0.901  (in-window z 0.901)
+    L0 MRL: cg~learned 0.557  cg~zoracle 0.501  cstat~learned 0.309  learned~zoracle 0.113
+    L1 MRL: cg~learned 0.735  cg~zoracle 0.376  cstat~learned 0.063  learned~zoracle 0.309
+    L2 MRL: cg~learned 0.700  cg~zoracle 0.616  cstat~learned 0.260  learned~zoracle 0.626
+    L3 MRL: cg~learned 0.887  cg~zoracle 0.886  cstat~learned 0.547  learned~zoracle 0.998
+seed 1: routeA retrain + probes...
+    s1 step 500: loss 0.0279
+    s1 step 1000: loss 0.0032
+    s1 step 1500: loss 0.0007
+  held-out cos: identity 0.596  cg^stat 0.475  z_oracle 0.893  (in-window z 0.893)
+    L0 MRL: cg~learned 0.512  cg~zoracle 0.676  cstat~learned 0.275  learned~zoracle 0.126
+    L1 MRL: cg~learned 0.094  cg~zoracle 0.455  cstat~learned 0.511  learned~zoracle 0.442
+    L2 MRL: cg~learned 0.410  cg~zoracle 0.420  cstat~learned 0.077  learned~zoracle 0.201
+    L3 MRL: cg~learned 0.890  cg~zoracle 0.898  cstat~learned 0.685  learned~zoracle 0.999
+seed 2: routeA retrain + probes...
+    s2 step 500: loss 0.0194
+    s2 step 1000: loss 0.0017
+    s2 step 1500: loss 0.0015
+  held-out cos: identity 0.609  cg^stat 0.536  z_oracle 0.921  (in-window z 0.928)
+    L0 MRL: cg~learned 0.308  cg~zoracle 0.182  cstat~learned 0.180  learned~zoracle 0.321
+    L1 MRL: cg~learned 0.907  cg~zoracle 0.809  cstat~learned 0.072  learned~zoracle 0.785
+    L2 MRL: cg~learned 0.940  cg~zoracle 0.898  cstat~learned 0.142  learned~zoracle 0.819
+    L3 MRL: cg~learned 0.921  cg~zoracle 0.928  cstat~learned 0.342  learned~zoracle 0.995
+seed 3: routeA retrain + probes...
+    s3 step 500: loss 0.0233
+    s3 step 1000: loss 0.0249
+    s3 step 1500: loss 0.0243
+  held-out cos: identity 0.775  cg^stat 0.688  z_oracle 0.977  (in-window z 0.985)
+    L0 MRL: cg~learned 0.484  cg~zoracle 0.574  cstat~learned 0.561  learned~zoracle 0.767
+    L1 MRL: cg~learned 0.909  cg~zoracle 0.978  cstat~learned 0.936  learned~zoracle 0.909
+    L2 MRL: cg~learned 0.903  cg~zoracle 0.900  cstat~learned 0.724  learned~zoracle 0.799
+    L3 MRL: cg~learned 0.939  cg~zoracle 0.940  cstat~learned 0.943  learned~zoracle 1.000
+seed 4: routeA retrain + probes...
+    s4 step 500: loss 0.0069
+    s4 step 1000: loss 0.0029
+    s4 step 1500: loss 0.0013
+  held-out cos: identity 0.466  cg^stat 0.238  z_oracle 0.813  (in-window z 0.816)
+    L0 MRL: cg~learned 0.805  cg~zoracle 0.856  cstat~learned 0.706  learned~zoracle 0.648
+    L1 MRL: cg~learned 0.117  cg~zoracle 0.500  cstat~learned 0.595  learned~zoracle 0.483
+    L2 MRL: cg~learned 0.696  cg~zoracle 0.865  cstat~learned 0.316  learned~zoracle 0.511
+    L3 MRL: cg~learned 0.370  cg~zoracle 0.346  cstat~learned 0.726  learned~zoracle 0.997
+------------------------------------------------------------------------------
+  identity           held-out cos 0.596  rel 1.347
+  cgstat             held-out cos 0.475  rel 13.091
+  zoracle            held-out cos 0.901  rel 0.434
+  zoracle_inwindow   held-out cos 0.901  rel 0.434
+MRL medians per layer:
+  L0: cgstat_vs_learned 0.512  cgstat_vs_zoracle 0.574  cstat_vs_learned 0.309  learned_vs_zoracle 0.321
+  L1: cgstat_vs_learned 0.735  cgstat_vs_zoracle 0.500  cstat_vs_learned 0.511  learned_vs_zoracle 0.483
+  L2: cgstat_vs_learned 0.700  cgstat_vs_zoracle 0.865  cstat_vs_learned 0.260  learned_vs_zoracle 0.626
+  L3: cgstat_vs_learned 0.890  cgstat_vs_zoracle 0.898  cstat_vs_learned 0.685  learned_vs_zoracle 0.998
+wrote summary.json

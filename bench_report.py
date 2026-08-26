@@ -34,7 +34,7 @@ RESULTS_DIR = os.path.join(HERE, "results", "bench")
 GATE_H = 0.2
 
 ARMS = ["baseline", "online", "tbptt", "routeA", "scalarLive", "routePC",
-        "frozenPhase", "frozenMag"]
+        "routePCreal", "frozenPhase", "frozenMag"]
 
 
 def collect():

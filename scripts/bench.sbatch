@@ -76,6 +76,7 @@ fi
 run routeA
 run scalarLive
 run routePC
+run routePCreal
 WFILE="results/bench/w_${TASK}_routeA_s${SEED}.npz"
 run frozenPhase --w-file "$WFILE"
 run frozenMag   --w-file "$WFILE"

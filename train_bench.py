@@ -19,6 +19,9 @@ Arms (--arm):
               Correction-only Simonetto (PC0; prediction measured NOT
               load-bearing): the BPTT teacher is replaced by the realized
               online gradient on the newly arrived batch. Zero BPTT calls.
+  routePCreal EXPLORATORY control: routePC with w constrained real
+              (per-mode gain, phase pinned 0) — the causal arm's
+              rotation-vs-gain control (route_pc_factorial.py).
   frozenPhase w = exp(i arg w_routeA) loaded from --w-file, never updated
   frozenMag   w = |w_routeA| loaded from --w-file, never updated
 
@@ -232,7 +235,7 @@ def parse_args() -> argparse.Namespace:
                    required=True)
     p.add_argument("--arm", choices=["baseline", "online", "tbptt", "routeA",
                                      "scalarLive", "frozenPhase", "frozenMag",
-                                     "routePC"],
+                                     "routePC", "routePCreal"],
                    required=True)
     p.add_argument("--epochs", type=int, default=3)
     p.add_argument("--subset", type=int, default=20000,
@@ -293,7 +296,7 @@ def main() -> None:
 
     # ---------------- models ----------------
     is_meta_arm = args.arm in ("routeA", "scalarLive", "frozenPhase",
-                               "frozenMag", "routePC")
+                               "frozenMag", "routePC", "routePCreal")
     model_type = {"baseline": "baseline", "online": "online",
                   "tbptt": "tbptt"}.get(args.arm, "online")
     model = build_model(model_type=model_type, d_model=args.d_model,
@@ -431,6 +434,8 @@ def main() -> None:
         g_meta = jax.tree_util.tree_map(lambda cc: -lr_t * cc, c)
         upd, meta_state = meta_tx.update(g_meta, meta_state, meta)
         meta = optax.apply_updates(meta, upd)     # w_corr (PC0: pred=corr)
+        if args.arm == "routePCreal":
+            meta = zero_wim_jnp(meta)
         # (3) applied update with the corrected geometry
         grads = jax.grad(lambda p: apply_model(p, meta, x, y, drng,
                                                True)[0])(params0)
@@ -466,7 +471,7 @@ def main() -> None:
         return tot_l / n, tot_c / n
 
     # ---------------- startup self-checks (meta arms) ----------------
-    if args.arm in ("routeA", "scalarLive", "routePC"):
+    if args.arm in ("routeA", "scalarLive", "routePC", "routePCreal"):
         xb = prep_x(x_train[:8], tmeta["one_hot"])
         yb = jnp.asarray(y_train[:8])
         dr = jax.random.PRNGKey(0)
@@ -507,7 +512,7 @@ def main() -> None:
             if args.arm in ("routeA", "scalarLive"):
                 state, meta, meta_state, loss, acc = routeA_step(
                     state, meta, meta_state, xb, yb)
-            elif args.arm == "routePC":
+            elif args.arm in ("routePC", "routePCreal"):
                 drng, new_drng = jax.random.split(state.dropout_rng)
                 state = state.replace(dropout_rng=new_drng)
                 if prev is None:
@@ -552,7 +557,7 @@ def main() -> None:
           f"wall={wall:.1f}s  ({step / wall:.2f} steps/s)")
 
     w_path = ""
-    if args.arm in ("routeA", "scalarLive", "routePC"):
+    if args.arm in ("routeA", "scalarLive", "routePC", "routePCreal"):
         w_path = os.path.join(
             RESULTS_DIR,
             f"w_{args.task}_{args.arm}{args.tag}_s{args.seed}.npz")
