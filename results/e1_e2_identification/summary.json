@@ -1,0 +1,1055 @@
+{
+  "git": "71a34b86df4043c7a4e7c35ad169d8879d647eef",
+  "config": {
+    "steps": 1500,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "checkpoints": [
+      100,
+      500,
+      1000,
+      1500
+    ]
+  },
+  "replay_determinism": 0.0,
+  "bptt_calls": {
+    "exact_grad": 15000,
+    "exact_lambda": 15000
+  },
+  "e1": {
+    "rows": {
+      "0": {
+        "pooled": [
+          {
+            "cos_radial": 0.9018335511304997,
+            "cos_tangential": 0.4076834697387612,
+            "nrat_radial": 0.46858751075973365,
+            "nrat_tangential": 0.5515760418238679,
+            "sign_radial": 0.625,
+            "sign_tangential": 0.5208333333333334,
+            "frac_energy_tangential": 0.7058758937638877
+          },
+          {
+            "cos_radial": -0.1205457243307937,
+            "cos_tangential": 0.12681711241608895,
+            "nrat_radial": 1.4304272977765975,
+            "nrat_tangential": 1.4529452905033238,
+            "sign_radial": 0.625,
+            "sign_tangential": 0.6875,
+            "frac_energy_tangential": 0.23306079276837816
+          },
+          {
+            "cos_radial": 0.8492870632701861,
+            "cos_tangential": 0.9769897185715232,
+            "nrat_radial": 1.1897079631462533,
+            "nrat_tangential": 0.8961267032356814,
+            "sign_radial": 0.7291666666666666,
+            "sign_tangential": 0.5625,
+            "frac_energy_tangential": 0.7356838488181876
+          },
+          {
+            "cos_radial": 0.5771551459294906,
+            "cos_tangential": 0.5673326454202523,
+            "nrat_radial": 0.40692850484797083,
+            "nrat_tangential": 0.303612781254362,
+            "sign_radial": 0.6666666666666666,
+            "sign_tangential": 0.6875,
+            "frac_energy_tangential": 0.6324354186122131
+          }
+        ],
+        "per_layer": {
+          "0": [
+            {
+              "cos_radial": 0.9658047566372421,
+              "cos_tangential": -0.19125182441565888,
+              "nrat_radial": 0.30498176011060796,
+              "nrat_tangential": 0.8303756373854837,
+              "sign_radial": 0.5625,
+              "sign_tangential": 0.5,
+              "frac_energy_tangential": 0.4389017666010937
+            },
+            {
+              "cos_radial": -0.9583251532498821,
+              "cos_tangential": -0.9227567873076621,
+              "nrat_radial": 2.7737333091949092,
+              "nrat_tangential": 2.6861174371411205,
+              "sign_radial": 0.5,
+              "sign_tangential": 0.5,
+              "frac_energy_tangential": 0.15040339257299243
+            },
+            {
+              "cos_radial": -0.8469795705706166,
+              "cos_tangential": -0.5032488835301382,
+              "nrat_radial": 0.2938037470166469,
+              "nrat_tangential": 0.34319107208755933,
+              "sign_radial": 0.5625,
+              "sign_tangential": 0.5625,
+              "frac_energy_tangential": 0.26459368404108496
+            },
+            {
+              "cos_radial": 0.8718843072811049,
+              "cos_tangential": 0.963148562063102,
+              "nrat_radial": 0.19470378567571503,
+              "nrat_tangential": 0.17054993231818116,
+              "sign_radial": 0.5,
+              "sign_tangential": 0.625,
+              "frac_energy_tangential": 0.7645486329897123
+            }
+          ],
+          "1": [
+            {
+              "cos_radial": 0.9230078966614339,
+              "cos_tangential": 0.5684506324737942,
+              "nrat_radial": 0.44212736000379793,
+              "nrat_tangential": 0.24885307173574459,
+              "sign_radial": 0.5,
+              "sign_tangential": 0.5,
+              "frac_energy_tangential": 0.7314819977031736
+            },
+            {
+              "cos_radial": 0.8437638810864018,
+              "cos_tangential": 0.04272455962822235,
+              "nrat_radial": 0.5310236458974528,
+              "nrat_tangential": 0.8503081442565469,
+              "sign_radial": 0.625,
+              "sign_tangential": 0.75,
+              "frac_energy_tangential": 0.20571696384687
+            },
+            {
+              "cos_radial": 0.9607018040645244,
+              "cos_tangential": 0.37307912195301624,
+              "nrat_radial": 0.6461743266958816,
+              "nrat_tangential": 0.814340555817784,
+              "sign_radial": 0.75,
+              "sign_tangential": 0.4375,
+              "frac_energy_tangential": 0.1620354640870889
+            },
+            {
+              "cos_radial": 0.6534228844456723,
+              "cos_tangential": 0.8040639860240635,
+              "nrat_radial": 0.2971593080669595,
+              "nrat_tangential": 0.5969775265748658,
+              "sign_radial": 0.625,
+              "sign_tangential": 0.75,
+              "frac_energy_tangential": 0.25951722454998805
+            }
+          ],
+          "2": [
+            {
+              "cos_radial": 0.900826689990954,
+              "cos_tangential": 0.6094025021113408,
+              "nrat_radial": 0.6393766070026894,
+              "nrat_tangential": 1.12919222854764,
+              "sign_radial": 0.8125,
+              "sign_tangential": 0.5625,
+              "frac_energy_tangential": 0.7043992058068757
+            },
+            {
+              "cos_radial": 0.956748600531727,
+              "cos_tangential": 0.9873255372661828,
+              "nrat_radial": 1.0764128692127897,
+              "nrat_tangential": 1.5657025037783079,
+              "sign_radial": 0.75,
+              "sign_tangential": 0.8125,
+              "frac_energy_tangential": 0.4329754423287772
+            },
+            {
+              "cos_radial": 0.9917411506110001,
+              "cos_tangential": 0.9985812580872567,
+              "nrat_radial": 1.393947485076843,
+              "nrat_tangential": 0.9048329456816959,
+              "sign_radial": 0.875,
+              "sign_tangential": 0.6875,
+              "frac_energy_tangential": 0.7968671122250862
+            },
+            {
+              "cos_radial": 0.5875669059001208,
+              "cos_tangential": -0.06421478401103461,
+              "nrat_radial": 0.7576533903676502,
+              "nrat_tangential": 0.8369568716532322,
+              "sign_radial": 0.875,
+              "sign_tangential": 0.6875,
+              "frac_energy_tangential": 0.336733187142396
+            }
+          ],
+          "3": [
+            {
+              "cos_radial": 1.0000000000000002,
+              "cos_tangential": 1.0,
+              "nrat_radial": 1.0000000000000024,
+              "nrat_tangential": 1.000000000000007,
+              "sign_radial": 1.0,
+              "sign_tangential": 1.0,
+              "frac_energy_tangential": 0.9143720158162774
+            },
+            {
+              "cos_radial": 1.0,
+              "cos_tangential": 1.0,
+              "nrat_radial": 1.0000000000000018,
+              "nrat_tangential": 1.0000000000000047,
+              "sign_radial": 1.0,
+              "sign_tangential": 1.0,
+              "frac_energy_tangential": 0.8724150323750942
+            },
+            {
+              "cos_radial": 1.0000000000000002,
+              "cos_tangential": 1.0000000000000002,
+              "nrat_radial": 1.0000000000000016,
+              "nrat_tangential": 1.0000000000000009,
+              "sign_radial": 1.0,
+              "sign_tangential": 1.0,
+              "frac_energy_tangential": 0.06099685135181175
+            },
+            {
+              "cos_radial": 0.9999999999999998,
+              "cos_tangential": 1.0,
+              "nrat_radial": 0.9999999999999989,
+              "nrat_tangential": 0.9999999999999998,
+              "sign_radial": 1.0,
+              "sign_tangential": 1.0,
+              "frac_energy_tangential": 0.2123509912865512
+            }
+          ]
+        }
+      },
+      "1": {
+        "pooled": [
+          {
+            "cos_radial": 0.3407021370228716,
+            "cos_tangential": -0.2954716013729396,
+            "nrat_radial": 0.4032254037964579,
+            "nrat_tangential": 0.17711780588560005,
+            "sign_radial": 0.7291666666666666,
+            "sign_tangential": 0.6875,
+            "frac_energy_tangential": 0.589142602297775
+          },
+          {
+            "cos_radial": 0.8826193473704167,
+            "cos_tangential": -0.7512514694572403,
+            "nrat_radial": 0.48339807631919546,
+            "nrat_tangential": 0.2767101346274642,
+            "sign_radial": 0.7083333333333334,
+            "sign_tangential": 0.5416666666666666,
+            "frac_energy_tangential": 0.8355437082816661
+          },
+          {
+            "cos_radial": 0.8686509728465873,
+            "cos_tangential": -0.7377980891308089,
+            "nrat_radial": 0.18879385618453526,
+            "nrat_tangential": 0.4811034587916302,
+            "sign_radial": 0.625,
+            "sign_tangential": 0.6666666666666666,
+            "frac_energy_tangential": 0.17578013892566374
+          },
+          {
+            "cos_radial": 0.7357258401371544,
+            "cos_tangential": -0.9181962935469872,
+            "nrat_radial": 0.20701160854227582,
+            "nrat_tangential": 0.39232379537619516,
+            "sign_radial": 0.6041666666666666,
+            "sign_tangential": 0.5208333333333334,
+            "frac_energy_tangential": 0.4183741453710667
+          }
+        ],
+        "per_layer": {
+          "0": [
+            {
+              "cos_radial": 0.08681174691412154,
+              "cos_tangential": 0.9283447891910978,
+              "nrat_radial": 0.056373918812048805,
+              "nrat_tangential": 0.14582980236324042,
+              "sign_radial": 0.6875,
+              "sign_tangential": 0.75,
+              "frac_energy_tangential": 0.20976472151590322
+            },
+            {
+              "cos_radial": -0.9309330442495,
+              "cos_tangential": -0.9849020791701381,
+              "nrat_radial": 0.08739963555505235,
+              "nrat_tangential": 0.09880678483346762,
+              "sign_radial": 0.6875,
+              "sign_tangential": 0.6875,
+              "frac_energy_tangential": 0.7247599470712159
+            },
+            {
+              "cos_radial": -0.014315959344394244,
+              "cos_tangential": -0.041624338510774,
+              "nrat_radial": 0.32342307439532014,
+              "nrat_tangential": 0.354177452122562,
+              "sign_radial": 0.5,
+              "sign_tangential": 0.4375,
+              "frac_energy_tangential": 0.8370736467518685
+            },
+            {
+              "cos_radial": 0.06830652129775827,
+              "cos_tangential": 0.014324538257875746,
+              "nrat_radial": 0.06909752197583119,
+              "nrat_tangential": 0.09915707316372792,
+              "sign_radial": 0.625,
+              "sign_tangential": 0.5625,
+              "frac_energy_tangential": 0.2953622712758381
+            }
+          ],
+          "1": [
+            {
+              "cos_radial": 0.2172705540421588,
+              "cos_tangential": -0.606048420919229,
+              "nrat_radial": 0.433910578858921,
+              "nrat_tangential": 0.14055606831296016,
+              "sign_radial": 0.75,
+              "sign_tangential": 0.5625,
+              "frac_energy_tangential": 0.7035727524664757
+            },
+            {
+              "cos_radial": 0.9522637314433218,
+              "cos_tangential": -0.46667146435356055,
+              "nrat_radial": 0.542248817644313,
+              "nrat_tangential": 0.4267969256341106,
+              "sign_radial": 0.75,
+              "sign_tangential": 0.4375,
+              "frac_energy_tangential": 0.24449097770585387
+            },
+            {
+              "cos_radial": 0.5710144627941902,
+              "cos_tangential": 0.8846808852063454,
+              "nrat_radial": 0.296393541096446,
+              "nrat_tangential": 0.36705050946346346,
+              "sign_radial": 0.5,
+              "sign_tangential": 0.6875,
+              "frac_energy_tangential": 0.7200452924850267
+            },
+            {
+              "cos_radial": -0.6505080018910893,
+              "cos_tangential": -0.6243059434091464,
+              "nrat_radial": 0.1966666533857347,
+              "nrat_tangential": 0.42841903112894186,
+              "sign_radial": 0.5,
+              "sign_tangential": 0.4375,
+              "frac_energy_tangential": 0.49435636102083536
+            }
+          ],
+          "2": [
+            {
+              "cos_radial": 0.9130040731163036,
+              "cos_tangential": 0.6087805618452101,
+              "nrat_radial": 0.6474953489284853,
+              "nrat_tangential": 0.49376704991742076,
+              "sign_radial": 0.75,
+              "sign_tangential": 0.75,
+              "frac_energy_tangential": 0.3386700713893918
+            },
+            {
+              "cos_radial": 0.8333454179274151,
+              "cos_tangential": -0.7783428167805035,
+              "nrat_radial": 0.367438079645976,
+              "nrat_tangential": 0.2711495383234355,
+              "sign_radial": 0.6875,
+              "sign_tangential": 0.5,
+              "frac_energy_tangential": 0.9409638194572129
+            },
+            {
+              "cos_radial": 0.8723890974248575,
+              "cos_tangential": -0.7916065763303751,
+              "nrat_radial": 0.18823624446864626,
+              "nrat_tangential": 0.48775805156504703,
+              "sign_radial": 0.875,
+              "sign_tangential": 0.875,
+              "frac_energy_tangential": 0.16756340883385767
+            },
+            {
+              "cos_radial": 0.8501400976471551,
+              "cos_tangential": -0.9725169781907625,
+              "nrat_radial": 0.21705783954499455,
+              "nrat_tangential": 0.4002812101482896,
+              "sign_radial": 0.6875,
+              "sign_tangential": 0.5625,
+              "frac_energy_tangential": 0.42381864271613484
+            }
+          ],
+          "3": [
+            {
+              "cos_radial": 1.0,
+              "cos_tangential": 1.0,
+              "nrat_radial": 1.0000000000000042,
+              "nrat_tangential": 1.0000000000000062,
+              "sign_radial": 1.0,
+              "sign_tangential": 1.0,
+              "frac_energy_tangential": 0.5717631317432331
+            },
+            {
+              "cos_radial": 1.0,
+              "cos_tangential": 1.0,
+              "nrat_radial": 0.9999999999999964,
+              "nrat_tangential": 0.9999999999999936,
+              "sign_radial": 1.0,
+              "sign_tangential": 1.0,
+              "frac_energy_tangential": 0.25209906282217115
+            },
+            {
+              "cos_radial": 1.0,
+              "cos_tangential": 1.0,
+              "nrat_radial": 0.9999999999999998,
+              "nrat_tangential": 0.999999999999998,
+              "sign_radial": 1.0,
+              "sign_tangential": 1.0,
+              "frac_energy_tangential": 0.41965122659340554
+            },
+            {
+              "cos_radial": 1.0,
+              "cos_tangential": 1.0,
+              "nrat_radial": 1.000000000000001,
+              "nrat_tangential": 1.0000000000000009,
+              "sign_radial": 1.0,
+              "sign_tangential": 1.0,
+              "frac_energy_tangential": 0.22999322969451336
+            }
+          ]
+        }
+      },
+      "2": {
+        "pooled": [
+          {
+            "cos_radial": 0.6147883284249522,
+            "cos_tangential": -0.26687808587255607,
+            "nrat_radial": 0.43877101517695555,
+            "nrat_tangential": 0.43617224514031444,
+            "sign_radial": 0.8333333333333334,
+            "sign_tangential": 0.6875,
+            "frac_energy_tangential": 0.7977656645412985
+          },
+          {
+            "cos_radial": 0.9399013058126927,
+            "cos_tangential": 0.6919697301853526,
+            "nrat_radial": 0.6855016259364678,
+            "nrat_tangential": 0.6483360644602162,
+            "sign_radial": 0.6875,
+            "sign_tangential": 0.6458333333333334,
+            "frac_energy_tangential": 0.7743431225091082
+          },
+          {
+            "cos_radial": 0.2629154708055569,
+            "cos_tangential": 0.1054896026140336,
+            "nrat_radial": 0.27943235628143825,
+            "nrat_tangential": 0.24213074272896287,
+            "sign_radial": 0.6458333333333334,
+            "sign_tangential": 0.6666666666666666,
+            "frac_energy_tangential": 0.39755137203471874
+          },
+          {
+            "cos_radial": 0.7398971557495261,
+            "cos_tangential": 0.7450829707158666,
+            "nrat_radial": 0.16070966930296765,
+            "nrat_tangential": 0.4495895887761389,
+            "sign_radial": 0.5833333333333334,
+            "sign_tangential": 0.7291666666666666,
+            "frac_energy_tangential": 0.6396284729091622
+          }
+        ],
+        "per_layer": {
+          "0": [
+            {
+              "cos_radial": 0.23373717441072017,
+              "cos_tangential": -0.6530452663535223,
+              "nrat_radial": 0.3948850663137773,
+              "nrat_tangential": 1.4666603537202054,
+              "sign_radial": 0.75,
+              "sign_tangential": 0.75,
+              "frac_energy_tangential": 0.6001566784258452
+            },
+            {
+              "cos_radial": 0.9951302836772375,
+              "cos_tangential": 0.9562420259827634,
+              "nrat_radial": 0.7909462222567651,
+              "nrat_tangential": 0.7664938394563817,
+              "sign_radial": 0.625,
+              "sign_tangential": 0.5625,
+              "frac_energy_tangential": 0.9010838927175829
+            },
+            {
+              "cos_radial": 0.5740830807634298,
+              "cos_tangential": 0.6938969121097192,
+              "nrat_radial": 0.04532276235984347,
+              "nrat_tangential": 0.04089927627269419,
+              "sign_radial": 0.5625,
+              "sign_tangential": 0.625,
+              "frac_energy_tangential": 0.6968430805374383
+            },
+            {
+              "cos_radial": 0.7108818670590016,
+              "cos_tangential": 0.5032164331505791,
+              "nrat_radial": 0.08137882088231942,
+              "nrat_tangential": 0.051064954222286914,
+              "sign_radial": 0.6875,
+              "sign_tangential": 0.6875,
+              "frac_energy_tangential": 0.7557826516453987
+            }
+          ],
+          "1": [
+            {
+              "cos_radial": 0.8092632662675744,
+              "cos_tangential": -0.13011838499981596,
+              "nrat_radial": 0.6634815564765426,
+              "nrat_tangential": 0.2996431636135809,
+              "sign_radial": 0.8125,
+              "sign_tangential": 0.625,
+              "frac_energy_tangential": 0.9035143782451062
+            },
+            {
+              "cos_radial": 0.8511120984032882,
+              "cos_tangential": -0.25398782544615606,
+              "nrat_radial": 0.15498602511940698,
+              "nrat_tangential": 0.3811709482492329,
+              "sign_radial": 0.625,
+              "sign_tangential": 0.625,
+              "frac_energy_tangential": 0.9085203769184169
+            },
+            {
+              "cos_radial": 0.6838441446390202,
+              "cos_tangential": 0.08088201495700344,
+              "nrat_radial": 0.1378606220054331,
+              "nrat_tangential": 0.13368667755504413,
+              "sign_radial": 0.5625,
+              "sign_tangential": 0.75,
+              "frac_energy_tangential": 0.36326010245742596
+            },
+            {
+              "cos_radial": 0.5749917955147275,
+              "cos_tangential": -0.543109255868498,
+              "nrat_radial": 0.15000487521773967,
+              "nrat_tangential": 0.0867578520599757,
+              "sign_radial": 0.625,
+              "sign_tangential": 0.75,
+              "frac_energy_tangential": 0.604635360558925
+            }
+          ],
+          "2": [
+            {
+              "cos_radial": 0.5944327157778753,
+              "cos_tangential": -0.5235936937585272,
+              "nrat_radial": 0.25809387823554836,
+              "nrat_tangential": 0.49807913262886366,
+              "sign_radial": 0.9375,
+              "sign_tangential": 0.6875,
+              "frac_energy_tangential": 0.587101076858703
+            },
+            {
+              "cos_radial": 0.9711855091170213,
+              "cos_tangential": 0.9012767953021037,
+              "nrat_radial": 0.7036820608234423,
+              "nrat_tangential": 0.6445574635472675,
+              "sign_radial": 0.8125,
+              "sign_tangential": 0.75,
+              "frac_energy_tangential": 0.45802436013877373
+            },
+            {
+              "cos_radial": -0.04901293145048503,
+              "cos_tangential": 0.22394686901982097,
+              "nrat_radial": 0.714890192439971,
+              "nrat_tangential": 0.9458334505214355,
+              "sign_radial": 0.8125,
+              "sign_tangential": 0.625,
+              "frac_energy_tangential": 0.2159693316446103
+            },
+            {
+              "cos_radial": 0.8254728267996951,
+              "cos_tangential": 0.9439036300985817,
+              "nrat_radial": 0.16660907235806316,
+              "nrat_tangential": 0.5394965057427101,
+              "sign_radial": 0.4375,
+              "sign_tangential": 0.75,
+              "frac_energy_tangential": 0.6563899093977876
+            }
+          ],
+          "3": [
+            {
+              "cos_radial": 0.9999999999999998,
+              "cos_tangential": 1.0,
+              "nrat_radial": 1.0000000000000009,
+              "nrat_tangential": 1.0000000000000018,
+              "sign_radial": 1.0,
+              "sign_tangential": 1.0,
+              "frac_energy_tangential": 0.3037040363805454
+            },
+            {
+              "cos_radial": 1.0,
+              "cos_tangential": 1.0000000000000002,
+              "nrat_radial": 1.0000000000000022,
+              "nrat_tangential": 1.000000000000001,
+              "sign_radial": 1.0,
+              "sign_tangential": 1.0,
+              "frac_energy_tangential": 0.3509895233678327
+            },
+            {
+              "cos_radial": 1.0,
+              "cos_tangential": 1.0,
+              "nrat_radial": 1.0,
+              "nrat_tangential": 0.9999999999999999,
+              "sign_radial": 1.0,
+              "sign_tangential": 1.0,
+              "frac_energy_tangential": 0.10872244551167336
+            },
+            {
+              "cos_radial": 1.0000000000000002,
+              "cos_tangential": 1.0,
+              "nrat_radial": 0.9999999999999993,
+              "nrat_tangential": 0.9999999999999997,
+              "sign_radial": 1.0,
+              "sign_tangential": 1.0,
+              "frac_energy_tangential": 0.47763708283323736
+            }
+          ]
+        }
+      },
+      "3": {
+        "pooled": [
+          {
+            "cos_radial": 0.932419437108231,
+            "cos_tangential": 0.983521870590852,
+            "nrat_radial": 0.8208238396216582,
+            "nrat_tangential": 1.2617274238227334,
+            "sign_radial": 0.7291666666666666,
+            "sign_tangential": 0.6666666666666666,
+            "frac_energy_tangential": 0.8889122337027845
+          },
+          {
+            "cos_radial": -0.15769247475749518,
+            "cos_tangential": 0.9007798253772998,
+            "nrat_radial": 2.1850979323375266,
+            "nrat_tangential": 1.743666650874586,
+            "sign_radial": 0.7916666666666666,
+            "sign_tangential": 0.625,
+            "frac_energy_tangential": 0.4045976628647875
+          },
+          {
+            "cos_radial": 0.5436712828498451,
+            "cos_tangential": 0.9572413965580826,
+            "nrat_radial": 30.908800544729136,
+            "nrat_tangential": 56.89069716481572,
+            "sign_radial": 0.7916666666666666,
+            "sign_tangential": 0.75,
+            "frac_energy_tangential": 0.7123652110156035
+          },
+          {
+            "cos_radial": 0.46217884713444457,
+            "cos_tangential": 0.9939325279684105,
+            "nrat_radial": 2.624839453743803,
+            "nrat_tangential": 19.67494724116545,
+            "sign_radial": 0.8125,
+            "sign_tangential": 0.7916666666666666,
+            "frac_energy_tangential": 0.8548754198840668
+          }
+        ],
+        "per_layer": {
+          "0": [
+            {
+              "cos_radial": -0.02977024645048551,
+              "cos_tangential": -0.06770222055728746,
+              "nrat_radial": 0.2287477304035782,
+              "nrat_tangential": 0.1633666573456808,
+              "sign_radial": 0.6875,
+              "sign_tangential": 0.625,
+              "frac_energy_tangential": 0.47554786846430697
+            },
+            {
+              "cos_radial": 0.9565985745878763,
+              "cos_tangential": 0.7811767659337459,
+              "nrat_radial": 0.08026221832438712,
+              "nrat_tangential": 0.0958903179495392,
+              "sign_radial": 0.6875,
+              "sign_tangential": 0.625,
+              "frac_energy_tangential": 0.25948416517071604
+            },
+            {
+              "cos_radial": 0.7423070019519609,
+              "cos_tangential": 0.46967161005585967,
+              "nrat_radial": 0.11870939535072883,
+              "nrat_tangential": 0.1674037158494583,
+              "sign_radial": 0.8125,
+              "sign_tangential": 0.6875,
+              "frac_energy_tangential": 0.5158195468161494
+            },
+            {
+              "cos_radial": 0.44466324054240003,
+              "cos_tangential": 0.32837117999549,
+              "nrat_radial": 0.15013530812517112,
+              "nrat_tangential": 0.23316518765642616,
+              "sign_radial": 0.6875,
+              "sign_tangential": 0.625,
+              "frac_energy_tangential": 0.5253431574858186
+            }
+          ],
+          "1": [
+            {
+              "cos_radial": 0.6922474649221494,
+              "cos_tangential": 0.9921206645433739,
+              "nrat_radial": 0.9661379983513432,
+              "nrat_tangential": 1.270721874728448,
+              "sign_radial": 0.5,
+              "sign_tangential": 0.625,
+              "frac_energy_tangential": 0.989484030357243
+            },
+            {
+              "cos_radial": -0.5951083932888581,
+              "cos_tangential": 0.9815499449606576,
+              "nrat_radial": 3.000374717304373,
+              "nrat_tangential": 1.8496637736522383,
+              "sign_radial": 0.6875,
+              "sign_tangential": 0.5625,
+              "frac_energy_tangential": 0.558007150561084
+            },
+            {
+              "cos_radial": 0.9996854633637393,
+              "cos_tangential": 0.9926265935763934,
+              "nrat_radial": 59.52100180743083,
+              "nrat_tangential": 59.010750121995216,
+              "sign_radial": 0.625,
+              "sign_tangential": 0.875,
+              "frac_energy_tangential": 0.895215065833457
+            },
+            {
+              "cos_radial": 0.9990358818821758,
+              "cos_tangential": 0.9999994422083759,
+              "nrat_radial": 20.294354798035698,
+              "nrat_tangential": 19.795491728029493,
+              "sign_radial": 0.75,
+              "sign_tangential": 0.8125,
+              "frac_energy_tangential": 0.9974887569724695
+            }
+          ],
+          "2": [
+            {
+              "cos_radial": 0.9811169658343869,
+              "cos_tangential": 0.7459941415445608,
+              "nrat_radial": 0.8216705158944313,
+              "nrat_tangential": 1.033096566352877,
+              "sign_radial": 1.0,
+              "sign_tangential": 0.75,
+              "frac_energy_tangential": 0.21219570484841882
+            },
+            {
+              "cos_radial": 0.9978616791174666,
+              "cos_tangential": -0.8339149796034296,
+              "nrat_radial": 0.9677506297927857,
+              "nrat_tangential": 0.36178890471665687,
+              "sign_radial": 1.0,
+              "sign_tangential": 0.6875,
+              "frac_energy_tangential": 0.13024106071765315
+            },
+            {
+              "cos_radial": 0.9998380998727112,
+              "cos_tangential": 0.918020537660232,
+              "nrat_radial": 1.0572979742409014,
+              "nrat_tangential": 0.2438946634399466,
+              "sign_radial": 0.9375,
+              "sign_tangential": 0.6875,
+              "frac_energy_tangential": 0.19302616968783007
+            },
+            {
+              "cos_radial": 0.9974988227376677,
+              "cos_tangential": 0.2640239658454065,
+              "nrat_radial": 0.9320723247282731,
+              "nrat_tangential": 0.1424202405506646,
+              "sign_radial": 1.0,
+              "sign_tangential": 0.9375,
+              "frac_energy_tangential": 0.06767759952690273
+            }
+          ],
+          "3": [
+            {
+              "cos_radial": 1.0000000000000002,
+              "cos_tangential": 1.0,
+              "nrat_radial": 0.9999999999999998,
+              "nrat_tangential": 0.9999999999999997,
+              "sign_radial": 1.0,
+              "sign_tangential": 1.0,
+              "frac_energy_tangential": 0.2926298364622943
+            },
+            {
+              "cos_radial": 0.9999999999999999,
+              "cos_tangential": 1.0,
+              "nrat_radial": 1.0000000000000038,
+              "nrat_tangential": 1.0000000000000113,
+              "sign_radial": 1.0,
+              "sign_tangential": 1.0,
+              "frac_energy_tangential": 0.0456136871349877
+            },
+            {
+              "cos_radial": 1.0,
+              "cos_tangential": 1.0,
+              "nrat_radial": 0.9999999999999992,
+              "nrat_tangential": 0.9999999999999899,
+              "sign_radial": 1.0,
+              "sign_tangential": 1.0,
+              "frac_energy_tangential": 0.12526388569166794
+            },
+            {
+              "cos_radial": 1.0,
+              "cos_tangential": 1.0,
+              "nrat_radial": 1.0000000000000009,
+              "nrat_tangential": 1.000000000000002,
+              "sign_radial": 1.0,
+              "sign_tangential": 1.0,
+              "frac_energy_tangential": 0.03543646142090597
+            }
+          ]
+        }
+      },
+      "4": {
+        "pooled": [
+          {
+            "cos_radial": 0.6343108301684781,
+            "cos_tangential": -0.18930505818905222,
+            "nrat_radial": 0.7760182756997248,
+            "nrat_tangential": 4.26687058975114,
+            "sign_radial": 0.7291666666666666,
+            "sign_tangential": 0.6458333333333334,
+            "frac_energy_tangential": 0.8776342948416878
+          },
+          {
+            "cos_radial": 0.5328074532925363,
+            "cos_tangential": 0.8520042915328524,
+            "nrat_radial": 0.5549566397505794,
+            "nrat_tangential": 0.5964289426545754,
+            "sign_radial": 0.8125,
+            "sign_tangential": 0.6041666666666666,
+            "frac_energy_tangential": 0.8506834492539673
+          },
+          {
+            "cos_radial": -0.6832588269287779,
+            "cos_tangential": -0.42571738713795965,
+            "nrat_radial": 2.6673170225602605,
+            "nrat_tangential": 2.675857391124233,
+            "sign_radial": 0.75,
+            "sign_tangential": 0.7916666666666666,
+            "frac_energy_tangential": 0.6441693395151201
+          },
+          {
+            "cos_radial": 0.3405430832976748,
+            "cos_tangential": 0.6498574309334992,
+            "nrat_radial": 0.974190520708349,
+            "nrat_tangential": 0.551221742749906,
+            "sign_radial": 0.7916666666666666,
+            "sign_tangential": 0.6458333333333334,
+            "frac_energy_tangential": 0.2648599208070409
+          }
+        ],
+        "per_layer": {
+          "0": [
+            {
+              "cos_radial": 0.41548726600637653,
+              "cos_tangential": 0.13954577812895355,
+              "nrat_radial": 0.27390483764844825,
+              "nrat_tangential": 0.2756019521799536,
+              "sign_radial": 0.625,
+              "sign_tangential": 0.6875,
+              "frac_energy_tangential": 0.8597838774838957
+            },
+            {
+              "cos_radial": 0.9100747418138305,
+              "cos_tangential": 0.8187576438308253,
+              "nrat_radial": 1.660435162284719,
+              "nrat_tangential": 1.5792489612355312,
+              "sign_radial": 0.6875,
+              "sign_tangential": 0.6875,
+              "frac_energy_tangential": 0.7551336933480443
+            },
+            {
+              "cos_radial": 0.9234780291680484,
+              "cos_tangential": 0.6177603975906859,
+              "nrat_radial": 0.7503417660826206,
+              "nrat_tangential": 0.6350214694096273,
+              "sign_radial": 0.75,
+              "sign_tangential": 0.8125,
+              "frac_energy_tangential": 0.15219251644190424
+            },
+            {
+              "cos_radial": 0.9262794533882114,
+              "cos_tangential": 0.2705006242260211,
+              "nrat_radial": 0.5407815185752423,
+              "nrat_tangential": 0.27895502413482615,
+              "sign_radial": 0.875,
+              "sign_tangential": 0.875,
+              "frac_energy_tangential": 0.16988250730431842
+            }
+          ],
+          "1": [
+            {
+              "cos_radial": 0.5059081200158887,
+              "cos_tangential": -0.5517078916287671,
+              "nrat_radial": 0.9229060451594512,
+              "nrat_tangential": 16.68897964880701,
+              "sign_radial": 0.75,
+              "sign_tangential": 0.5,
+              "frac_energy_tangential": 0.6619310854966488
+            },
+            {
+              "cos_radial": 0.48771201025337707,
+              "cos_tangential": 0.8857228434948589,
+              "nrat_radial": 0.5102442272045971,
+              "nrat_tangential": 0.5333734586915022,
+              "sign_radial": 0.8125,
+              "sign_tangential": 0.375,
+              "frac_energy_tangential": 0.8665347967031738
+            },
+            {
+              "cos_radial": -0.8544043372197065,
+              "cos_tangential": -0.7272609450724198,
+              "nrat_radial": 3.0034063398529383,
+              "nrat_tangential": 3.472319813008172,
+              "sign_radial": 0.625,
+              "sign_tangential": 0.8125,
+              "frac_energy_tangential": 0.5728147780635858
+            },
+            {
+              "cos_radial": -0.19468370038605248,
+              "cos_tangential": 0.7153938828352423,
+              "nrat_radial": 1.24984244047477,
+              "nrat_tangential": 0.5846562359212221,
+              "sign_radial": 0.6875,
+              "sign_tangential": 0.5,
+              "frac_energy_tangential": 0.40969467399077275
+            }
+          ],
+          "2": [
+            {
+              "cos_radial": 0.7315856213662362,
+              "cos_tangential": -0.5873859721996204,
+              "nrat_radial": 0.777531239068885,
+              "nrat_tangential": 0.4378737609109349,
+              "sign_radial": 0.8125,
+              "sign_tangential": 0.75,
+              "frac_energy_tangential": 0.9026053030333935
+            },
+            {
+              "cos_radial": 0.7402665777796391,
+              "cos_tangential": 0.9376481848408906,
+              "nrat_radial": 0.6304210871970375,
+              "nrat_tangential": 1.3033577071651723,
+              "sign_radial": 0.9375,
+              "sign_tangential": 0.75,
+              "frac_energy_tangential": 0.6059698065709903
+            },
+            {
+              "cos_radial": 0.9029050417773261,
+              "cos_tangential": 0.9410208606873277,
+              "nrat_radial": 0.8202637137846136,
+              "nrat_tangential": 0.7747561190641924,
+              "sign_radial": 0.875,
+              "sign_tangential": 0.75,
+              "frac_energy_tangential": 0.8798293923973367
+            },
+            {
+              "cos_radial": 0.9569730668223814,
+              "cos_tangential": 0.676079543613141,
+              "nrat_radial": 0.9430230182151798,
+              "nrat_tangential": 0.7034551533640414,
+              "sign_radial": 0.8125,
+              "sign_tangential": 0.5625,
+              "frac_energy_tangential": 0.0869810682053608
+            }
+          ],
+          "3": [
+            {
+              "cos_radial": 1.0,
+              "cos_tangential": 1.0,
+              "nrat_radial": 1.0000000000000027,
+              "nrat_tangential": 1.000000000000004,
+              "sign_radial": 1.0,
+              "sign_tangential": 1.0,
+              "frac_energy_tangential": 0.25099420892191493
+            },
+            {
+              "cos_radial": 1.0000000000000002,
+              "cos_tangential": 1.0,
+              "nrat_radial": 0.9999999999999991,
+              "nrat_tangential": 0.9999999999999986,
+              "sign_radial": 1.0,
+              "sign_tangential": 1.0,
+              "frac_energy_tangential": 0.06387434120372103
+            },
+            {
+              "cos_radial": 0.9999999999999999,
+              "cos_tangential": 1.0,
+              "nrat_radial": 0.9999999999999989,
+              "nrat_tangential": 0.9999999999999971,
+              "sign_radial": 1.0,
+              "sign_tangential": 1.0,
+              "frac_energy_tangential": 0.1344252479735097
+            },
+            {
+              "cos_radial": 1.0,
+              "cos_tangential": 1.0000000000000002,
+              "nrat_radial": 0.9999999999999996,
+              "nrat_tangential": 0.9999999999999992,
+              "sign_radial": 1.0,
+              "sign_tangential": 1.0,
+              "frac_energy_tangential": 0.05221752014217779
+            }
+          ]
+        }
+      }
+    },
+    "med_cos_radial": 0.5959717371772214,
+    "med_cos_tangential": 0.48750805757950677,
+    "verdict": "CONFIRMED: causal teacher loses tangential (phase) information disproportionately"
+  },
+  "e2": {
+    "finals": {
+      "E_C": {
+        "0": 0.002241392563213608,
+        "1": 0.0014441700676566228,
+        "2": 0.0012922445029017896,
+        "3": 0.02469880798853349,
+        "4": 0.0012926481087936518
+      },
+      "E_R": {
+        "0": 0.02285397556004928,
+        "1": 0.010064684410870304,
+        "2": 0.0056565779889180415,
+        "3": 0.004704042272744039,
+        "4": 0.008920056633965497
+      },
+      "C_C": {
+        "0": 0.016693249722993287,
+        "1": 0.0031327570456708862,
+        "2": 0.002484983076608951,
+        "3": 0.08893580832535956,
+        "4": 0.007318227100636881
+      },
+      "C_R": {
+        "0": 0.0018477242991285926,
+        "1": 0.016425073303425134,
+        "2": 0.019368879103882672,
+        "3": 0.03182136909849306,
+        "4": 0.0015409755197962833
+      }
+    },
+    "delta_exact": {
+      "0": 0.02061258299683567,
+      "1": 0.00862051434321368,
+      "2": 0.004364333486016252,
+      "3": -0.019994765715789453,
+      "4": 0.007627408525171846
+    },
+    "delta_causal": {
+      "0": -0.014845525423864695,
+      "1": 0.013292316257754247,
+      "2": 0.01688389602727372,
+      "3": -0.0571144392268665,
+      "4": -0.005777251580840598
+    },
+    "interaction": {
+      "0": 0.035458108420700366,
+      "1": -0.004671801914540566,
+      "2": -0.012519562541257467,
+      "3": 0.03711967351107705,
+      "4": 0.013404660106012444
+    },
+    "verdict": "CONFIRMED: exact teacher exploits complex phase; causal recovers much less"
+  }
+}

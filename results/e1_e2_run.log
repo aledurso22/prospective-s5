@@ -1,0 +1,85 @@
+E_R (exact-next, real) s0...
+    BR s0 step 500: loss 0.0512
+    BR s0 step 1000: loss 0.0174
+    BR s0 step 1500: loss 0.0191
+  final 0.0229
+B-complex replay with residual logging s0...
+    BC s0 step 500: loss 0.0049
+    BC s0 step 1000: loss 0.0020
+    BC s0 step 1500: loss 0.0024
+  replay final 0.0022  (stored 0.0022)
+E_R (exact-next, real) s1...
+    BR s1 step 500: loss 0.0634
+    BR s1 step 1000: loss 0.0310
+    BR s1 step 1500: loss 0.0070
+  final 0.0101
+B-complex replay with residual logging s1...
+    BC s1 step 500: loss 0.0219
+    BC s1 step 1000: loss 0.0062
+    BC s1 step 1500: loss 0.0013
+  replay final 0.0014  (stored 0.0014)
+E_R (exact-next, real) s2...
+    BR s2 step 500: loss 0.0572
+    BR s2 step 1000: loss 0.0090
+    BR s2 step 1500: loss 0.0059
+  final 0.0057
+B-complex replay with residual logging s2...
+    BC s2 step 500: loss 0.0194
+    BC s2 step 1000: loss 0.0025
+    BC s2 step 1500: loss 0.0014
+  replay final 0.0013  (stored 0.0013)
+E_R (exact-next, real) s3...
+    BR s3 step 500: loss 0.0384
+    BR s3 step 1000: loss 0.0121
+    BR s3 step 1500: loss 0.0050
+  final 0.0047
+B-complex replay with residual logging s3...
+    BC s3 step 500: loss 0.0226
+    BC s3 step 1000: loss 0.0248
+    BC s3 step 1500: loss 0.0241
+  replay final 0.0247  (stored 0.0247)
+E_R (exact-next, real) s4...
+    BR s4 step 500: loss 0.0189
+    BR s4 step 1000: loss 0.0170
+    BR s4 step 1500: loss 0.0097
+  final 0.0089
+B-complex replay with residual logging s4...
+    BC s4 step 500: loss 0.0071
+    BC s4 step 1000: loss 0.0015
+    BC s4 step 1500: loss 0.0010
+  replay final 0.0013  (stored 0.0013)
+arm-B replay determinism: max |dfinal| 0.00e+00
+BPTT calls (exact-teacher arms E_C/E_R): {'exact_grad': 15000, 'exact_lambda': 15000}
+------------------------------------------------------------------------------
+E1 — radial vs tangential teacher alignment (pooled lower layers 0..L-2):
+  s0 n= 100  cos_r +0.902  cos_phi +0.408  sign_r 0.62  sign_phi 0.52  E_phi 0.71
+  s0 n= 500  cos_r -0.121  cos_phi +0.127  sign_r 0.62  sign_phi 0.69  E_phi 0.23
+  s0 n=1000  cos_r +0.849  cos_phi +0.977  sign_r 0.73  sign_phi 0.56  E_phi 0.74
+  s0 n=1500  cos_r +0.577  cos_phi +0.567  sign_r 0.67  sign_phi 0.69  E_phi 0.63
+  s1 n= 100  cos_r +0.341  cos_phi -0.295  sign_r 0.73  sign_phi 0.69  E_phi 0.59
+  s1 n= 500  cos_r +0.883  cos_phi -0.751  sign_r 0.71  sign_phi 0.54  E_phi 0.84
+  s1 n=1000  cos_r +0.869  cos_phi -0.738  sign_r 0.62  sign_phi 0.67  E_phi 0.18
+  s1 n=1500  cos_r +0.736  cos_phi -0.918  sign_r 0.60  sign_phi 0.52  E_phi 0.42
+  s2 n= 100  cos_r +0.615  cos_phi -0.267  sign_r 0.83  sign_phi 0.69  E_phi 0.80
+  s2 n= 500  cos_r +0.940  cos_phi +0.692  sign_r 0.69  sign_phi 0.65  E_phi 0.77
+  s2 n=1000  cos_r +0.263  cos_phi +0.105  sign_r 0.65  sign_phi 0.67  E_phi 0.40
+  s2 n=1500  cos_r +0.740  cos_phi +0.745  sign_r 0.58  sign_phi 0.73  E_phi 0.64
+  s3 n= 100  cos_r +0.932  cos_phi +0.984  sign_r 0.73  sign_phi 0.67  E_phi 0.89
+  s3 n= 500  cos_r -0.158  cos_phi +0.901  sign_r 0.79  sign_phi 0.62  E_phi 0.40
+  s3 n=1000  cos_r +0.544  cos_phi +0.957  sign_r 0.79  sign_phi 0.75  E_phi 0.71
+  s3 n=1500  cos_r +0.462  cos_phi +0.994  sign_r 0.81  sign_phi 0.79  E_phi 0.85
+  s4 n= 100  cos_r +0.634  cos_phi -0.189  sign_r 0.73  sign_phi 0.65  E_phi 0.88
+  s4 n= 500  cos_r +0.533  cos_phi +0.852  sign_r 0.81  sign_phi 0.60  E_phi 0.85
+  s4 n=1000  cos_r -0.683  cos_phi -0.426  sign_r 0.75  sign_phi 0.79  E_phi 0.64
+  s4 n=1500  cos_r +0.341  cos_phi +0.650  sign_r 0.79  sign_phi 0.65  E_phi 0.26
+  medians: cos_r +0.596  cos_phi +0.488  -> CONFIRMED: causal teacher loses tangential (phase) information disproportionately
+E2 — crossed teacher x geometry (final losses):
+  E_C (exact,  complex): ['0.0022', '0.0014', '0.0013', '0.0247', '0.0013']  med 0.0014
+  E_R (exact,  real):    ['0.0229', '0.0101', '0.0057', '0.0047', '0.0089']  med 0.0089
+  C_C (causal, complex): ['0.0167', '0.0031', '0.0025', '0.0889', '0.0073']  med 0.0073
+  C_R (causal, real):    ['0.0018', '0.0164', '0.0194', '0.0318', '0.0015']  med 0.0164
+  Delta_exact  per seed ['+0.0206', '+0.0086', '+0.0044', '-0.0200', '+0.0076']  med +0.0076
+  Delta_causal per seed ['-0.0148', '+0.0133', '+0.0169', '-0.0571', '-0.0058']  med -0.0058
+  interaction Delta_exact - Delta_causal: ['+0.0355', '-0.0047', '-0.0125', '+0.0371', '+0.0134']  med +0.0134
+  -> CONFIRMED: exact teacher exploits complex phase; causal recovers much less
+wrote summary.json
