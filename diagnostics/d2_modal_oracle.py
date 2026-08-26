@@ -34,7 +34,7 @@ from toyrig import ssm_rig as tcg
 from toyrig import route_a as cvm
 from toyrig.probes import make_data
 from diagnostics.d1_exact_credit_factorization import setup, train_routeA, blocks_vec
-from gradient_cstat import gather, fit_scalars, grad_with_z, exact_vec, \
+from diagnostics.gradient_cstat import gather, fit_scalars, grad_with_z, exact_vec, \
     align, mrl
 
 SEEDS = [0, 1, 2, 3, 4]

@@ -39,7 +39,7 @@ from toyrig import ssm_rig as tcg
 from toyrig import route_a as cvm
 from toyrig.train_cell import STEPS
 from toyrig.probes import make_data
-from pac_deploy2 import rho1_of, setup
+from archive.credit_filters.pac_deploy2 import rho1_of, setup
 
 SEEDS = [0, 1, 2]
 ARMS = ["c1_oracle", "c1_ema01", "c1_ema005", "c1_frozen200"]

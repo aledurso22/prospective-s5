@@ -89,7 +89,7 @@ def main() -> None:
     for seed in SEEDS:
         print(f"seed {seed}: routeA retrain...", flush=True)
         # retrain routeA (registered protocol) and probe at final params
-        import route_pc as _rp  # audit wrappers (unused here)
+        from toyrig import routepc as _rp  # audit wrappers (unused here)
         params = tcg.init_params(seed)
         rng = np.random.RandomState(1000 + seed)
         w = [np.ones(tcg.N, np.complex128) for _ in range(tcg.L)]

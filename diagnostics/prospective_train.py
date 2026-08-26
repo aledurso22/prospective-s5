@@ -36,7 +36,7 @@ from toyrig import ssm_rig as tcg
 from toyrig import route_a as cvm
 from toyrig.train_cell import STEPS
 from toyrig.probes import make_data
-from prospective_ops import build_err
+from archive.prospective_ops import build_err
 
 SEEDS = [0, 1, 2, 3, 4]
 ARMS = ["online", "gain", "raw", "matched", "bestGlobal", "oppphase"]

@@ -51,7 +51,7 @@ from toyrig import ssm_rig as tcg
 from toyrig import route_a as cvm
 from toyrig.train_cell import STEPS
 from toyrig.probes import make_data
-from prospective_ops import apply_operator
+from archive.prospective_ops import apply_operator
 
 SEEDS = [0, 1, 2, 3, 4]
 BATCHES = 8

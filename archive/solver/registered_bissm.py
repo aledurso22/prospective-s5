@@ -71,7 +71,7 @@ from flax.training import train_state
 
 from train import load_mnist
 from ssm.baseline_s5.layer import S5SSM
-from registered_stiff_deq import StiffEquilibriumLayer
+from archive.solver.registered_stiff_deq import StiffEquilibriumLayer
 
 # ---------------------------------------------------------------------------
 # Registered hyperparameters (do not tune post hoc — see docstring)

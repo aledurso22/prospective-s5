@@ -45,8 +45,8 @@ from toyrig import ssm_rig as tcg
 from toyrig import route_a as cvm
 from toyrig.train_cell import train_cell, STEPS
 from toyrig.probes import make_data
-from wiener_oracle import wiener_fit
-from orient_wiener import apply_filter
+from archive.credit_filters.wiener_oracle import wiener_fit
+from archive.credit_filters.orient_wiener import apply_filter
 
 SEEDS = [0, 1, 2]
 K_FROZEN = [1, 4, 16, 32, 64, 96]
