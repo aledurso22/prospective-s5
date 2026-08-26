@@ -1,0 +1,202 @@
+{
+  "seeds5": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "arms": {
+    "polar": {
+      "finals5": {
+        "0": NaN,
+        "1": NaN,
+        "2": NaN,
+        "3": NaN,
+        "4": NaN
+      },
+      "dyn5": {
+        "0": {
+          "rho_max": NaN,
+          "rho_min": NaN,
+          "rho_final_med": NaN,
+          "dalpha_step": NaN,
+          "dphi_step": NaN,
+          "finite": false
+        },
+        "1": {
+          "rho_max": NaN,
+          "rho_min": NaN,
+          "rho_final_med": NaN,
+          "dalpha_step": NaN,
+          "dphi_step": NaN,
+          "finite": false
+        },
+        "2": {
+          "rho_max": NaN,
+          "rho_min": NaN,
+          "rho_final_med": NaN,
+          "dalpha_step": NaN,
+          "dphi_step": NaN,
+          "finite": false
+        },
+        "3": {
+          "rho_max": NaN,
+          "rho_min": NaN,
+          "rho_final_med": NaN,
+          "dalpha_step": NaN,
+          "dphi_step": NaN,
+          "finite": false
+        },
+        "4": {
+          "rho_max": NaN,
+          "rho_min": NaN,
+          "rho_final_med": NaN,
+          "dalpha_step": NaN,
+          "dphi_step": NaN,
+          "finite": false
+        }
+      },
+      "sane": false,
+      "competitive": false,
+      "report5": {
+        "median": NaN,
+        "beats_online": 0,
+        "beats_pc0": 0,
+        "ratio_online": NaN,
+        "ratio_pc0": NaN,
+        "failures": []
+      }
+    },
+    "polar_gauge": {
+      "finals5": {
+        "0": NaN,
+        "1": NaN,
+        "2": NaN,
+        "3": NaN,
+        "4": NaN
+      },
+      "dyn5": {
+        "0": {
+          "rho_max": NaN,
+          "rho_min": NaN,
+          "rho_final_med": NaN,
+          "dalpha_step": NaN,
+          "dphi_step": NaN,
+          "finite": false
+        },
+        "1": {
+          "rho_max": NaN,
+          "rho_min": NaN,
+          "rho_final_med": NaN,
+          "dalpha_step": NaN,
+          "dphi_step": NaN,
+          "finite": false
+        },
+        "2": {
+          "rho_max": NaN,
+          "rho_min": NaN,
+          "rho_final_med": NaN,
+          "dalpha_step": NaN,
+          "dphi_step": NaN,
+          "finite": false
+        },
+        "3": {
+          "rho_max": NaN,
+          "rho_min": NaN,
+          "rho_final_med": NaN,
+          "dalpha_step": NaN,
+          "dphi_step": NaN,
+          "finite": false
+        },
+        "4": {
+          "rho_max": NaN,
+          "rho_min": NaN,
+          "rho_final_med": NaN,
+          "dalpha_step": NaN,
+          "dphi_step": NaN,
+          "finite": false
+        }
+      },
+      "sane": false,
+      "competitive": false,
+      "report5": {
+        "median": NaN,
+        "beats_online": 0,
+        "beats_pc0": 0,
+        "ratio_online": NaN,
+        "ratio_pc0": NaN,
+        "failures": []
+      }
+    },
+    "pc0_adam": {
+      "finals5": {
+        "0": 0.04344300344827387,
+        "1": 0.01982115606094847,
+        "2": 0.0038120998196645136,
+        "3": 0.013625597052491042,
+        "4": 0.005181828115190793
+      },
+      "dyn5": {
+        "0": {
+          "rho_max": 2.4278586094643995,
+          "rho_min": 0.9986622283541414,
+          "rho_final_med": 1.6581630903907556,
+          "dalpha_step": 0.00035283779059825434,
+          "dphi_step": 0.00020528422046143033,
+          "finite": true
+        },
+        "1": {
+          "rho_max": 2.5539899147262197,
+          "rho_min": 0.9990005273022232,
+          "rho_final_med": 1.6108071951092948,
+          "dalpha_step": 0.0003398158248357284,
+          "dphi_step": 0.0002150599748310218,
+          "finite": true
+        },
+        "2": {
+          "rho_max": 2.366608243500839,
+          "rho_min": 0.9976643600328237,
+          "rho_final_med": 1.6545141796698815,
+          "dalpha_step": 0.0003448278781041632,
+          "dphi_step": 0.00019636748182163446,
+          "finite": true
+        },
+        "3": {
+          "rho_max": 2.7922100058983763,
+          "rho_min": 0.9988757043068272,
+          "rho_final_med": 1.5600213266039433,
+          "dalpha_step": 0.00034088161405459994,
+          "dphi_step": 0.00018673659203027881,
+          "finite": true
+        },
+        "4": {
+          "rho_max": 2.526315741128559,
+          "rho_min": 0.998948808240825,
+          "rho_final_med": 1.5806785317053231,
+          "dalpha_step": 0.00031297627133068944,
+          "dphi_step": 0.00019314817842567942,
+          "finite": true
+        }
+      },
+      "sane": true,
+      "competitive": false,
+      "report5": {
+        "median": 0.013625597052491042,
+        "beats_online": 4,
+        "beats_pc0": 2,
+        "ratio_online": 0.5974280997910628,
+        "ratio_pc0": 1.5340546402700528,
+        "failures": [
+          3
+        ]
+      }
+    }
+  },
+  "fd_gate": true,
+  "probe_calls": {
+    "exact_grad": 450,
+    "exact_lambda": 450
+  },
+  "git": "fa16d693d2cd9b86e62add4347dec4f453c0c04e"
+}
