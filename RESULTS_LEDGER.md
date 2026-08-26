@@ -120,7 +120,7 @@ seed ⇒ phase is representationally valuable; the causal factorial tie is an
 |---|---|---|
 | rot-RNN generality (D6 v1/v2) | `diagnostics/rot_rnn_generality{,2}.py` | barrier phenomena generalize; P3 FAIL — the large frozen-orientation benefit is **S5-specific in magnitude** |
 | CPU bench gates | `diagnostics/bench_copy.py`, `diagnostics/bench_smnist.py` | copy saturates (degenerate discriminator); sMNIST headroom 0.12 < 0.2 at CPU budget |
-| **cluster benchmark** | `train_bench.py` + `scripts/bench*.sbatch/bench_grid.sh` + `bench_report.py` | 8 arms × 3 tasks, paired streams, in-job headroom gate h≥0.2, CPU-smoke-clean, **UNLAUNCHED** |
+| **cluster benchmark** | `train_bench.py` + `scripts/bench*.sbatch/bench_grid.sh` + `bench_report.py` | 8 arms × 3 tasks (+ opt-in `--arm routePCphase` from C1), paired streams, in-job headroom gate h≥0.2, CPU-smoke-clean, **UNLAUNCHED** |
 
 ## 9. Solver lane (separate positive, archived)
 
@@ -128,3 +128,66 @@ seed ⇒ phase is representationally valuable; the causal factorial tie is an
 exact in 1 step; PLDS MC_Maze real neural data 2 NFEs/trial ~5 ms,
 L-BFGS never converges). Distinct program line from RoutePC; preserved for
 provenance. See `EXPERIMENTS.md` lane 1.
+
+## 10. Addendum controls C1–C3 (claim-sharpening, branch `controls/c1-c3`)
+
+Scripts: `controls/c1_phase_only_routepc.py` (+ `c1b_phase_only_15seeds.py`),
+`controls/c2_real_w_diagnostics.py`, `controls/c3_matched_budget_bptt_w.py`.
+Artifacts: `results/c1_phase_only_routepc/`, `results/c2_real_w_diagnostics/`,
+`results/c3_matched_budget_bptt_w/`. Every replay gate vs stored finals
+**bitwise PASS**; BPTT calls 0/0 in the causal arms.
+
+### C1 — phase-only (unit-modulus) RoutePC
+
+| arm | s0 | s1 | s2 | s3 | s4 | median |
+|---|---|---|---|---|---|---|
+| pcPhase | 0.0115 | 0.0085 | 0.0015 | 0.0580 | 0.0079 | **0.0085** |
+
+(online/PC0 as in §1.) 5-seed verdict per registered rule
+(median ≤ 1.5× PC0 AND beats online ≥ 4/5): **COMPETITIVE** — paired
+ratios pcPhase/PC0 median 0.686; seed 3 fails for both arms but less
+badly under unit modulus (0.0580 vs PC0 0.0889 vs online 0.0109).
+
+15-seed extension (seeds 0–14, `summary_15seeds.json`):
+
+| arm | median | paired-ratio median (arm/online) | failures (ratio > 1) |
+|---|---|---|---|
+| online | 0.0226 | 1.000 | 0/15 |
+| PC0 | 0.0167 | 0.861 | **6/15** [3, 6, 7, 8, 12, 13] |
+| pcPhase | **0.0137** | **0.718** | **4/15** [3, 6, 9, 13] |
+
+pcPhase beats PC0 on 9/15 paired seeds (median ratio 0.686) and online on
+11/15. **Unit modulus improves stability** (fewer catastrophic seeds) at
+some cost where the gain channel was helping (s1, s11). Registered as a
+**selectable arm** `--arm routePCphase` in `train_bench.py` (unit-modulus
+verified in saved w); PC0 preserved unchanged. Honesty note: the frozen
+5-seed headline (PC0 0.0073, 4/5) is a luckier-than-typical draw — over
+15 seeds PC0 fails on 6/15 seeds and its median ratio is 0.861. Both arms
+fail sometimes on this bistable task; per-seed reporting stands.
+
+### C2 — why does the real geometry work?
+
+- **Pr(w_j < 0) = 0.000** — every layer, every seed, trajectory and
+  final. **Zero sign flips ever** (0 flips/mode, all layers).
+- |w_j| at final: heavy-tailed, depth-increasing — medians L0 1.80,
+  L1 11.2, L2 15.6, L3 29.1; p90 7.5–160; max 2724 (L1).
+- temporal variation: relative |Δw|/|w| median < 5e-4 (quasi-static).
+
+**Verdict: (b) relative modal gain structure** — a quasi-static positive
+per-mode reweighting that changes the gradient DIRECTION before
+clipping/Adam. Not sign flips (none), not time-varying gain (static).
+Consistent with E1 (radial teacher alignment > tangential) and the
+factorial tie being identification-limited.
+
+### C3 — matched-headroom BPTT+w control
+
+Budgets by registered rule (first K where median L_BPTT(K) ≤
+{2×, 1×, 0.25×} online median final; L(K) = 25-step mean):
+K = 129 / 184 / 280 (+1500 reference). Δ_credit positive **5/5 at every
+K**. **BPTT+w is WORSE than BPTT at every budget on (nearly) every
+seed** (e.g. K=129: 0.0445→0.0637; K=280: 0.0024→0.0114 medians) —
+the geometry learned for online-credit repair actively miscalibrates
+exact credit. Interaction I(K) medians: +0.0022 / +0.0037 / +0.0120 /
++0.0211 (final). **Verdict: the generic-preconditioning hypothesis is
+rejected with headroom present, at every budget** — the final-step 2×2
+floor was not the limitation; PC0's benefit is credit-repair-specific.

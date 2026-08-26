@@ -22,6 +22,11 @@ Arms (--arm):
   routePCreal EXPLORATORY control: routePC with w constrained real
               (per-mode gain, phase pinned 0) — the causal arm's
               rotation-vs-gain control (route_pc_factorial.py).
+  routePCphase EXPLORATORY variant (addendum control C1: COMPETITIVE —
+              better median and fewer failure seeds than PC0 over 15
+              paired toy seeds): routePC constrained to unit modulus
+              |w_j| = 1, phase learned only
+              (controls/c1_phase_only_routepc.py).
   frozenPhase w = exp(i arg w_routeA) loaded from --w-file, never updated
   frozenMag   w = |w_routeA| loaded from --w-file, never updated
 
@@ -254,6 +259,19 @@ def zero_wim_jnp(meta):
     raise TypeError(f"unexpected meta leaf: {type(meta)}")
 
 
+def unit_w_jnp(meta):
+    """routePCphase projection (jnp-native, jit-traceable): w <- w/|w|
+    per (channel, mode) — unit-modulus geometry, learn phase only
+    (C1 control, controls/c1_phase_only_routepc.py)."""
+    if hasattr(meta, "items"):
+        if "w_re" in meta and "w_im" in meta:
+            r = jnp.sqrt(meta["w_re"] ** 2 + meta["w_im"] ** 2)
+            r = jnp.where(r < 1e-12, 1.0, r)
+            return {"w_re": meta["w_re"] / r, "w_im": meta["w_im"] / r}
+        return {k: unit_w_jnp(v) for k, v in meta.items()}
+    raise TypeError(f"unexpected meta leaf: {type(meta)}")
+
+
 def save_meta(meta, path):
     flat = flatten_dict(unfreeze(meta), sep="/")
     np.savez(path, **{k: np.asarray(v) for k, v in flat.items()})
@@ -294,7 +312,8 @@ def parse_args() -> argparse.Namespace:
                    required=True)
     p.add_argument("--arm", choices=["baseline", "online", "tbptt", "routeA",
                                      "scalarLive", "frozenPhase", "frozenMag",
-                                     "routePC", "routePCreal"],
+                                     "routePC", "routePCreal",
+                                     "routePCphase"],
                    required=True)
     p.add_argument("--epochs", type=int, default=3)
     p.add_argument("--subset", type=int, default=20000,
@@ -373,7 +392,8 @@ def main() -> None:
 
     # ---------------- models ----------------
     is_meta_arm = args.arm in ("routeA", "scalarLive", "frozenPhase",
-                               "frozenMag", "routePC", "routePCreal")
+                               "frozenMag", "routePC", "routePCreal",
+                               "routePCphase")
     model_type = {"baseline": "baseline", "online": "online",
                   "tbptt": "tbptt"}.get(args.arm, "online")
     # learning rule vs state dynamics, exposed independently (factorial-
@@ -383,6 +403,7 @@ def main() -> None:
     learning_rule = {"baseline": "bptt", "tbptt": "tbptt",
                      "online": "online", "routePC": "routepc",
                      "routePCreal": "routepc",
+                     "routePCphase": "routepc",
                      "routeA": "oracle_exact_teacher",
                      "scalarLive": "oracle_exact_teacher",
                      "frozenPhase": "online_frozen_geometry",
@@ -534,6 +555,8 @@ def main() -> None:
         meta = optax.apply_updates(meta, upd)     # w_corr (PC0: pred=corr)
         if args.arm == "routePCreal":
             meta = zero_wim_jnp(meta)
+        elif args.arm == "routePCphase":
+            meta = unit_w_jnp(meta)
         # (3) applied update with the corrected geometry
         grads = jax.grad(lambda p: apply_model(p, meta, x, y, drng,
                                                True)[0])(params0)
@@ -569,7 +592,8 @@ def main() -> None:
         return tot_l / n, tot_c / n
 
     # ---------------- startup self-checks (meta arms) ----------------
-    if args.arm in ("routeA", "scalarLive", "routePC", "routePCreal"):
+    if args.arm in ("routeA", "scalarLive", "routePC", "routePCreal",
+                    "routePCphase"):
         xb = prep_x(x_train[:8], tmeta["one_hot"])
         yb = jnp.asarray(y_train[:8])
         dr = jax.random.PRNGKey(0)
@@ -611,7 +635,7 @@ def main() -> None:
             if args.arm in ("routeA", "scalarLive"):
                 state, meta, meta_state, loss, acc = routeA_step(
                     state, meta, meta_state, xb, yb)
-            elif args.arm in ("routePC", "routePCreal"):
+            elif args.arm in ("routePC", "routePCreal", "routePCphase"):
                 drng, new_drng = jax.random.split(state.dropout_rng)
                 state = state.replace(dropout_rng=new_drng)
                 if prev is None:
@@ -660,7 +684,8 @@ def main() -> None:
           f"wall={wall:.1f}s  ({step / wall:.2f} steps/s)")
 
     w_path = ""
-    if args.arm in ("routeA", "scalarLive", "routePC", "routePCreal"):
+    if args.arm in ("routeA", "scalarLive", "routePC", "routePCreal",
+                    "routePCphase"):
         w_path = os.path.join(
             RESULTS_DIR,
             f"w_{args.task}_{args.arm}{args.tag}_s{args.seed}.npz")
@@ -698,7 +723,8 @@ def main() -> None:
     # structural here; routeA/scalarLive call an exact-BPTT teacher.
     audit = dict(teacher=("exact-bptt" if teacher is not None else
                           "realized-online" if args.arm in
-                          ("routePC", "routePCreal") else None),
+                          ("routePC", "routePCreal", "routePCphase")
+                          else None),
                    exact_gradient_path=bool(teacher is not None),
                    bptt_calls_in_deployed_rule=(
                        args.arm in ("routeA", "scalarLive")))

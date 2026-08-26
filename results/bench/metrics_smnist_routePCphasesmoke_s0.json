@@ -1,0 +1,86 @@
+{
+  "config": {
+    "task": "smnist",
+    "arm": "routePCphase",
+    "model_type": "online",
+    "learning_rule": "routepc",
+    "state_prospective": false,
+    "gamma": null,
+    "rho_init": null,
+    "d_model": 32,
+    "state_size": 16,
+    "n_layers": 2,
+    "dropout": 0.1,
+    "batch_size": 32,
+    "lr": 0.001,
+    "lr_m": 0.001,
+    "schedule": "cosine->0",
+    "optimizer": "adam",
+    "meta_optimizer": "sgd",
+    "epochs": 1,
+    "train_samples": 512,
+    "test_samples": 256,
+    "seed": 0,
+    "standardized": false,
+    "scan_impl": "assoc",
+    "downsample": 1,
+    "seq_len": 784,
+    "seq2seq": false,
+    "tbptt_window": null,
+    "w_file": null,
+    "target_loss": null,
+    "copy_k": null,
+    "copy_alpha": null
+  },
+  "params": 9098,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 2.5748134652773538,
+      "train_acc": 0.08333333333333333,
+      "test_loss": 2.4696457386016846,
+      "test_acc": 0.0859375,
+      "eval_samples": 256,
+      "epoch_time_sec": 11.594659090042114
+    }
+  ],
+  "final_test_acc": 0.0859375,
+  "final_test_loss": 2.4696457386016846,
+  "final_eval_samples": 256,
+  "per_epoch_eval_samples": 256,
+  "wall_time_sec": 12.141907930374146,
+  "total_steps": 12,
+  "steps_per_sec": 0.9883125509443907,
+  "device": "cpu:0",
+  "w_file": "/Users/alessandrodurso/Documents/prospective-s5/results/bench/w_smnist_routePCphasesmoke_s0.npz",
+  "audit": {
+    "teacher": "realized-online",
+    "exact_gradient_path": false,
+    "bptt_calls_in_deployed_rule": false
+  },
+  "instrumentation": {
+    "wall_time_sec": 12.141907930374146,
+    "total_steps": 12,
+    "steps_per_sec": 0.9883125509443907,
+    "peak_device_memory_bytes": null,
+    "eligibility_state_bytes": 16384,
+    "time_to_target": null
+  },
+  "provenance": {
+    "git_commit": "19113650ef101781f8504db1de9f2b54ba68e44e",
+    "git_branch": "controls/c1-c3",
+    "git_dirty": true,
+    "hostname": "Alessandros-MacBook-Pro",
+    "slurm_job_id": null,
+    "slurm_array": null,
+    "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+    "versions": {
+      "python": "3.14.4",
+      "numpy": "2.5.2",
+      "jax": "0.11.0",
+      "flax": "0.12.8",
+      "optax": "0.2.8",
+      "jaxlib_devices": "[CpuDevice(id=0)]"
+    }
+  }
+}

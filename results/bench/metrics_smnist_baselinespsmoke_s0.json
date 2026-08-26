@@ -1,0 +1,86 @@
+{
+  "config": {
+    "task": "smnist",
+    "arm": "baseline",
+    "model_type": "prospective",
+    "learning_rule": "bptt",
+    "state_prospective": true,
+    "gamma": 0.0,
+    "rho_init": 0.001,
+    "d_model": 32,
+    "state_size": 16,
+    "n_layers": 2,
+    "dropout": 0.1,
+    "batch_size": 32,
+    "lr": 0.001,
+    "lr_m": 0.001,
+    "schedule": "cosine->0",
+    "optimizer": "adam",
+    "meta_optimizer": null,
+    "epochs": 1,
+    "train_samples": 512,
+    "test_samples": 256,
+    "seed": 0,
+    "standardized": false,
+    "scan_impl": "assoc",
+    "downsample": 1,
+    "seq_len": 784,
+    "seq2seq": false,
+    "tbptt_window": null,
+    "w_file": null,
+    "target_loss": null,
+    "copy_k": null,
+    "copy_alpha": null
+  },
+  "params": 9098,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 2.690254306793213,
+      "train_acc": 0.07708333333333334,
+      "test_loss": 2.588637113571167,
+      "test_acc": 0.10546875,
+      "eval_samples": 256,
+      "epoch_time_sec": 28.935863733291626
+    }
+  ],
+  "final_test_acc": 0.10546875,
+  "final_test_loss": 2.588637113571167,
+  "final_eval_samples": 256,
+  "per_epoch_eval_samples": 256,
+  "wall_time_sec": 30.498410940170288,
+  "total_steps": 15,
+  "steps_per_sec": 0.4918289031328872,
+  "device": "cpu:0",
+  "w_file": null,
+  "audit": {
+    "teacher": null,
+    "exact_gradient_path": false,
+    "bptt_calls_in_deployed_rule": false
+  },
+  "instrumentation": {
+    "wall_time_sec": 30.498410940170288,
+    "total_steps": 15,
+    "steps_per_sec": 0.4918289031328872,
+    "peak_device_memory_bytes": null,
+    "eligibility_state_bytes": 0,
+    "time_to_target": null
+  },
+  "provenance": {
+    "git_commit": "8af6b8e958bf4ecc0af6be1a37d16a66ace472a3",
+    "git_branch": "s5-routepc",
+    "git_dirty": true,
+    "hostname": "Alessandros-MacBook-Pro",
+    "slurm_job_id": null,
+    "slurm_array": null,
+    "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+    "versions": {
+      "python": "3.14.4",
+      "numpy": "2.5.2",
+      "jax": "0.11.0",
+      "flax": "0.12.8",
+      "optax": "0.2.8",
+      "jaxlib_devices": "[CpuDevice(id=0)]"
+    }
+  }
+}

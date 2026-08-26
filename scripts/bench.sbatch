@@ -77,6 +77,7 @@ run routeA
 run scalarLive
 run routePC
 run routePCreal
+run routePCphase   # opt-in exploratory (C1: unit-modulus variant)
 WFILE="results/bench/w_${TASK}_routeA_s${SEED}.npz"
 run frozenPhase --w-file "$WFILE"
 run frozenMag   --w-file "$WFILE"
