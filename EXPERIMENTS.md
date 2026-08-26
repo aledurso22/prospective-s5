@@ -9,6 +9,21 @@ running; paired seeds/init/data streams across arms; complex-conjugation
 gates; post-hoc changes logged. Final-loss metric: mean of last 100 of
 1500 steps, delayed copy D=50/T=128 (unless stated), median over seeds.
 
+> **Repository layout (2026-08 consolidation, commit `8cdc4d6`).** The
+> scripts below moved into semantic directories; this ledger keeps the
+> historical names in the tables. Mapping: the five shared modules
+> (`trained_credit_gains`, `co_variational_metric`, `decompose_w_final`,
+> `depth_law`, `route_pc`) are now `toyrig/{ssm_rig, route_a, probes,
+> train_cell, routepc}.py`; `prospective_offline2.py` →
+> `diagnostics/d1_exact_credit_factorization.py`;
+> `oracle_real_vs_complex.py` → `diagnostics/d2_modal_oracle.py`;
+> `check_route_pc/routeA_meta/online_s5` → `tests/test_pc0_regression /
+> test_routepc_jax_meta / test_online_s5_jax.py`; all other experiment
+> scripts keep their filenames under `diagnostics/`, `controls/`,
+> `archive/` (see each directory's README). Everything runs as
+> `python -m <dir>.<name>` from the repo root. Frozen numbers with full
+> provenance: `RESULTS_LEDGER.md`.
+
 **Headline scoreboard:**
 
 | lane | experiments | positive | negative / closed |
@@ -176,24 +191,30 @@ split, Mori–Zwanzig/FDT
 
 ## Reproduce
 
+All commands from the repo root, module-style (`python -m ...`).
+Directory READMEs map every script; frozen numbers: `RESULTS_LEDGER.md`.
+
 ```bash
-python exact_failure.py && python ghost_demo.py        # lane 0
-python pesm_s5_spectrum.py && python s5_state_inference.py
-python plds_benchmark.py && python plds_mcmaze.py && python plds_mcmaze_fit.py
-python registered_stiff_deq.py --grid --summarize      # lane 1
-# lane 2 on research/prospective-credit-s5
-python co_variational_metric.py && python ablation_generic.py
-python decompose_w_final.py && python depth_law.py && python transfer_m.py
-python recheck_curvature.py && python recheck_curvature_matrix.py
-python factorize_w.py && python transfer_phase.py && python derive_phase.py
-python pac_probe2.py && python pac_analysis.py
-python pac_deploy.py && python pac_deploy2.py && python pac_deploy3.py && python pac_deploy4.py
-python tbptt_baseline.py && python test_holonomy.py
-python covariant_adam.py && python lr_control.py
-python wiener_oracle.py             # Wiener ceiling, Hankel floor, deploy barrier
-python route_pc.py && python pc_signal_audit.py   # lane 8: causal orientation
-python route_pc_pro.py && python route_pc_pro_drift.py  # TSS residual prospection (CORRECTION ONLY)
-python check_online_s5.py && python check_routeA_meta.py   # jax pipeline gates
-# cluster: bash scripts/bench_grid.sh <partition> <account> 0 1 2
-#          then python bench_report.py --gate && python bench_report.py
+python -m tests.test_pc0_regression    # THE freeze gate (bitwise PC0, 0 BPTT)
+python -m tests.test_external_rig      # independent-rig identities
+python -m tests.test_online_s5_jax && python -m tests.test_routepc_jax_meta
+python -m tests.test_scan
+python -m core.train_routepc           # canonical protocol (online/routeA/PC)
+python -m core.train_online            # online baseline only
+# controls:
+python -m controls.control_2x2_normmatch && python -m controls.tbptt_baseline
+python -m controls.lr_control
+# key diagnostics:
+python -m diagnostics.d1_exact_credit_factorization
+python -m diagnostics.d2_modal_oracle
+python -m diagnostics.teacher_decompose && python -m diagnostics.prospective_kappa
+python -m diagnostics.e1_e2_identification
+python -m diagnostics.oracle_lagged_deficit
+python -m diagnostics.phase_probes && python -m diagnostics.gradient_cstat
+# archived lanes (see archive/README.md):
+python -m archive.solver.pesm_s5_spectrum      # solver positive
+python -m archive.forward_prospection.exact_failure
+# cluster benchmark (UNLAUNCHED):
+#   bash scripts/bench_grid.sh <partition> <account> 0 1 2
+#   then python bench_report.py --gate && python bench_report.py
 ```
