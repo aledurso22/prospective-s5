@@ -1,0 +1,162 @@
+kappa=0.0 s0...
+    k=0.0 s0 step 500: loss 0.0043
+    k=0.0 s0 step 1000: loss 0.0026
+    k=0.0 s0 step 1500: loss 0.0013
+  final 0.0015  finite True
+kappa=0.0 s1...
+    k=0.0 s1 step 500: loss 0.0279
+    k=0.0 s1 step 1000: loss 0.0032
+    k=0.0 s1 step 1500: loss 0.0007
+  final 0.0009  finite True
+kappa=0.0 s2...
+    k=0.0 s2 step 500: loss 0.0194
+    k=0.0 s2 step 1000: loss 0.0017
+    k=0.0 s2 step 1500: loss 0.0015
+  final 0.0016  finite True
+kappa=0.0 s3...
+    k=0.0 s3 step 500: loss 0.0233
+    k=0.0 s3 step 1000: loss 0.0249
+    k=0.0 s3 step 1500: loss 0.0243
+  final 0.0248  finite True
+kappa=0.0 s4...
+    k=0.0 s4 step 500: loss 0.0069
+    k=0.0 s4 step 1000: loss 0.0029
+    k=0.0 s4 step 1500: loss 0.0013
+  final 0.0018  finite True
+kappa=0.5 s0...
+    k=0.5 s0 step 500: loss 0.0065
+    k=0.5 s0 step 1000: loss 0.0043
+    k=0.5 s0 step 1500: loss 0.0029
+  final 0.0029  finite True
+kappa=0.5 s1...
+    k=0.5 s1 step 500: loss 0.0222
+    k=0.5 s1 step 1000: loss 0.0049
+    k=0.5 s1 step 1500: loss 0.0063
+  final 0.0047  finite True
+kappa=0.5 s2...
+    k=0.5 s2 step 500: loss 0.0193
+    k=0.5 s2 step 1000: loss 0.0017
+    k=0.5 s2 step 1500: loss 0.0010
+  final 0.0015  finite True
+kappa=0.5 s3...
+    k=0.5 s3 step 500: loss 0.0234
+    k=0.5 s3 step 1000: loss 0.0248
+    k=0.5 s3 step 1500: loss 0.0248
+  final 0.0250  finite True
+kappa=0.5 s4...
+    k=0.5 s4 step 500: loss 0.0054
+    k=0.5 s4 step 1000: loss 0.0038
+    k=0.5 s4 step 1500: loss 0.0023
+  final 0.0029  finite True
+kappa=1.0 s0...
+    k=1.0 s0 step 500: loss 0.0049
+    k=1.0 s0 step 1000: loss 0.0020
+    k=1.0 s0 step 1500: loss 0.0024
+  final 0.0022  finite True
+kappa=1.0 s1...
+    k=1.0 s1 step 500: loss 0.0219
+    k=1.0 s1 step 1000: loss 0.0062
+    k=1.0 s1 step 1500: loss 0.0013
+  final 0.0014  finite True
+kappa=1.0 s2...
+    k=1.0 s2 step 500: loss 0.0194
+    k=1.0 s2 step 1000: loss 0.0025
+    k=1.0 s2 step 1500: loss 0.0014
+  final 0.0013  finite True
+kappa=1.0 s3...
+    k=1.0 s3 step 500: loss 0.0226
+    k=1.0 s3 step 1000: loss 0.0248
+    k=1.0 s3 step 1500: loss 0.0241
+  final 0.0247  finite True
+kappa=1.0 s4...
+    k=1.0 s4 step 500: loss 0.0071
+    k=1.0 s4 step 1000: loss 0.0015
+    k=1.0 s4 step 1500: loss 0.0010
+  final 0.0013  finite True
+kappa=1.5 s0...
+    k=1.5 s0 step 500: loss 0.0060
+    k=1.5 s0 step 1000: loss 0.0021
+    k=1.5 s0 step 1500: loss 0.0013
+  final 0.0011  finite True
+kappa=1.5 s1...
+    k=1.5 s1 step 500: loss 0.0222
+    k=1.5 s1 step 1000: loss 0.0022
+    k=1.5 s1 step 1500: loss 0.0010
+  final 0.0013  finite True
+kappa=1.5 s2...
+    k=1.5 s2 step 500: loss 0.0197
+    k=1.5 s2 step 1000: loss 0.0020
+    k=1.5 s2 step 1500: loss 0.0039
+  final 0.0041  finite True
+kappa=1.5 s3...
+    k=1.5 s3 step 500: loss 0.0230
+    k=1.5 s3 step 1000: loss 0.0244
+    k=1.5 s3 step 1500: loss 0.0236
+  final 0.0240  finite True
+kappa=1.5 s4...
+    k=1.5 s4 step 500: loss 0.0090
+    k=1.5 s4 step 1000: loss 0.0015
+    k=1.5 s4 step 1500: loss 0.0012
+  final 0.0013  finite True
+kappa=2.0 s0...
+    k=2.0 s0 step 500: loss 0.0075
+    k=2.0 s0 step 1000: loss 0.0034
+    k=2.0 s0 step 1500: loss 0.0007
+  final 0.0009  finite True
+kappa=2.0 s1...
+    k=2.0 s1 step 500: loss 0.0195
+    k=2.0 s1 step 1000: loss 0.0013
+    k=2.0 s1 step 1500: loss 0.0016
+  final 0.0016  finite True
+kappa=2.0 s2...
+    k=2.0 s2 step 500: loss 0.0171
+    k=2.0 s2 step 1000: loss 0.0028
+    k=2.0 s2 step 1500: loss 0.0034
+  final 0.0027  finite True
+kappa=2.0 s3...
+    k=2.0 s3 step 500: loss 0.0237
+    k=2.0 s3 step 1000: loss 0.0258
+    k=2.0 s3 step 1500: loss 0.0248
+  final 0.0252  finite True
+kappa=2.0 s4...
+    k=2.0 s4 step 500: loss 0.0104
+    k=2.0 s4 step 1000: loss 0.0043
+    k=2.0 s4 step 1500: loss 0.0011
+  final 0.0013  finite True
+kappa=4.0 s0...
+    k=4.0 s0 step 500: loss 0.0060
+    k=4.0 s0 step 1000: loss 0.0044
+    k=4.0 s0 step 1500: loss 0.0033
+  final 0.0024  finite True
+kappa=4.0 s1...
+    k=4.0 s1 step 500: loss 0.0216
+    k=4.0 s1 step 1000: loss 0.0030
+    k=4.0 s1 step 1500: loss 0.0015
+  final 0.0019  finite True
+kappa=4.0 s2...
+    k=4.0 s2 step 500: loss 0.0166
+    k=4.0 s2 step 1000: loss 0.0028
+    k=4.0 s2 step 1500: loss 0.0021
+  final 0.0029  finite True
+kappa=4.0 s3...
+    k=4.0 s3 step 500: loss 0.0344
+    k=4.0 s3 step 1000: loss 0.0246
+    k=4.0 s3 step 1500: loss 0.0019
+  final 0.0028  finite True
+kappa=4.0 s4...
+    k=4.0 s4 step 500: loss 0.0058
+    k=4.0 s4 step 1000: loss 0.0047
+    k=4.0 s4 step 1500: loss 0.0018
+  final 0.0025  finite True
+kappa=0 vs stored routeA: max |dfinal| 0.00e+00 (bitwise expected)
+BPTT calls (exact-teacher sweep): {'exact_grad': 82500, 'exact_lambda': 82500}
+------------------------------------------------------------------------------
+finals per kappa:
+Traceback (most recent call last):
+  File "/Users/alessandrodurso/Documents/prospective-s5/prospective_kappa.py", line 325, in <module>
+    main()
+    ~~~~^^
+  File "/Users/alessandrodurso/Documents/prospective-s5/prospective_kappa.py", line 270, in main
+    print(f"  k={k:<4s} {['%.4f' % finals[k][s] for s in SEEDS]}  "
+                ^^^^^^^
+ValueError: Unknown format code 's' for object of type 'float'

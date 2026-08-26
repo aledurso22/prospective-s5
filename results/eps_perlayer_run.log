@@ -1,0 +1,17 @@
+eps series s0...
+  pooled lower: rho_r(1) +0.684  rho_phi(1) +0.785
+eps series s1...
+  pooled lower: rho_r(1) +0.802  rho_phi(1) +0.833
+eps series s2...
+  pooled lower: rho_r(1) +0.837  rho_phi(1) +0.854
+eps series s3...
+  pooled lower: rho_r(1) +0.696  rho_phi(1) +0.787
+eps series s4...
+  pooled lower: rho_r(1) +0.760  rho_phi(1) +0.784
+------------------------------------------------------------------------------
+kappa finals (parsed from the completed sweep):
+eps directional ac1, pooled lower layers (full / late):
+  radial      +0.760 / +0.665   per-layer: [0.746, 0.767, 0.773, -0.005]
+  tangential  +0.787 / +0.711   per-layer: [0.765, 0.805, 0.818, -0.002]
+tangential energy fraction (lower layers): 0.60
+wrote summary.json
