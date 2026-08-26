@@ -1,0 +1,95 @@
+BPTT+w s0...
+    BPTT+w s0 step 500: loss 0.0009
+    BPTT+w s0 step 1000: loss 0.0001
+    BPTT+w s0 step 1500: loss 0.0000
+  final 0.0000  finite True
+PC0_normmatched s0...
+    PC0NM s0 step 500: loss 0.0166
+    PC0NM s0 step 1000: loss 0.0059
+    PC0NM s0 step 1500: loss 0.0145
+  final 0.0167
+PC0 replay (ratio log) s0...
+    PC0 s0 step 500: loss 0.0166
+    PC0 s0 step 1000: loss 0.0059
+    PC0 s0 step 1500: loss 0.0145
+  final 0.0167  median |M_w g|/|g| 39.319
+BPTT+w s1...
+    BPTT+w s1 step 500: loss 0.0004
+    BPTT+w s1 step 1000: loss 0.0001
+    BPTT+w s1 step 1500: loss 0.0001
+  final 0.0000  finite True
+PC0_normmatched s1...
+    PC0NM s1 step 500: loss 0.0603
+    PC0NM s1 step 1000: loss 0.0356
+    PC0NM s1 step 1500: loss 0.0021
+  final 0.0035
+PC0 replay (ratio log) s1...
+    PC0 s1 step 500: loss 0.0603
+    PC0 s1 step 1000: loss 0.0356
+    PC0 s1 step 1500: loss 0.0028
+  final 0.0031  median |M_w g|/|g| 63.875
+BPTT+w s2...
+    BPTT+w s2 step 500: loss 0.0003
+    BPTT+w s2 step 1000: loss 0.0002
+    BPTT+w s2 step 1500: loss 0.0001
+  final 0.0001  finite True
+PC0_normmatched s2...
+    PC0NM s2 step 500: loss 0.0550
+    PC0NM s2 step 1000: loss 0.0070
+    PC0NM s2 step 1500: loss 0.0022
+  final 0.0027
+PC0 replay (ratio log) s2...
+    PC0 s2 step 500: loss 0.0550
+    PC0 s2 step 1000: loss 0.0070
+    PC0 s2 step 1500: loss 0.0021
+  final 0.0025  median |M_w g|/|g| 331.384
+BPTT+w s3...
+    BPTT+w s3 step 500: loss 0.0020
+    BPTT+w s3 step 1000: loss 0.0009
+    BPTT+w s3 step 1500: loss 0.0005
+  final 0.0003  finite True
+PC0_normmatched s3...
+    PC0NM s3 step 500: loss 0.0589
+    PC0NM s3 step 1000: loss 0.0425
+    PC0NM s3 step 1500: loss 0.1507
+  final 0.1137
+PC0 replay (ratio log) s3...
+    PC0 s3 step 500: loss 0.0589
+    PC0 s3 step 1000: loss 0.0425
+    PC0 s3 step 1500: loss 0.0589
+  final 0.0889  median |M_w g|/|g| 563.570
+BPTT+w s4...
+    BPTT+w s4 step 500: loss 0.0033
+    BPTT+w s4 step 1000: loss 0.0003
+    BPTT+w s4 step 1500: loss 0.0001
+  final 0.0001  finite True
+PC0_normmatched s4...
+    PC0NM s4 step 500: loss 0.0167
+    PC0NM s4 step 1000: loss 0.0060
+    PC0NM s4 step 1500: loss 0.0076
+  final 0.0073
+PC0 replay (ratio log) s4...
+    PC0 s4 step 500: loss 0.0167
+    PC0 s4 step 1000: loss 0.0060
+    PC0 s4 step 1500: loss 0.0076
+  final 0.0073  median |M_w g|/|g| 79.727
+PC0 replay vs stored: max |dfinal| 0.00e+00 (gate)
+BPTT calls (BPTT+w arm + PC0 arms): {'exact_grad': 7500, 'exact_lambda': 7500}
+------------------------------------------------------------------------------
+2x2 finals:
+  Online : ['0.0727', '0.0224', '0.0284', '0.0109', '0.0118']
+  PC0    : ['0.0167', '0.0031', '0.0025', '0.0889', '0.0073']
+  BPTT   : ['0.00004', '0.00004', '0.00009', '0.00035', '0.00009']
+  BPTT+w : ['0.00005', '0.00005', '0.00011', '0.00033', '0.00006']
+Delta_credit (online - BPTT): ['+0.0727', '+0.0224', '+0.0283', '+0.0105', '+0.0117']
+I = (online-PC0) - (BPTT-BPTT+w): ['+0.0560', '+0.0193', '+0.0259', '-0.0781', '+0.0044']
+  median +0.0193  mean +0.0055  sd 0.0504
+PC0_normmatched finals: ['0.0167', '0.0035', '0.0027', '0.1137', '0.0073']  med 0.0073
+PC0 |M_w g|/|g| per-seed medians: ['39.319', '63.875', '331.384', '563.570', '79.727']  pooled 79.727
+D2 per-mode-complex held-out cos per seed: [np.float64(0.901), np.float64(0.893), np.float64(0.921), np.float64(0.977), np.float64(0.813)]
+  median 0.901  min 0.813  max 0.977  IQR [0.893, 0.921]
+D2 per-mode-real held-out cos per seed: [np.float64(0.764), np.float64(0.765), np.float64(0.885), np.float64(0.85), np.float64(0.673)]
+  median 0.765  min 0.673  max 0.885
+------------------------------------------------------------------------------
+optimizer record: theta: Adam (b1=0.9, b2=0.999, eps=1e-8), LR = 1e-3 constant; grad clipped to global norm 1.0 BEFORE Adam; w (MetaOpt): plain SGD, LR_M = 1e-3, no clip, no Adam; M_w = conj(w) per mode on the (a, B) gradient blocks applied to the RAW gradient BEFORE clipping and BEFORE any Adam normalization; the meta-chain ignores Adam/clip (documented cvm simplification).
+wrote summary.json
