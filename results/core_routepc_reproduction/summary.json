@@ -1,0 +1,132 @@
+{
+  "artifact": "core RoutePC/PC0 reproduction (standalone)",
+  "git_at_packaging": "5ef1c15eaa6fad3d92ff0a3e3cef39f1915dd3d7",
+  "source_run": {
+    "path": "results/route_pc/summary.json",
+    "git": "107a9d282f2863f2397fb0beb9fd6da572b41a25",
+    "config": {
+      "steps": 1500,
+      "lr": 0.001,
+      "lr_m": 0.001,
+      "clip": 1.0,
+      "seeds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "betas": [
+        0.0,
+        0.25,
+        0.5
+      ],
+      "delta_max": 0.2,
+      "L": 4,
+      "N": 16,
+      "T": 128,
+      "delay": 50,
+      "batch": 32,
+      "bar": "best PC beats online >=4/5 paired seeds and median R_gap >= 0.30"
+    }
+  },
+  "implementation_pointer": "route_pc.py: train_pc(seed, beta=0.0). Core recursion: h_n = tcg.flat_grads(G, params) (online grad, fixed); per-layer du/dv chain (r_hat); w_pred <- w_pred - LR_M*(-LR)*r_hat; main update g = clip(flat_grads(scale_by_w(G, w_pred))), Adam.",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "finals_online": {
+    "0": 0.07271670593242449,
+    "1": 0.02242807737868163,
+    "2": 0.028405044813432142,
+    "3": 0.010873864879310828,
+    "4": 0.011770399898219508
+  },
+  "finals_pc0": {
+    "0": 0.016693249722993287,
+    "1": 0.0031327570456708862,
+    "2": 0.002484983076608951,
+    "3": 0.08893580832535956,
+    "4": 0.007318227100636881
+  },
+  "median_online": 0.02242807737868163,
+  "median_pc0": 0.007318227100636881,
+  "paired_deltas": {
+    "0": 0.05602345620943121,
+    "1": 0.01929532033301074,
+    "2": 0.02592006173682319,
+    "3": -0.07806194344604873,
+    "4": 0.0044521727975826274
+  },
+  "paired_wins": 4,
+  "relative_improvement_median": 0.6737024321312083,
+  "relative_improvement_per_seed": {
+    "0": 0.7704344619446005,
+    "1": 0.8603198574368822,
+    "2": 0.9125161360268703,
+    "3": -7.178859063677845,
+    "4": 0.37825161728414186
+  },
+  "bptt_audit": {
+    "online": {
+      "exact_grad": 0,
+      "exact_lambda": 0
+    },
+    "routeA": {
+      "exact_grad": 7500,
+      "exact_lambda": 7500
+    },
+    "pc_b0.0": {
+      "exact_grad": 0,
+      "exact_lambda": 0
+    },
+    "pc_b0.25": {
+      "exact_grad": 0,
+      "exact_lambda": 0
+    },
+    "pc_b0.5": {
+      "exact_grad": 0,
+      "exact_lambda": 0
+    }
+  },
+  "rng_hash_audit": {
+    "per_seed": {
+      "0": {
+        "online_loop": "2b0132d481507ce6d4b3e8dcf2aae1df",
+        "pc_loop": "2b0132d481507ce6d4b3e8dcf2aae1df"
+      },
+      "1": {
+        "online_loop": "eb78a00a735dd5ee55b76f79c8712a80",
+        "pc_loop": "eb78a00a735dd5ee55b76f79c8712a80"
+      },
+      "2": {
+        "online_loop": "aea5b7a1236c1cf0cd77272cb5e513a9",
+        "pc_loop": "aea5b7a1236c1cf0cd77272cb5e513a9"
+      },
+      "3": {
+        "online_loop": "e39f327435f064c539f9a56dd5a2d6dd",
+        "pc_loop": "e39f327435f064c539f9a56dd5a2d6dd"
+      },
+      "4": {
+        "online_loop": "94282a01e31280d4b3b5f4ad386a0ae1",
+        "pc_loop": "94282a01e31280d4b3b5f4ad386a0ae1"
+      }
+    },
+    "all_equal": true
+  },
+  "stopgradient_audit": true,
+  "regression_gates": {
+    "script": "check_route_pc.py",
+    "log": "results/mech_gates_run.log",
+    "gates": [
+      "stored PC0 reproduction bitwise (max |diff| 0.0)",
+      "paired RNG streams (60-step hashes identical)",
+      "stop-gradient: h_n bitwise invariant to w",
+      "zero BPTT calls in PC0 segments"
+    ],
+    "status": "ALL PASS"
+  }
+}
