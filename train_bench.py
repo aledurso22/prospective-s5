@@ -39,12 +39,19 @@ the grid enforces this, the trainer itself runs what it is told.
 
 Metrics -> results/bench/metrics_{task}_{arm}{tag}_s{seed}.json
 routeA/scalarLive also save w -> results/bench/w_{task}_{arm}{tag}_s{seed}.npz
+Every metrics JSON carries: full config (including the independent
+learning_rule / state_prospective axes), an audit block (where exact
+credit can enter), instrumentation (wall/step time, steps/s, peak device
+memory, online eligibility-state estimate, time-to-target), and
+provenance (git commit/branch/dirty, host, SLURM id, versions).
 
 Usage:
     python train_bench.py --task smnist --arm routeA --seed 0 \
         --epochs 3 --subset 20000
     python train_bench.py --task copy --arm frozenPhase --seed 0 \
         --w-file results/bench/w_copy_routeA_s0.npz
+    python train_bench.py --task smnist --arm baseline \
+        --state-prospective --gamma 0        # state-prospective x BPTT
 """
 from __future__ import annotations
 
@@ -70,6 +77,58 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 RESULTS_DIR = os.path.join(HERE, "results", "bench")
 
 GATE_H = 0.2          # registered headroom bar (bench_report.py enforces)
+
+
+def provenance() -> dict:
+    """Run provenance: git state, host, SLURM id, software versions.
+    Best-effort — every field falls back to None/"unknown" so training
+    never depends on the environment cooperating."""
+    import platform
+    import socket
+    import subprocess
+
+    def _git(*argv):
+        try:
+            return subprocess.run(["git"] + list(argv), cwd=HERE,
+                                  capture_output=True, text=True,
+                                  timeout=10).stdout.strip() or None
+        except Exception:
+            return None
+
+    import flax
+    versions = {"python": platform.python_version(),
+                "numpy": np.__version__, "jax": jax.__version__,
+                "flax": flax.__version__, "optax": optax.__version__,
+                "jaxlib_devices": str(jax.devices())}
+    return dict(git_commit=_git("rev-parse", "HEAD"),
+                git_branch=_git("rev-parse", "--abbrev-ref", "HEAD"),
+                git_dirty=(bool(_git("status", "--porcelain"))
+                           if _git("status", "--porcelain") is not None
+                           else None),
+                hostname=socket.gethostname(),
+                slurm_job_id=os.environ.get("SLURM_JOB_ID"),
+                slurm_array=os.environ.get("SLURM_ARRAY_JOB_ID"),
+                platform=platform.platform(),
+                versions=versions)
+
+
+def eligibility_state_bytes(n_layers: int, d_model: int,
+                            state_size: int) -> int:
+    """Analytic estimate of the online rule's live sensitivity (RTRL)
+    state: per SSM layer, Sa and Sb each (H, N) complex64, recomputed in
+    the backward scan (ssm/online_s5). This is the memory the online rule
+    carries instead of BPTT's O(T) activation tape."""
+    return n_layers * d_model * state_size * 2 * 8
+
+
+def peak_device_memory():
+    """Peak bytes-in-use from the JAX device, if the runtime exposes
+    memory stats (GPU does; CPU may not)."""
+    try:
+        stats = jax.devices()[0].memory_stats()
+        return int(stats.get("peak_bytes_in_use")) if stats else None
+    except Exception:
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -262,6 +321,24 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--copy-alpha", type=int, default=8, help="copy: alphabet")
     p.add_argument("--max-steps", type=int, default=0)
     p.add_argument("--tag", type=str, default="")
+    # --- integration flags (s5-routepc branch): independent exposure of ---
+    # --- state prospectiveness vs learning rule (factorial-ready)      ---
+    p.add_argument("--state-prospective", action="store_true",
+                   help="use the state-dynamics prospective SSM recurrence "
+                        "(ssm/prospective) instead of the first-order S5 "
+                        "recurrence. Currently supported ONLY with "
+                        "--arm baseline (BPTT); other learning rules raise "
+                        "NotImplementedError (no online VJP for the 2x2 "
+                        "prospective recurrence yet).")
+    p.add_argument("--gamma", type=float, default=1.0,
+                   help="prospective blending (0 = matched explicit-Euler "
+                        "S5 control); only with --state-prospective")
+    p.add_argument("--rho-init", type=float, default=0.1,
+                   help="prospective friction init rho = dt/tau; only with "
+                        "--state-prospective")
+    p.add_argument("--target-loss", type=float, default=0.0,
+                   help="if > 0, record the first step/wall-time at which "
+                        "train loss <= target (time-to-target metric)")
     return p.parse_args()
 
 
@@ -299,10 +376,31 @@ def main() -> None:
                                "frozenMag", "routePC", "routePCreal")
     model_type = {"baseline": "baseline", "online": "online",
                   "tbptt": "tbptt"}.get(args.arm, "online")
+    # learning rule vs state dynamics, exposed independently (factorial-
+    # ready config). state_prospective swaps the forward recurrence; the
+    # learning rule is unchanged. Only the BPTT rule currently supports
+    # the prospective recurrence (no online VJP for it yet).
+    learning_rule = {"baseline": "bptt", "tbptt": "tbptt",
+                     "online": "online", "routePC": "routepc",
+                     "routePCreal": "routepc",
+                     "routeA": "oracle_exact_teacher",
+                     "scalarLive": "oracle_exact_teacher",
+                     "frozenPhase": "online_frozen_geometry",
+                     "frozenMag": "online_frozen_geometry"}[args.arm]
+    if args.state_prospective:
+        if model_type != "baseline":
+            raise NotImplementedError(
+                "--state-prospective currently supports only --arm "
+                "baseline (BPTT): there is no online/RTRL VJP for the "
+                "2x2 prospective recurrence, so online/routepc x "
+                "state-prospective is not implemented. This keeps the two "
+                "axes independent in config without silently mixing them.")
+        model_type = "prospective"
     model = build_model(model_type=model_type, d_model=args.d_model,
                         state_size=args.state_size, n_layers=args.n_layers,
                         n_classes=tmeta["n_classes"],
                         dropout_rate=args.dropout, scan_impl=args.scan,
+                        gamma=args.gamma, rho_init=args.rho_init,
                         seq2seq=tmeta["seq2seq"],
                         tbptt_window=args.tbptt_window)
     key = jax.random.PRNGKey(args.seed)
@@ -501,6 +599,7 @@ def main() -> None:
     step = 0
     done = False
     prev = None
+    target_step, target_wall = None, None
     for epoch in range(args.epochs):
         perm = rng_np.permutation(n_train)
         ep_loss, ep_acc, ep_n = 0.0, 0.0, 0
@@ -529,6 +628,10 @@ def main() -> None:
             ep_acc += float(acc) * len(idx)
             ep_n += len(idx)
             step += 1
+            if (target_step is None and args.target_loss > 0
+                    and float(loss) <= args.target_loss):
+                target_step = step
+                target_wall = time.time() - t_start
             if step == 1 or step % 50 == 0:
                 dt = time.time() - t_start
                 print(f"  step {step:5d}/{total_steps}  loss "
@@ -565,6 +668,11 @@ def main() -> None:
         print(f"wrote {w_path}")
 
     config = dict(task=args.task, arm=args.arm, model_type=model_type,
+                  learning_rule=learning_rule,
+                  state_prospective=bool(args.state_prospective),
+                  gamma=(args.gamma if args.state_prospective else None),
+                  rho_init=(args.rho_init if args.state_prospective
+                            else None),
                   d_model=args.d_model, state_size=args.state_size,
                   n_layers=args.n_layers, dropout=args.dropout,
                   batch_size=args.batch_size, lr=args.lr, lr_m=args.lr_m,
@@ -580,16 +688,39 @@ def main() -> None:
                   w_file=(args.w_file if args.arm in ("frozenPhase",
                                                       "frozenMag")
                           else None),
+                  target_loss=(args.target_loss or None),
                   copy_k=(args.copy_k if args.task == "copy" else None),
                   copy_alpha=(args.copy_alpha if args.task == "copy"
                               else None))
+    # audit: where exact (non-causal) credit can enter this arm.
+    # routePC/routePCreal build NO exact-gradient path at all (no teacher
+    # model, no reverse-time cotangent) — the zero-BPTT invariant is
+    # structural here; routeA/scalarLive call an exact-BPTT teacher.
+    audit = dict(teacher=("exact-bptt" if teacher is not None else
+                          "realized-online" if args.arm in
+                          ("routePC", "routePCreal") else None),
+                   exact_gradient_path=bool(teacher is not None),
+                   bptt_calls_in_deployed_rule=(
+                       args.arm in ("routeA", "scalarLive")))
+    instrumentation = dict(
+        wall_time_sec=wall, total_steps=step, steps_per_sec=step / wall,
+        peak_device_memory_bytes=peak_device_memory(),
+        eligibility_state_bytes=(
+            eligibility_state_bytes(args.n_layers, args.d_model,
+                                    args.state_size)
+            if model_type == "online" else 0),
+        time_to_target=(dict(target=args.target_loss, step=target_step,
+                             wall_time_sec=target_wall)
+                        if args.target_loss > 0 else None))
     metrics = dict(config=config, params=n_params, history=history,
                    final_test_acc=final_acc, final_test_loss=final_loss,
                    final_eval_samples=len(x_test),
                    per_epoch_eval_samples=len(x_ev),
                    wall_time_sec=wall, total_steps=step,
                    steps_per_sec=step / wall,
-                   device=str(jax.devices()[0]), w_file=w_path or None)
+                   device=str(jax.devices()[0]), w_file=w_path or None,
+                   audit=audit, instrumentation=instrumentation,
+                   provenance=provenance())
     out_path = os.path.join(
         RESULTS_DIR,
         f"metrics_{args.task}_{args.arm}{args.tag}_s{args.seed}.json")
