@@ -1,0 +1,112 @@
+A1 s0...
+    A1 s0 step 500: loss 0.0166
+    A1 s0 step 1000: loss 0.0059
+    A1 s0 step 1500: loss 0.0145
+  final 0.0167  finite True
+A1 s1...
+    A1 s1 step 500: loss 0.0603
+    A1 s1 step 1000: loss 0.0356
+    A1 s1 step 1500: loss 0.0028
+  final 0.0031  finite True
+A1 s2...
+    A1 s2 step 500: loss 0.0550
+    A1 s2 step 1000: loss 0.0070
+    A1 s2 step 1500: loss 0.0021
+  final 0.0025  finite True
+A1 s3...
+    A1 s3 step 500: loss 0.0589
+    A1 s3 step 1000: loss 0.0425
+    A1 s3 step 1500: loss 0.0589
+  final 0.0889  finite True
+A1 s4...
+    A1 s4 step 500: loss 0.0167
+    A1 s4 step 1000: loss 0.0060
+    A1 s4 step 1500: loss 0.0076
+  final 0.0073  finite True
+A2 s0...
+    A2 s0 step 500: loss 0.0433
+    A2 s0 step 1000: loss 0.0068
+    A2 s0 step 1500: loss 0.0102
+  final 0.0194  finite True
+A2 s1...
+    A2 s1 step 500: loss 0.0410
+    A2 s1 step 1000: loss 0.0171
+    A2 s1 step 1500: loss 0.0053
+  final 0.0053  finite True
+A2 s2...
+    A2 s2 step 500: loss 0.0417
+    A2 s2 step 1000: loss 0.0418
+    A2 s2 step 1500: loss 0.0157
+  final 0.0157  finite True
+A2 s3...
+    A2 s3 step 500: loss 0.0521
+    A2 s3 step 1000: loss 0.0312
+    A2 s3 step 1500: loss 0.0288
+  final 0.0186  finite True
+A2 s4...
+    A2 s4 step 500: loss 0.0103
+    A2 s4 step 1000: loss 0.0018
+    A2 s4 step 1500: loss 0.0040
+  final 0.0024  finite True
+A3 s0...
+    A3 s0 step 500: loss 0.0083
+    A3 s0 step 1000: loss 0.0042
+    A3 s0 step 1500: loss 0.0048
+  final 0.0044  finite True
+A3 s1...
+    A3 s1 step 500: loss 0.0522
+    A3 s1 step 1000: loss 0.0209
+    A3 s1 step 1500: loss 0.0051
+  final 0.0126  finite True
+A3 s2...
+    A3 s2 step 500: loss 0.0470
+    A3 s2 step 1000: loss 0.0201
+    A3 s2 step 1500: loss 0.0023
+  final 0.0033  finite True
+A3 s3...
+    A3 s3 step 500: loss 0.0535
+    A3 s3 step 1000: loss 0.0388
+    A3 s3 step 1500: loss 0.0233
+  final 0.0239  finite True
+A3 s4...
+    A3 s4 step 500: loss 0.0131
+    A3 s4 step 1000: loss 0.0066
+    A3 s4 step 1500: loss 0.0096
+  final 0.0088  finite True
+A4 s0...
+    A4 s0 step 500: loss 0.0088
+    A4 s0 step 1000: loss 0.0026
+    A4 s0 step 1500: loss 0.0026
+  final 0.0025  finite True
+A4 s1...
+    A4 s1 step 500: loss 0.0255
+    A4 s1 step 1000: loss 0.0087
+    A4 s1 step 1500: loss 0.0018
+  final 0.0020  finite True
+A4 s2...
+    A4 s2 step 500: loss 0.0286
+    A4 s2 step 1000: loss 0.0017
+    A4 s2 step 1500: loss 0.0039
+  final 0.0037  finite True
+A4 s3...
+    A4 s3 step 500: loss 0.0448
+    A4 s3 step 1000: loss 0.0163
+    A4 s3 step 1500: loss 0.0053
+  final 0.0053  finite True
+A4 s4...
+    A4 s4 step 500: loss 0.0101
+    A4 s4 step 1000: loss 0.0034
+    A4 s4 step 1500: loss 0.0023
+  final 0.0020  finite True
+A1 vs stored PC0: max |dfinal| 0.00e+00 (bitwise expected)
+BPTT calls (oracle arms A2-A4): {'exact_grad': 22500, 'exact_lambda': 22500}
+fitted |rho| medians (radial, tangential): {0: [0.8022731391749992, 0.8287661635631236], 1: [0.7904703889602082, 0.8290021409774745], 2: [0.7633126962320296, 0.842382107050541], 3: [0.8059028514471901, 0.8686960332627429], 4: [0.7002144782243256, 0.8026216766001779]}
+------------------------------------------------------------------------------
+  A1  ['0.0167', '0.0031', '0.0025', '0.0889', '0.0073']  med 0.0073
+  A2  ['0.0194', '0.0053', '0.0157', '0.0186', '0.0024']  med 0.0157
+  A3  ['0.0044', '0.0126', '0.0033', '0.0239', '0.0088']  med 0.0088
+  A4  ['0.0025', '0.0020', '0.0037', '0.0053', '0.0020']  med 0.0025
+references: PC0(=A1) 0.0073  arm B (oracle ceiling) 0.0014
+P1 actionable (A4 < A1 median AND >=4/5 wins): True  (wins 4/5)
+P2 shares of A1->A4 improvement: radial-only -1.76  tangential-only -0.31  -> GENERAL/mixed
+wrote summary.json
