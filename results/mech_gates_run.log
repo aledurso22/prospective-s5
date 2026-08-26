@@ -1,0 +1,228 @@
+======================================================================
+RoutePC freeze / regression gates
+======================================================================
+[3] stop-gradient: h_n bitwise invariant to w — PASS
+[2] paired streams (60 steps x 2 arm-loop replicas): PASS
+      pc(b=0.0) s0 step 200: loss 0.0703  max|a| 0.9954
+      pc(b=0.0) s0 step 400: loss 0.0451  max|a| 0.9953
+      pc(b=0.0) s0 step 600: loss 0.0155  max|a| 0.9945
+      pc(b=0.0) s0 step 800: loss 0.0072  max|a| 0.9945
+      pc(b=0.0) s0 step 1000: loss 0.0059  max|a| 0.9946
+      pc(b=0.0) s0 step 1200: loss 0.0068  max|a| 0.9946
+      pc(b=0.0) s0 step 1400: loss 0.0188  max|a| 0.9946
+  s0: fresh 0.016693249722993287  stored 0.016693249722993287  ==
+      pc(b=0.0) s1 step 200: loss 0.0912  max|a| 0.9951
+      pc(b=0.0) s1 step 400: loss 0.0841  max|a| 0.9952
+      pc(b=0.0) s1 step 600: loss 0.0357  max|a| 0.9951
+      pc(b=0.0) s1 step 800: loss 0.0279  max|a| 0.9951
+      pc(b=0.0) s1 step 1000: loss 0.0356  max|a| 0.9951
+      pc(b=0.0) s1 step 1200: loss 0.0055  max|a| 0.9958
+      pc(b=0.0) s1 step 1400: loss 0.0036  max|a| 0.9963
+  s1: fresh 0.0031327570456708862  stored 0.0031327570456708862  ==
+      pc(b=0.0) s2 step 200: loss 0.0984  max|a| 0.9953
+      pc(b=0.0) s2 step 400: loss 0.0565  max|a| 0.9957
+      pc(b=0.0) s2 step 600: loss 0.0340  max|a| 0.9959
+      pc(b=0.0) s2 step 800: loss 0.0108  max|a| 0.9959
+      pc(b=0.0) s2 step 1000: loss 0.0070  max|a| 0.9962
+      pc(b=0.0) s2 step 1200: loss 0.0029  max|a| 0.9968
+      pc(b=0.0) s2 step 1400: loss 0.0023  max|a| 0.9969
+  s2: fresh 0.002484983076608951  stored 0.002484983076608951  ==
+      pc(b=0.0) s3 step 200: loss 0.0843  max|a| 0.9950
+      pc(b=0.0) s3 step 400: loss 0.0596  max|a| 0.9950
+      pc(b=0.0) s3 step 600: loss 0.0514  max|a| 0.9949
+      pc(b=0.0) s3 step 800: loss 0.0438  max|a| 0.9949
+      pc(b=0.0) s3 step 1000: loss 0.0425  max|a| 0.9950
+      pc(b=0.0) s3 step 1200: loss 0.0357  max|a| 0.9950
+      pc(b=0.0) s3 step 1400: loss 0.0373  max|a| 0.9950
+  s3: fresh 0.08893580832535956  stored 0.08893580832535956  ==
+      pc(b=0.0) s4 step 200: loss 0.0382  max|a| 0.9955
+      pc(b=0.0) s4 step 400: loss 0.0193  max|a| 0.9952
+      pc(b=0.0) s4 step 600: loss 0.0090  max|a| 0.9950
+      pc(b=0.0) s4 step 800: loss 0.0112  max|a| 0.9948
+      pc(b=0.0) s4 step 1000: loss 0.0060  max|a| 0.9948
+      pc(b=0.0) s4 step 1200: loss 0.0083  max|a| 0.9949
+      pc(b=0.0) s4 step 1400: loss 0.0095  max|a| 0.9949
+  s4: fresh 0.007318227100636881  stored 0.007318227100636881  ==
+[1] stored PC0 reproduction: max |diff| 0.0  PASS
+[4] BPTT calls during PC0 segments: {'exact_grad': 0, 'exact_lambda': 0}  PASS
+----------------------------------------------------------------------
+ALL REGRESSION GATES PASS
+global-real s0...
+    global-real s0 step 500: loss 0.0351
+    global-real s0 step 1000: loss 0.0289
+    global-real s0 step 1500: loss 0.0032
+  final 0.0036  finite True  |w| 2320.21
+global-real s1...
+    global-real s1 step 500: loss 0.0500
+    global-real s1 step 1000: loss 0.0273
+    global-real s1 step 1500: loss 0.0140
+  final 0.0208  finite True  |w| 5366.40
+global-real s2...
+    global-real s2 step 500: loss 0.0526
+    global-real s2 step 1000: loss 0.0132
+    global-real s2 step 1500: loss 0.0061
+  final 0.0063  finite True  |w| 55584.00
+global-real s3...
+    global-real s3 step 500: loss 0.0498
+    global-real s3 step 1000: loss 0.0308
+    global-real s3 step 1500: loss 0.0316
+  final 0.0385  finite True  |w| 11974.94
+global-real s4...
+    global-real s4 step 500: loss 0.0227
+    global-real s4 step 1000: loss 0.0186
+    global-real s4 step 1500: loss 0.0400
+  final 0.0313  finite True  |w| 10133.35
+global-complex s0...
+    global-complex s0 step 500: loss 0.0307
+    global-complex s0 step 1000: loss 0.0095
+    global-complex s0 step 1500: loss 0.0295
+  final 0.0324  finite True  |w| 4111.19
+global-complex s1...
+    global-complex s1 step 500: loss 0.0791
+    global-complex s1 step 1000: loss 0.0285
+    global-complex s1 step 1500: loss 0.0161
+  final 0.0117  finite True  |w| 8413.53
+global-complex s2...
+    global-complex s2 step 500: loss 0.0320
+    global-complex s2 step 1000: loss 0.0289
+    global-complex s2 step 1500: loss 0.0284
+  final 0.0463  finite True  |w| 5459.30
+global-complex s3...
+    global-complex s3 step 500: loss 0.0382
+    global-complex s3 step 1000: loss 0.0398
+    global-complex s3 step 1500: loss 0.0134
+  final 0.0344  finite True  |w| 11248.08
+global-complex s4...
+    global-complex s4 step 500: loss 0.0219
+    global-complex s4 step 1000: loss 0.0515
+    global-complex s4 step 1500: loss 0.0100
+  final 0.0104  finite True  |w| 7775.07
+per-mode-real s0...
+    per-mode-real s0 step 500: loss 0.0536
+    per-mode-real s0 step 1000: loss 0.0112
+    per-mode-real s0 step 1500: loss 0.0016
+  final 0.0018  finite True  |w| 23.12
+per-mode-real s1...
+    per-mode-real s1 step 500: loss 0.0693
+    per-mode-real s1 step 1000: loss 0.0168
+    per-mode-real s1 step 1500: loss 0.0134
+  final 0.0164  finite True  |w| 27.33
+per-mode-real s2...
+    per-mode-real s2 step 500: loss 0.0609
+    per-mode-real s2 step 1000: loss 0.0051
+    per-mode-real s2 step 1500: loss 0.0397
+  final 0.0194  finite True  |w| 84.27
+per-mode-real s3...
+    per-mode-real s3 step 500: loss 0.0414
+    per-mode-real s3 step 1000: loss 0.0367
+    per-mode-real s3 step 1500: loss 0.0290
+  final 0.0318  finite True  |w| 67.86
+per-mode-real s4...
+    per-mode-real s4 step 500: loss 0.0169
+    per-mode-real s4 step 1000: loss 0.0028
+    per-mode-real s4 step 1500: loss 0.0025
+  final 0.0015  finite True  |w| 36.99
+per-mode-complex s0...
+    per-mode-complex s0 step 500: loss 0.0166
+    per-mode-complex s0 step 1000: loss 0.0059
+    per-mode-complex s0 step 1500: loss 0.0145
+  final 0.0167  finite True  |w| 30.65
+per-mode-complex s1...
+    per-mode-complex s1 step 500: loss 0.0603
+    per-mode-complex s1 step 1000: loss 0.0356
+    per-mode-complex s1 step 1500: loss 0.0028
+  final 0.0031  finite True  |w| 32.35
+per-mode-complex s2...
+    per-mode-complex s2 step 500: loss 0.0550
+    per-mode-complex s2 step 1000: loss 0.0070
+    per-mode-complex s2 step 1500: loss 0.0021
+  final 0.0025  finite True  |w| 103.33
+per-mode-complex s3...
+    per-mode-complex s3 step 500: loss 0.0589
+    per-mode-complex s3 step 1000: loss 0.0425
+    per-mode-complex s3 step 1500: loss 0.0589
+  final 0.0889  finite True  |w| 1635.22
+per-mode-complex s4...
+    per-mode-complex s4 step 500: loss 0.0167
+    per-mode-complex s4 step 1000: loss 0.0060
+    per-mode-complex s4 step 1500: loss 0.0076
+  final 0.0073  finite True  |w| 47.96
+----------------------------------------------------------------------
+medians: {'online': 0.0224, 'global-real': 0.0208, 'global-complex': 0.0324, 'per-mode-real': 0.0164, 'per-mode-complex': 0.0073}
+  online            ['0.0727', '0.0224', '0.0284', '0.0109', '0.0118']
+  global-real       ['0.0036', '0.0208', '0.0063', '0.0385', '0.0313']
+  global-complex    ['0.0324', '0.0117', '0.0463', '0.0344', '0.0104']
+  per-mode-real     ['0.0018', '0.0164', '0.0194', '0.0318', '0.0015']
+  per-mode-complex  ['0.0167', '0.0031', '0.0025', '0.0889', '0.0073']
+per-mode-complex vs per-mode-real: wins 2/5  medians 0.0073 vs 0.0164 (0.45x)
+per-mode-complex vs global-complex: wins 4/5  medians 0.0073 vs 0.0324 (0.23x)
+BAR (>=4/5 paired wins vs both AND >=20% lower median vs both): FAIL
+wrote summary.json
+B (nextExact) s0...
+    B s0 step 500: loss 0.0049
+    B s0 step 1000: loss 0.0020
+    B s0 step 1500: loss 0.0024
+  final 0.0022  finite True
+B (nextExact) s1...
+    B s1 step 500: loss 0.0219
+    B s1 step 1000: loss 0.0062
+    B s1 step 1500: loss 0.0013
+  final 0.0014  finite True
+B (nextExact) s2...
+    B s2 step 500: loss 0.0194
+    B s2 step 1000: loss 0.0025
+    B s2 step 1500: loss 0.0014
+  final 0.0013  finite True
+B (nextExact) s3...
+    B s3 step 500: loss 0.0226
+    B s3 step 1000: loss 0.0248
+    B s3 step 1500: loss 0.0241
+  final 0.0247  finite True
+B (nextExact) s4...
+    B s4 step 500: loss 0.0071
+    B s4 step 1000: loss 0.0015
+    B s4 step 1500: loss 0.0010
+  final 0.0013  finite True
+BPTT calls (arm B only; diagnostic probe): {'exact_grad': 7500, 'exact_lambda': 7500}
+----------------------------------------------------------------------
+finals  online ['0.0727', '0.0224', '0.0284', '0.0109', '0.0118']  med 0.0224
+finals  A      ['0.0015', '0.0009', '0.0016', '0.0248', '0.0018']  med 0.0016
+finals  B      ['0.0022', '0.0014', '0.0013', '0.0247', '0.0013']  med 0.0014
+finals  C      ['0.0167', '0.0031', '0.0025', '0.0889', '0.0073']  med 0.0073
+online->A gap 0.0208:  batch-shift cost (B-A) -0.0002 (-0.9%),  causal-blindness cost (C-B) 0.0059 (28.2%)
+alignment probes (r_exactNext vs r_causal, identical J_n):
+  s0 n= 100  cos +0.888  norm ratio 1.13  dphi med 0.197  p90 3.081
+  s0 n= 500  cos +0.091  norm ratio 0.73  dphi med 0.252  p90 3.097
+  s0 n=1000  cos +0.935  norm ratio 1.02  dphi med 0.142  p90 2.936
+  s0 n=1500  cos +0.682  norm ratio 1.71  dphi med 0.236  p90 2.905
+  s1 n= 100  cos +0.983  norm ratio 1.02  dphi med 0.209  p90 2.576
+  s1 n= 500  cos +0.218  norm ratio 1.89  dphi med 0.261  p90 3.058
+  s1 n=1000  cos +0.680  norm ratio 1.48  dphi med 0.329  p90 3.108
+  s1 n=1500  cos +0.878  norm ratio 1.10  dphi med 0.210  p90 2.931
+  s2 n= 100  cos +0.855  norm ratio 1.10  dphi med 0.099  p90 2.690
+  s2 n= 500  cos +0.882  norm ratio 1.18  dphi med 0.310  p90 2.874
+  s2 n=1000  cos +0.991  norm ratio 1.01  dphi med 0.179  p90 2.842
+  s2 n=1500  cos +0.775  norm ratio 1.52  dphi med 0.188  p90 2.914
+  s3 n= 100  cos +0.973  norm ratio 0.82  dphi med 0.107  p90 2.808
+  s3 n= 500  cos +0.237  norm ratio 0.51  dphi med 0.061  p90 2.680
+  s3 n=1000  cos +0.856  norm ratio 0.02  dphi med 0.089  p90 1.978
+  s3 n=1500  cos +0.926  norm ratio 0.05  dphi med 0.051  p90 2.733
+  s4 n= 100  cos -0.142  norm ratio 0.26  dphi med 0.314  p90 3.067
+  s4 n= 500  cos +0.853  norm ratio 1.38  dphi med 0.060  p90 2.795
+  s4 n=1000  cos -0.395  norm ratio 0.41  dphi med 0.101  p90 2.041
+  s4 n=1500  cos +0.732  norm ratio 1.06  dphi med 0.142  p90 2.195
+  medians: cos +0.854  norm ratio 1.04  dphi 0.184
+wrote summary.json
+seed 0: routeA retrain + checkpoint probes...
+    seed 0 step 500: loss 0.0043
+    seed 0 step 1000: loss 0.0026
+    seed 0 step 1500: loss 0.0013
+  final loss 0.0015
+Traceback (most recent call last):
+  File "/Users/alessandrodurso/Documents/prospective-s5/phase_probes.py", line 313, in <module>
+    main()
+    ~~~~^^
+  File "/Users/alessandrodurso/Documents/prospective-s5/phase_probes.py", line 260, in main
+    wt = np.array([abs(_rho[l][j][0]) for j in range(tcg.N)])
+                       ^^^^
+NameError: name '_rho' is not defined
