@@ -76,6 +76,18 @@ class StreamingRelevance:
         if record:
             self.history.append(self.rho.copy())
 
+    def reset_filter(self):
+        """B9.1 fix: zero the per-candidate temporal filter state `x`
+        only. `rho` (the accumulated/EMA relevance statistic) is left
+        untouched -- accumulating evidence across independent
+        calibration trajectories is the intended semantics of
+        "windowed" calibration. Call this at every trajectory boundary
+        so one trajectory's filter tail cannot leak into the next,
+        unrelated trajectory (each trajectory's own model state starts
+        at 0; the relevance filter previously did not, which
+        contaminated slow-pole candidates -- see PHASE_B9.md Part 1(b))."""
+        self.x[...] = 0.0
+
     def top_channel(self, r=1):
         return np.argsort(-np.abs(self.rho))[:r]
 
@@ -94,6 +106,7 @@ def run_windowed_calibration(f_diag, cal_rows, m):
     batch = cal_rows[0]["Sa0"].shape[1]
     est = StreamingRelevance(f_diag, batch, mode="windowed")
     for row in cal_rows:
+        est.reset_filter()   # B9.1: no cross-trajectory filter leakage
         u_traj = row["Sa0"][:, :, m]                    # (T,BATCH)
         c_traj = build_c_t(row["q1"], row["B1"][:, m])   # (T,BATCH,2N)
         for t in range(u_traj.shape[0]):

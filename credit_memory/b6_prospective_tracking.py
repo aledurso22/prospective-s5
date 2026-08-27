@@ -72,6 +72,8 @@ def causal_prefix_selection(params, cal_rng, f_diag):
     estimators = {m: StreamingRelevance(f_diag, BATCH, mode="windowed")
                  for m in range(N)}
     for _ in range(N_CAL_TRAJ):
+        for m in range(N):
+            estimators[m].reset_filter()  # B9.1: no cross-trajectory leak
         x, y = draw_task_batch(cal_rng)
         _, h, r = loss_of(params, x, y)
         q = tcg.spatial_q(params, h, r)

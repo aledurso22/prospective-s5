@@ -91,6 +91,8 @@ def causal_calibration_selector(params, cal_rng, f_diag):
                  for m in range(N)}
     from credit_memory.hankel import build_c_t
     for _ in range(N_CAL_TRAJ):
+        for m in range(N):
+            estimators[m].reset_filter()  # B9.1: no cross-trajectory leak
         x, y = draw_task_batch(cal_rng)
         _, h, r = loss_of(params, x, y)
         q = tcg.spatial_q(params, h, r)

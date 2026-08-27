@@ -8,9 +8,13 @@ Same 8 seeds, same 4 calibration / 4 test trajectories, same N/T/BATCH
 as B2/B3 (imported directly for an exact apples-to-apples comparison).
 
 First sanity-checks that the streaming estimator's frozen rho exactly
-matches B3's batch-computed g_p (same numbers, different code path) --
-this must hold since both implement the identical sum, just via a loop
-vs. vectorized ops.
+matches a batch-computed g_p reference (same numbers, different code
+path) -- this must hold since both implement the identical sum, just
+via a loop vs. vectorized ops. B9.1: both sides now reset their filter
+state at each calibration trajectory boundary (run_windowed_calibration
+was fixed to do this in credit_memory/streaming.py; the batch reference
+below is summed per-row, each row processed with its own fresh
+per_coordinate_contribution call, for a fair apples-to-apples check).
 
 Run:  python -m credit_memory.phase_b4c_streaming_rank1
 """
@@ -72,10 +76,14 @@ def main() -> None:
     d0 = np.ones(2 * N, np.complex128)
     m0 = 0
     est0 = run_windowed_calibration(f_diag_0, cal0, m0)
-    c_pool = np.concatenate([build_c_t(row["q1"], B1_0[:, m0])
-                             for row in cal0], axis=0)
-    u_pool = np.concatenate([row["Sa0"][:, :, m0] for row in cal0], axis=0)
-    g_p_batch, _ = per_coordinate_contribution(f_diag_0, d0, c_pool, u_pool)
+    g_p_batch = np.zeros(2 * N, np.complex128)
+    for row in cal0:
+        c_row = build_c_t(row["q1"], B1_0[:, m0])
+        u_row = row["Sa0"][:, :, m0]
+        g_p_row, _ = per_coordinate_contribution(f_diag_0, d0, c_row, u_row)
+        g_p_batch += g_p_row     # per-row fresh state, summed across rows
+                                  # -- matches run_windowed_calibration's
+                                  # post-B9.1-fix per-trajectory reset
     sanity_err = float(np.linalg.norm(est0.rho - g_p_batch)
                        / (np.linalg.norm(g_p_batch) + 1e-300))
     print(f"sanity check (streaming rho vs B3 batch g_p, seed 0 mode 0): "
