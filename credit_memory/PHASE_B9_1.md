@@ -174,10 +174,14 @@ measured using only already-computed quantities (aggregate score
 reusing the existing `deploy_selected_channel` unmodified with that one
 channel for every mode).
 
-**Cost benefit (if implemented):** deployment would need only *one*
-persistent filter state per batch element instead of `N` (one per
-lower mode) — an `N`-fold reduction in deployed state/compute,
-`O(1)` instead of `O(N)` per training step.
+**Cost benefit (if implemented) — corrected in B9.1: PHASE_B9_2.md
+Part 5.** The candidate filter `x_{j,m}(t) = lambda_j x_{j,m}(t-1) +
+Sa0_t[:,m]` depends on mode `m` through its *input* even when `j` is
+shared across modes, so a single shared channel still needs `O(N)`
+persistent filter states at deployment, not `O(1)` as stated here
+originally — sharing saves bookkeeping (one selected index instead of
+`N`), not deployed state or compute. The real cost saving from pooling
+shows up in *adaptive scoring*, not deployment; see PHASE_B9_2.md.
 
 **Accuracy cost, measured:** median held-out cos drops from **0.9654**
 (per-mode-optimal, current approach) to **0.9111** (shared `j*`) — a
