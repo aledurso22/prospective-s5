@@ -339,6 +339,12 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--downsample", type=int, default=1, choices=[1, 2])
     p.add_argument("--scan", choices=["assoc", "lax"], default="assoc")
     p.add_argument("--tbptt-window", type=int, default=64)
+    p.add_argument("--clip", type=float, default=1.0,
+                   help="global-norm gradient clip before Adam (0 = "
+                        "disabled). The toy mechanism regime is "
+                        "clipped-Adam; p_clip and pre-clip norm/clip "
+                        "ratio are recorded in every run's metrics as "
+                        "primary mechanistic covariates.")
     p.add_argument("--w-file", type=str, default="",
                    help="routeA w .npz for the frozen arms")
     p.add_argument("--seq-len", type=int, default=120, help="copy: T")
@@ -474,7 +480,13 @@ def main() -> None:
 
     # ---------------- step functions ----------------
     schedule = optax.cosine_decay_schedule(args.lr, total_steps)
-    tx = optax.adam(schedule)
+    tx = (optax.chain(optax.clip_by_global_norm(args.clip),
+                      optax.adam(schedule)) if args.clip > 0
+          else optax.adam(schedule))
+
+    def _gnorm(grads):
+        return jnp.sqrt(sum(jnp.sum(jnp.square(g))
+                            for g in jax.tree_util.tree_leaves(grads)))
     state = TrainState.create(apply_fn=model.apply, params=params, tx=tx,
                               dropout_rng=dropout_rng)
 
@@ -488,9 +500,10 @@ def main() -> None:
         drng, new_drng = jax.random.split(state.dropout_rng)
         (loss, logits), grads = jax.value_and_grad(
             apply_model, has_aux=True)(state.params, meta, x, y, drng, True)
+        gn = _gnorm(grads)
         state = state.apply_gradients(grads=grads)
         state = state.replace(dropout_rng=new_drng)
-        return state, loss, acc_fn(logits, y)
+        return state, loss, acc_fn(logits, y), gn
 
     @partial(jax.jit, donate_argnums=(0, 2))
     def routeA_step(state, meta, meta_state, x, y):
@@ -521,7 +534,8 @@ def main() -> None:
         meta = optax.apply_updates(meta, upd)
         if args.arm == "scalarLive":
             meta = zero_wim_jnp(meta)
-        return state, meta, meta_state, loss, acc_fn(logits, y)
+        return state, meta, meta_state, loss, acc_fn(logits, y), \
+            _gnorm(grads)
 
     # routePC (exploratory supplement; toy gate PASS in route_pc.py):
     # correction-only Simonetto (beta = 0 — prediction was measured NOT
@@ -569,9 +583,10 @@ def main() -> None:
         # (3) applied update with the corrected geometry
         grads = jax.grad(lambda p: apply_model(p, meta, x, y, drng,
                                                True)[0])(params0)
+        gn = _gnorm(grads)
         state = state.apply_gradients(grads=grads)
         new_prev = (x, y, params0, drng)
-        return state, meta, meta_state, new_prev, loss, acc_fn(logits, y)
+        return state, meta, meta_state, new_prev, loss, acc_fn(logits, y), gn
 
     def pc_bootstrap(state, x, y, drng):
         """routePC step 1: no previous geometry exists, so the toy applies
@@ -579,8 +594,9 @@ def main() -> None:
         params0 = state.params
         (loss, logits), grads = jax.value_and_grad(
             apply_model, has_aux=True)(params0, {}, x, y, drng, True)
+        gn = _gnorm(grads)
         state = state.apply_gradients(grads=grads)
-        return state, loss, acc_fn(logits, y), (x, y, params0, drng)
+        return state, loss, acc_fn(logits, y), (x, y, params0, drng), gn
 
     @jax.jit
     def eval_step(state, x, y):
@@ -633,6 +649,7 @@ def main() -> None:
     done = False
     prev = None
     target_step, target_wall = None, None
+    gnorms = []
     for epoch in range(args.epochs):
         perm = rng_np.permutation(n_train)
         ep_loss, ep_acc, ep_n = 0.0, 0.0, 0
@@ -642,21 +659,22 @@ def main() -> None:
             xb = prep_x(x_train[idx], tmeta["one_hot"])
             yb = jnp.asarray(y_train[idx])
             if args.arm in ("routeA", "scalarLive"):
-                state, meta, meta_state, loss, acc = routeA_step(
+                state, meta, meta_state, loss, acc, gn = routeA_step(
                     state, meta, meta_state, xb, yb)
             elif args.arm in ("routePC", "routePCreal", "routePCphase", "routePCadam"):
                 drng, new_drng = jax.random.split(state.dropout_rng)
                 state = state.replace(dropout_rng=new_drng)
                 if prev is None:
-                    state, loss, acc, prev = pc_bootstrap(
+                    state, loss, acc, prev, gn = pc_bootstrap(
                         state, xb, yb, drng)
                 else:
-                    state, meta, meta_state, prev, loss, acc = routePC_step(
+                    state, meta, meta_state, prev, loss, acc, gn = routePC_step(
                         state, meta, meta_state, prev, xb, yb, drng)
             elif args.arm in ("frozenPhase", "frozenMag"):
-                state, loss, acc = plain_step(state, meta, xb, yb)
+                state, loss, acc, gn = plain_step(state, meta, xb, yb)
             else:
-                state, loss, acc = plain_step(state, {}, xb, yb)
+                state, loss, acc, gn = plain_step(state, {}, xb, yb)
+            gnorms.append(float(gn))
             ep_loss += float(loss) * len(idx)
             ep_acc += float(acc) * len(idx)
             ep_n += len(idx)
@@ -710,7 +728,10 @@ def main() -> None:
                   d_model=args.d_model, state_size=args.state_size,
                   n_layers=args.n_layers, dropout=args.dropout,
                   batch_size=args.batch_size, lr=args.lr, lr_m=args.lr_m,
-                  schedule="cosine->0", optimizer="adam",
+                  clip=args.clip,
+                  schedule="cosine->0",
+                  optimizer=("adam+globalclip" if args.clip > 0
+                             else "adam"),
                   meta_optimizer=("adam" if args.arm == "routePCadam"
                                   else "sgd" if meta_tx else None),
                   epochs=args.epochs, train_samples=n_train,
@@ -747,7 +768,19 @@ def main() -> None:
             if model_type == "online" else 0),
         time_to_target=(dict(target=args.target_loss, step=target_step,
                              wall_time_sec=target_wall)
-                        if args.target_loss > 0 else None))
+                        if args.target_loss > 0 else None),
+        clip=args.clip,
+        p_clip=(float(np.mean(np.asarray(gnorms) > args.clip))
+                if args.clip > 0 else 0.0),
+        preclip_norm=dict(
+            p50=float(np.percentile(gnorms, 50)),
+            p90=float(np.percentile(gnorms, 90)),
+            max=float(np.max(gnorms))),
+        preclip_ratio=(dict(
+            p50=float(np.percentile(np.asarray(gnorms) / args.clip, 50)),
+            p90=float(np.percentile(np.asarray(gnorms) / args.clip, 90)),
+            max=float(np.max(np.asarray(gnorms) / args.clip)))
+            if args.clip > 0 else None))
     metrics = dict(config=config, params=n_params, history=history,
                    final_test_acc=final_acc, final_test_loss=final_loss,
                    final_eval_samples=len(x_test),

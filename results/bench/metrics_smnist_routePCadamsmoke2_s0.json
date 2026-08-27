@@ -1,0 +1,99 @@
+{
+  "config": {
+    "task": "smnist",
+    "arm": "routePCadam",
+    "model_type": "online",
+    "learning_rule": "routepc",
+    "state_prospective": false,
+    "gamma": null,
+    "rho_init": null,
+    "d_model": 32,
+    "state_size": 16,
+    "n_layers": 2,
+    "dropout": 0.1,
+    "batch_size": 32,
+    "lr": 0.001,
+    "lr_m": 0.001,
+    "clip": 1.0,
+    "schedule": "cosine->0",
+    "optimizer": "adam+globalclip",
+    "meta_optimizer": "adam",
+    "epochs": 1,
+    "train_samples": 512,
+    "test_samples": 256,
+    "seed": 0,
+    "standardized": false,
+    "scan_impl": "assoc",
+    "downsample": 1,
+    "seq_len": 784,
+    "seq2seq": false,
+    "tbptt_window": null,
+    "w_file": null,
+    "target_loss": null,
+    "copy_k": null,
+    "copy_alpha": null
+  },
+  "params": 9098,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 2.597034990787506,
+      "train_acc": 0.08333333333333333,
+      "test_loss": 2.4561614990234375,
+      "test_acc": 0.125,
+      "eval_samples": 256,
+      "epoch_time_sec": 13.669297933578491
+    }
+  ],
+  "final_test_acc": 0.125,
+  "final_test_loss": 2.4561614990234375,
+  "final_eval_samples": 256,
+  "per_epoch_eval_samples": 256,
+  "wall_time_sec": 14.283304929733276,
+  "total_steps": 12,
+  "steps_per_sec": 0.8401416940290783,
+  "device": "cpu:0",
+  "w_file": "/Users/alessandrodurso/Documents/prospective-s5/results/bench/w_smnist_routePCadamsmoke2_s0.npz",
+  "audit": {
+    "teacher": "realized-online",
+    "exact_gradient_path": false,
+    "bptt_calls_in_deployed_rule": false
+  },
+  "instrumentation": {
+    "wall_time_sec": 14.283304929733276,
+    "total_steps": 12,
+    "steps_per_sec": 0.8401416940290783,
+    "peak_device_memory_bytes": null,
+    "eligibility_state_bytes": 16384,
+    "time_to_target": null,
+    "clip": 1.0,
+    "p_clip": 1.0,
+    "preclip_norm": {
+      "p50": 60.40166664123535,
+      "p90": 209.4987777709961,
+      "max": 42047.3515625
+    },
+    "preclip_ratio": {
+      "p50": 60.40166664123535,
+      "p90": 209.4987777709961,
+      "max": 42047.3515625
+    }
+  },
+  "provenance": {
+    "git_commit": "550c181adb39879270414a29dbfb2df4caa67c32",
+    "git_branch": "main",
+    "git_dirty": true,
+    "hostname": "Alessandros-MacBook-Pro",
+    "slurm_job_id": null,
+    "slurm_array": null,
+    "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+    "versions": {
+      "python": "3.14.4",
+      "numpy": "2.5.2",
+      "jax": "0.11.0",
+      "flax": "0.12.8",
+      "optax": "0.2.8",
+      "jaxlib_devices": "[CpuDevice(id=0)]"
+    }
+  }
+}

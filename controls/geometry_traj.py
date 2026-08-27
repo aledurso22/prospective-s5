@@ -81,7 +81,7 @@ def _cos_real(a, b):
 
 def train_arm(arm, seed, clip=cvm.CLIP, exact_probes=True,
               ckpt_every=CKPT_EVERY, lr_scale=1.0, extra=False,
-              ra_probe=False):
+              ra_probe=False, ckpts=None):
     """Frozen-protocol run with full logging. Returns (out, traj) where
     traj holds per-step arrays; out holds final_loss/finite. lr_scale
     scales the polar arms' (alpha, phi) meta LR. extra=True additionally
@@ -90,7 +90,9 @@ def train_arm(arm, seed, clip=cvm.CLIP, exact_probes=True,
     ckpt_every steps, R_A = ||dA/d radial w|| / ||dA/d tangential w||
     of the actual clip+Adam action at the current context (numeric JVP:
     perturb all w by x(1+d) vs x e^{i d}); distinguishes "radial
-    residual exists" from "radial ACTION sensitivity is null"."""
+    residual exists" from "radial ACTION sensitivity is null".
+    ckpts: iterable of step indices; out["ckpts"][K] = (params_copy,
+    w_copy) captured at that step (post-hoc probe analysis only)."""
     params = tcg.init_params(seed)
     rng = np.random.RandomState(1000 + seed)
     L, N = tcg.L, tcg.N
@@ -101,6 +103,7 @@ def train_arm(arm, seed, clip=cvm.CLIP, exact_probes=True,
     vwre = [np.zeros(N) for _ in range(L)]         # per-component 2nd
     vwim = [np.zeros(N) for _ in range(L)]         # moments (real Adam)
     prev = None
+    ckpt_store = {}
     flat = tcg.flatten(params)
     m = np.zeros_like(flat)
     v = np.zeros_like(flat)
@@ -258,6 +261,10 @@ def train_arm(arm, seed, clip=cvm.CLIP, exact_probes=True,
                  for l in range(L)],
                 g_flat, m_pre, v_pre, step)
         params = tcg.pack(params, flat)
+        if ckpts and step in ckpts:
+            import copy as _copy
+            ckpt_store[step] = (_copy.deepcopy(params),
+                                [wl.copy() for wl in w])
         if step % 500 == 0:
             print(f"    {arm} s{seed} step {step}: loss {loss:.4f}",
                   flush=True)
@@ -270,7 +277,8 @@ def train_arm(arm, seed, clip=cvm.CLIP, exact_probes=True,
                 ex_cos=np.asarray(ex_cos), ex_eps=np.asarray(ex_eps),
                 ckpt_every=ckpt_every)
     out = dict(final_loss=float(losses[-100:].mean()),
-               finite=bool(np.all(np.isfinite(losses))))
+               finite=bool(np.all(np.isfinite(losses))),
+               ckpts=ckpt_store)
     return out, traj
 
 

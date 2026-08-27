@@ -194,8 +194,11 @@ gain structure retained (sd(log|w|) ~0.14–0.16); zero BPTT.
   variant; only one that rescues catastrophic basins).
 - E2 action-aware — **mechanistic action-Jacobian control**: pins
   ρ ≈ 1 exactly and establishes the action-null/gauge decomposition
-  (R_A, GE2B), but loses the relative-gain structure (sd(log|w|) ≈ 0)
-  and with it the performance edge; 6/15.
+  (R_A, GE2B). Stated precisely: at the inherited registered MetaOpt
+  settings, action-aware E2 does not improve performance and collapses
+  learned relative gain (sd(log|w|) ≈ 0); this does not establish that
+  exact action-aware hypergradients are intrinsically inferior — only
+  that this registered configuration is not the better arm. 6/15.
 - AA (no added benefit; 5/15).
 
 **Not carried forward:** free/gauge log-polar (stable only at reduced
@@ -203,6 +206,61 @@ LR, no advantage), full-2×2 and low-rank cross-mode geometries (oracle
 gains +0.02/+0.03, below the materiality bar), block-metric MetaOpt
 (preconditions not met: polar doesn't help, and Adam already solves
 the conditioning issue).
+
+## 10. Bridge audit (B1–B5): is the learned geometry the exact-credit correction?
+
+Post-hoc analysis on 15 bitwise-gated pc0_adam replays (training exact
+calls 0/0; exact credit only in the probes), checkpoints K ∈ {500, 1000,
+1500}, held-out probe batches, D2 conventions.
+
+**B1 — learned-w exact-gradient alignment.** Median over seeds at
+K=1500 (K=500/1000 similar): L0 C_id 0.448 → C_learned 0.466; L1 0.326
+→ 0.322; L2 0.503 → 0.540; L3 (negative control) 1.000 → 0.987.
+**ΔC ≈ 0 everywhere (±0.04)** while the per-mode complex oracle at the
+same params reaches **0.82–0.99**. The learned geometry does NOT
+statically approximate the exact-credit correction at its own
+checkpoints, even though a modal scalar could. The closed-loop benefit
+is not terminal static credit reconstruction — the D3/optimum_track
+lesson, now established for the winning causal arm.
+
+**B2 — analytic eligibility-credit correspondence.** Phase agreement
+with the analytic gradient-level statistic c_g^stat is strong:
+**MRL(arg c_g^stat, arg w) = 0.80–0.96** per layer at every checkpoint.
+Relative log-gain correlation (common layerwise scale removed) ≈ 0.
+So the learned geometry's *phase* does carry the credit-repair
+signature; its effect on training is simply not expressed as a better
+static cosine against exact credit.
+
+**B3 — cross-seed transplant (K=1500).** Lower layers: identity 0.361,
+diagonal (self) 0.385, off-diagonal 0.366. The small static gain is
+mostly not seed-specific (shared defect structure), and all static
+gains are small. Top layer: 1.000 → 0.987/0.989 (any rotation of an
+exact gradient only degrades it ✓).
+
+**B4 — mode shuffle.** Shuffled w gives C ≈ C_id ≈ C_learned — the
+static effect is too small for mode assignment to matter there.
+
+**B5 — exact pc0_adam failure ratios** (L_method/L_online): **s3
+1.253, s9 1.767, s10 1.165** — genuinely marginal (no catastrophic
+basin; PC0's seed-3 was 8.16).
+
+**Bridge reading.** The geometry IS credit-derived (phase tracks
+c_g^stat at MRL ~0.9), but its training benefit is realized through
+the clipped-Adam update dynamics, not by improving the static gradient
+direction at any checkpoint. This resolves the G3X tension: credit
+correspondence (phase) and clip-mediated benefit (dynamics) are
+separable, and both are now directly measured.
+
+## 11. S5 instrumentation
+
+Every S5 run now records the clipping covariates in its metrics JSON:
+`p_clip` (fraction of steps with pre-clip global norm > clip), the
+pre-clip norm distribution (p50/p90/max) and the pre-clip/clip ratio.
+The benchmark optimizer is now `optax.chain(clip_by_global_norm(--clip),
+adam)` with `--clip 1.0` default (the toy's mechanistic regime;
+`--clip 0` disables). CPU smoke at the tiny config: p_clip = 1.0,
+pre-clip norm p50 ≈ 60× threshold — the S5 model sits in the same
+always-clipped regime as the toy.
 
 **Mechanism one-liner for the paper:** The modal correction has strong
 gradient-level credit representation, but its causal training benefit is

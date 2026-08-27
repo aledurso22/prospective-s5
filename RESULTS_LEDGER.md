@@ -229,3 +229,34 @@ arms 0 BPTT.
 Controls: PC0 full complex, routePCphase, E2 (mechanistic
 action-Jacobian control), AA. Not carried: polar variants, causal
 2×2/low-rank, block-metric MetaOpt (preconditions unmet).
+
+## 12. Bridge audit (B1–B5, analysis-only; `controls/b1_b4_bridge_audit.py`)
+
+15 bitwise-gated pc0_adam replays (training exact calls 0/0), K ∈
+{500, 1000, 1500}, held-out probes.
+
+- **B1**: learned-w exact-gradient alignment — ΔC ≈ 0 at every layer
+  and checkpoint (K=1500 medians: L0 0.448→0.466, L1 0.326→0.322, L2
+  0.503→0.540, L3 control 1.000→0.987), while the per-mode complex
+  oracle at the same params is 0.82–0.99. **The winning arm's geometry
+  is NOT a static exact-credit approximation at its own checkpoints.**
+- **B2**: phase correspondence with the analytic credit statistic is
+  strong — MRL(arg c_g^stat, arg w) = 0.80–0.96 per layer; relative
+  log-gain correlation ≈ 0. Credit-derived in PHASE, not expressed as
+  static cosine.
+- **B3**: transplant at K=1500 — identity 0.361 / self 0.385 / off-diag
+  0.366 (lower layers): the small static gain is mostly shared, not
+  seed-specific.
+- **B4**: mode shuffle ≈ learned ≈ identity (static effect too small
+  for assignment to matter).
+- **B5**: exact pc0_adam failure ratios — s3 1.253, s9 1.767, s10
+  1.165 (marginal; PC0's seed-3 was 8.16).
+- **S5 instrumentation**: every run records p_clip + pre-clip norm/clip
+  ratio distribution; benchmark optimizer is now
+  chain(clip_by_global_norm(--clip), adam), default clip 1.0 (the toy's
+  regime; S5 smoke shows p_clip = 1.0 too).
+
+Bridge reading: the geometry is credit-derived in phase (MRL ~0.9) but
+its benefit is realized through the clipped-Adam update dynamics, not
+through static gradient-direction improvement. E2 wording downgraded
+per directive ("at the inherited registered MetaOpt settings…").

@@ -183,6 +183,10 @@ trajectory.
 | `controls/g4_g5_oracle_geometry.py` | do full-2×2 or low-rank cross-mode exceed the 0.901 complex ceiling? | 2×2 0.922, rank1 0.908, rank2 0.931 held-out | gains +0.02/+0.03 — **not material; no causal implementation** |
 | `controls/g7_failure_audit.py` + `ge_failure_signature.py` + `g8_statistics.py` | failure taxonomy + statistics | every failure = persistent meta-residual explosion (RESIDUAL_SPIKE); teacher-alignment collapse REFUTED (failures' cos if anything HIGHER); only pc0_adam has a supported win over online (sign p 0.035, Wilcoxon 0.008) | **primary S5 candidate: pc0_adam**; controls: PC0, pcPhase, E2, AA |
 
+## Bridge audit (analysis-only; branch `geometry/modal-audit`)
+
+| `controls/b1_b4_bridge_audit.py` | is the learned pc0_adam geometry the exact-credit correction? | ΔC ≈ 0 at every layer/checkpoint (K1500 medians: L0 0.448→0.466, L1 0.326→0.322, L2 0.503→0.540, L3 1.000→0.987) while the per-mode complex oracle reaches 0.82–0.99; phase MRL(arg c_g^stat, arg w) = 0.80–0.96; transplant: identity 0.361 / self 0.385 / off-diag 0.366; mode shuffle ≈ identity; exact failure ratios s3 1.253 / s9 1.767 / s10 1.165 | **credit-derived in PHASE (MRL ~0.9), but the benefit is realized through clipped-Adam dynamics, NOT static credit reconstruction** — the G3X tension resolved: correspondence and benefit are separable |
+
 ## What the ledger establishes, one paragraph
 
 The prospective principle's derived gifts are exactly two: the
