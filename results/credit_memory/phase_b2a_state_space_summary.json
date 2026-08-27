@@ -1,0 +1,36 @@
+{
+  "git": "8f90c87e26270e116510fa51840194522da61a5b",
+  "config": {
+    "N": 6,
+    "T": 40,
+    "BATCH": 8
+  },
+  "rows": [
+    {
+      "seed": 0,
+      "state_space_vs_causal_PQ_rel_err": 7.284454741085378e-16,
+      "state_space_vs_bptt_rel_err": 8.466689139930119e-16
+    },
+    {
+      "seed": 1,
+      "state_space_vs_causal_PQ_rel_err": 4.9788303374355334e-17,
+      "state_space_vs_bptt_rel_err": 3.2330107299763565e-16
+    },
+    {
+      "seed": 2,
+      "state_space_vs_causal_PQ_rel_err": 4.98845638157545e-16,
+      "state_space_vs_bptt_rel_err": 6.702795649381112e-16
+    },
+    {
+      "seed": 3,
+      "state_space_vs_causal_PQ_rel_err": 3.6922567423896703e-16,
+      "state_space_vs_bptt_rel_err": 8.406273383264231e-16
+    },
+    {
+      "seed": 4,
+      "state_space_vs_causal_PQ_rel_err": 5.725330921293601e-16,
+      "state_space_vs_bptt_rel_err": 6.855418257637928e-16
+    }
+  ],
+  "all_pass": true
+}
