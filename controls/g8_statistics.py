@@ -47,6 +47,13 @@ def load_finals():
     if os.path.exists(gb_path):
         gb = json.load(open(gb_path))
         F["pc0_adam"] = {int(s): v for s, v in gb["finals"].items()}
+    for name, key in (("ge2_summary.json", "e2action"),
+                      ("gaa_summary.json", "aae2adam")):
+        p = os.path.join(OUT, name)
+        if os.path.exists(p):
+            d = json.load(open(p))
+            if len(d["finals"]) == 15:
+                F[key] = {int(s): v for s, v in d["finals"].items()}
     return F
 
 

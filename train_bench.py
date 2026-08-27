@@ -27,6 +27,12 @@ Arms (--arm):
               paired toy seeds): routePC constrained to unit modulus
               |w_j| = 1, phase learned only
               (controls/c1_phase_only_routepc.py).
+  routePCadam RECOMMENDED PRIMARY (FINAL_MODAL_GEOMETRY_AUDIT.md):
+              routePC with Adam MetaOpt for w instead of plain SGD —
+              best 15-seed toy evidence (median 0.0120 vs online 0.0226,
+              3/15 marginal-only failures, only statistically supported
+              win: sign p 0.035, Wilcoxon 0.008); bounded radius with
+              relative modal gain retained.
   frozenPhase w = exp(i arg w_routeA) loaded from --w-file, never updated
   frozenMag   w = |w_routeA| loaded from --w-file, never updated
 
@@ -313,7 +319,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--arm", choices=["baseline", "online", "tbptt", "routeA",
                                      "scalarLive", "frozenPhase", "frozenMag",
                                      "routePC", "routePCreal",
-                                     "routePCphase"],
+                                     "routePCphase", "routePCadam"],
                    required=True)
     p.add_argument("--epochs", type=int, default=3)
     p.add_argument("--subset", type=int, default=20000,
@@ -393,7 +399,7 @@ def main() -> None:
     # ---------------- models ----------------
     is_meta_arm = args.arm in ("routeA", "scalarLive", "frozenPhase",
                                "frozenMag", "routePC", "routePCreal",
-                               "routePCphase")
+                               "routePCphase", "routePCadam")
     model_type = {"baseline": "baseline", "online": "online",
                   "tbptt": "tbptt"}.get(args.arm, "online")
     # learning rule vs state dynamics, exposed independently (factorial-
@@ -404,6 +410,7 @@ def main() -> None:
                      "online": "online", "routePC": "routepc",
                      "routePCreal": "routepc",
                      "routePCphase": "routepc",
+                     "routePCadam": "routepc",
                      "routeA": "oracle_exact_teacher",
                      "scalarLive": "oracle_exact_teacher",
                      "frozenPhase": "online_frozen_geometry",
@@ -460,7 +467,9 @@ def main() -> None:
             print(f"loaded w from {args.w_file} "
                   f"(projection: {args.arm})")
         else:
-            meta_tx = optax.sgd(args.lr_m)
+            meta_tx = (optax.adam(args.lr_m)
+                       if args.arm == "routePCadam"   # audit-recommended
+                       else optax.sgd(args.lr_m))
             meta_state = meta_tx.init(meta)
 
     # ---------------- step functions ----------------
@@ -593,7 +602,7 @@ def main() -> None:
 
     # ---------------- startup self-checks (meta arms) ----------------
     if args.arm in ("routeA", "scalarLive", "routePC", "routePCreal",
-                    "routePCphase"):
+                    "routePCphase", "routePCadam"):
         xb = prep_x(x_train[:8], tmeta["one_hot"])
         yb = jnp.asarray(y_train[:8])
         dr = jax.random.PRNGKey(0)
@@ -635,7 +644,7 @@ def main() -> None:
             if args.arm in ("routeA", "scalarLive"):
                 state, meta, meta_state, loss, acc = routeA_step(
                     state, meta, meta_state, xb, yb)
-            elif args.arm in ("routePC", "routePCreal", "routePCphase"):
+            elif args.arm in ("routePC", "routePCreal", "routePCphase", "routePCadam"):
                 drng, new_drng = jax.random.split(state.dropout_rng)
                 state = state.replace(dropout_rng=new_drng)
                 if prev is None:
@@ -685,7 +694,7 @@ def main() -> None:
 
     w_path = ""
     if args.arm in ("routeA", "scalarLive", "routePC", "routePCreal",
-                    "routePCphase"):
+                    "routePCphase", "routePCadam"):
         w_path = os.path.join(
             RESULTS_DIR,
             f"w_{args.task}_{args.arm}{args.tag}_s{args.seed}.npz")
@@ -702,7 +711,8 @@ def main() -> None:
                   n_layers=args.n_layers, dropout=args.dropout,
                   batch_size=args.batch_size, lr=args.lr, lr_m=args.lr_m,
                   schedule="cosine->0", optimizer="adam",
-                  meta_optimizer=("sgd" if meta_tx else None),
+                  meta_optimizer=("adam" if args.arm == "routePCadam"
+                                  else "sgd" if meta_tx else None),
                   epochs=args.epochs, train_samples=n_train,
                   test_samples=len(x_test), seed=args.seed,
                   standardized=bool(args.standardize),
@@ -723,7 +733,7 @@ def main() -> None:
     # structural here; routeA/scalarLive call an exact-BPTT teacher.
     audit = dict(teacher=("exact-bptt" if teacher is not None else
                           "realized-online" if args.arm in
-                          ("routePC", "routePCreal", "routePCphase")
+                          ("routePC", "routePCreal", "routePCphase", "routePCadam")
                           else None),
                    exact_gradient_path=bool(teacher is not None),
                    bptt_calls_in_deployed_rule=(

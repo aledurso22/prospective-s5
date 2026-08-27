@@ -115,6 +115,7 @@ def train_arm(arm, seed, clip=cvm.CLIP, exact_probes=True,
     res_rad = np.zeros(STEPS)          # radial/tangential residual
     res_tan = np.zeros(STEPS)          # decomposition (refinement D)
     ra_glob, ra_layer = [], []         # R_A action-sensitivity probe
+    ralpha = np.zeros((STEPS, L, N))   # signed radial residual r_alpha
     ex_cos, ex_eps = [], []
     for step in range(1, STEPS + 1):
         x, y = make_data(rng)
@@ -153,9 +154,10 @@ def train_arm(arm, seed, clip=cvm.CLIP, exact_probes=True,
                 c = chain_c_stored(Gp, th_all, u_all, sig_all, h_n)
             for l in range(L):
                 rnorm[step - 1, l] = np.abs(c[l])
+                w_hat = w[l] / np.maximum(np.abs(w[l]), 1e-30)
+                proj = np.conj(w_hat) * c[l]
+                ralpha[step - 1, l] = proj.real
                 if extra:
-                    w_hat = w[l] / np.maximum(np.abs(w[l]), 1e-30)
-                    proj = np.conj(w_hat) * c[l]
                     res_rad[step - 1] += np.abs(proj.real).sum()
                     res_tan[step - 1] += np.abs(proj.imag).sum()
             if arm in ("pc0", "e1clip", "e2action"):
@@ -238,7 +240,8 @@ def train_arm(arm, seed, clip=cvm.CLIP, exact_probes=True,
         n0 = float(np.linalg.norm(g_flat))
         preclip[step - 1] = n0
         clip_fire[step - 1] = n0 > clip
-        g = cvm.clip(g_flat) if clip <= 1e10 else g_flat * (clip / n0)
+        # honor the clip parameter (1.0 frozen; 1e30 = nonbinding/identity)
+        g = g_flat * (clip / n0) if n0 > clip else g_flat
         flat_prev = flat
         m_pre, v_pre = m, v
         flat, m, v = cvm.adam(flat, g, m, v, step)
@@ -262,7 +265,7 @@ def train_arm(arm, seed, clip=cvm.CLIP, exact_probes=True,
     traj = dict(losses=losses, w=w_tr, gnorm=gnorm, rnorm=rnorm,
                 clip_fire=clip_fire, preclip=preclip,
                 dtheta=dtheta, ab_share=ab_share,
-                res_rad=res_rad, res_tan=res_tan,
+                res_rad=res_rad, res_tan=res_tan, ralpha=ralpha,
                 ra_glob=np.asarray(ra_glob), ra_layer=np.asarray(ra_layer),
                 ex_cos=np.asarray(ex_cos), ex_eps=np.asarray(ex_eps),
                 ckpt_every=ckpt_every)

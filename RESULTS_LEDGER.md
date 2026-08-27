@@ -191,3 +191,41 @@ exact credit. Interaction I(K) medians: +0.0022 / +0.0037 / +0.0120 /
 +0.0211 (final). **Verdict: the generic-preconditioning hypothesis is
 rejected with headroom present, at every budget** — the final-step 2×2
 floor was not the limitation; PC0's benefit is credit-repair-specific.
+
+## 11. Modal-geometry audit (G-program, branch `geometry/modal-audit`)
+
+Full record: `FINAL_MODAL_GEOMETRY_AUDIT.md`. Scripts `controls/g*.py`;
+artifacts `results/geometry_audit/`. All replay gates bitwise; causal
+arms 0 BPTT.
+
+- **G0**: Cartesian self-annealing FALSIFIED — |Δα|,|Δφ| grow with ρ
+  (not ρ⁻²), ρ grows after (not before) bad-basin entry, successes reach
+  the same final ρ (~13). Clip fire rate 1.000 everywhere.
+- **G1/GA**: free/gauge polar NaN at original meta-LR; at η·1e-3/1e-4
+  finite + beats online 5/5 but median 0.0137 (not competitive). Polar
+  branch closed.
+- **G3/G3X (clean no-clip)**: benefit vs online, clip → noclip: real
+  +0.268→+0.156, PC0 +0.674→+0.294, pcPhase +0.620→+0.132; without
+  normalization the C3 credit-specificity washes out (interaction ≈ 0
+  every budget). The benefit is mediated by the clipped-Adam update
+  geometry.
+- **GC**: displacement decoupled from ρ (corr −0.91/−0.73 healthy);
+  common radial scale is a near-exact gauge (post-clip direction cos
+  ≥0.9990, Adam update cos ≥0.99996 at κ=100).
+- **G4/G5 (oracle)**: full 2×2 0.922, rank-2 0.931 vs complex 0.901 —
+  small, not material; no causal implementation.
+- **GD/GE2 (action-Jacobian)**: E2 pins ρ≈1 exactly; 15-seed 0.0167,
+  6/15 fails; sd(log|w|)≈0 (degenerates to phase-only). R_A: common
+  radial action sensitivity 0.113 (null) vs per-layer relative 0.6–0.87.
+  GE2B: radial residual is ~93% RELATIVE-subspace (common share 0.069).
+- **GAA**: action-aware + Adam = 0.0191, 5/15 fails — no improvement.
+- **G7/GE-SIG**: every failure = persistent meta-residual explosion
+  (RESIDUAL_SPIKE); teacher-alignment collapse REFUTED as precursor.
+- **G8**: only pc0_adam has a supported win over online (median 0.0120,
+  ratio 0.597, 12/15, sign p 0.035, Wilcoxon 0.008; 3/15 marginal-only
+  failures).
+
+**Primary S5 candidate: pc0_adam (PC0 + Adam MetaOpt for w).**
+Controls: PC0 full complex, routePCphase, E2 (mechanistic
+action-Jacobian control), AA. Not carried: polar variants, causal
+2×2/low-rank, block-metric MetaOpt (preconditions unmet).

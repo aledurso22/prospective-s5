@@ -7,6 +7,7 @@
 #      else the job stops (mechanism arms are meaningless without
 #      headroom — the D6 lesson)
 #   3. mechanism arms: routeA, scalarLive, routePC (exploratory),
+#      routePCadam (recommended primary),
 #      frozenPhase, frozenMag (w from THIS job's routeA run), tbptt
 #
 # Submit via scripts/bench_grid.sh, or directly:
@@ -78,6 +79,7 @@ run scalarLive
 run routePC
 run routePCreal
 run routePCphase   # opt-in exploratory (C1: unit-modulus variant)
+run routePCadam    # RECOMMENDED PRIMARY (geometry audit: PC0 + Adam MetaOpt on w)
 WFILE="results/bench/w_${TASK}_routeA_s${SEED}.npz"
 run frozenPhase --w-file "$WFILE"
 run frozenMag   --w-file "$WFILE"
