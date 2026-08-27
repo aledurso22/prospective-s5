@@ -1,0 +1,76 @@
+{
+  "git": "37b8c162c3cd5f2fc8299752b0576333079b2372",
+  "correlations": [
+    {
+      "seed": 0,
+      "pearson_rho_dtheta": -0.6420066988256371,
+      "spearman_rho_dtheta": -0.647345862465371,
+      "pearson_rho_abshare": 0.3101728247073571,
+      "dtheta_med": 0.014522617244926702,
+      "ab_share_med": 0.999986388999465
+    },
+    {
+      "seed": 1,
+      "pearson_rho_dtheta": -0.5344121967470077,
+      "spearman_rho_dtheta": -0.486327728844397,
+      "pearson_rho_abshare": 0.3509073535444413,
+      "dtheta_med": 0.011930926665301458,
+      "ab_share_med": 0.9999970122135984
+    },
+    {
+      "seed": 2,
+      "pearson_rho_dtheta": -0.9071870818994798,
+      "spearman_rho_dtheta": -0.9170868789436318,
+      "pearson_rho_abshare": 0.21307837791948966,
+      "dtheta_med": 0.010569050254484074,
+      "ab_share_med": 0.9999999384997487
+    },
+    {
+      "seed": 3,
+      "pearson_rho_dtheta": 0.219962644863506,
+      "spearman_rho_dtheta": -0.2768947502299538,
+      "pearson_rho_abshare": 0.0681352356413965,
+      "dtheta_med": 0.004579642047452775,
+      "ab_share_med": 0.9999999846021672
+    },
+    {
+      "seed": 4,
+      "pearson_rho_dtheta": -0.731769413717084,
+      "spearman_rho_dtheta": -0.6821559299479671,
+      "pearson_rho_abshare": 0.22322126917416507,
+      "dtheta_med": 0.012983985136119024,
+      "ab_share_med": 0.9999987223046768
+    }
+  ],
+  "probe": [
+    {
+      "kappa": 1,
+      "clip_dir_cos": 1.0000000000000002,
+      "adam_dir_cos": 0.9999999999999999,
+      "adam_norm_ratio": 1.0
+    },
+    {
+      "kappa": 3,
+      "clip_dir_cos": 0.9995644938429977,
+      "adam_dir_cos": 0.999983688328478,
+      "adam_norm_ratio": 0.9996321527759082
+    },
+    {
+      "kappa": 10,
+      "clip_dir_cos": 0.9992059900864567,
+      "adam_dir_cos": 0.9999702618309156,
+      "adam_norm_ratio": 0.9994950695091006
+    },
+    {
+      "kappa": 100,
+      "clip_dir_cos": 0.999039149141222,
+      "adam_dir_cos": 0.9999640130244614,
+      "adam_norm_ratio": 0.9994410560406543
+    }
+  ],
+  "control_full_scale_cos": 1.0000000000000002,
+  "probe_calls": {
+    "exact_grad": 150,
+    "exact_lambda": 150
+  }
+}

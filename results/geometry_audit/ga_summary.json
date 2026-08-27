@@ -1,0 +1,66 @@
+{
+  "rates": {
+    "0.1": {
+      "finals": {
+        "0": NaN,
+        "1": NaN,
+        "2": NaN,
+        "3": NaN,
+        "4": NaN
+      },
+      "finite_all": false,
+      "median": NaN,
+      "beats_online": 0,
+      "competitive": false
+    },
+    "0.01": {
+      "finals": {
+        "0": NaN,
+        "1": NaN,
+        "2": NaN,
+        "3": 0.01921091178304788,
+        "4": NaN
+      },
+      "finite_all": false,
+      "median": NaN,
+      "beats_online": 0,
+      "competitive": false
+    },
+    "0.001": {
+      "finals": {
+        "0": 0.01373176612627494,
+        "1": 0.0195230861298415,
+        "2": 0.023822543565241053,
+        "3": 0.0067228121532499656,
+        "4": 0.009203452076603327
+      },
+      "finite_all": true,
+      "median": 0.01373176612627494,
+      "beats_online": 5,
+      "competitive": false
+    },
+    "0.0001": {
+      "finals": {
+        "0": 0.0203181422463076,
+        "1": 0.013663970578309714,
+        "2": 0.023824208918744625,
+        "3": 0.008590266309124031,
+        "4": 0.010622538295581161
+      },
+      "finite_all": true,
+      "median": 0.013663970578309714,
+      "beats_online": 5,
+      "competitive": false
+    }
+  },
+  "selection": {
+    "rate": 0.0001,
+    "median5": 0.013663970578309714,
+    "competitive": false
+  },
+  "probe_calls": {
+    "exact_grad": 600,
+    "exact_lambda": 600
+  },
+  "git": "37b8c162c3cd5f2fc8299752b0576333079b2372"
+}

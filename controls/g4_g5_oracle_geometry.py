@@ -104,11 +104,12 @@ def stack_layer(p, key, l):
 
 def fit_lowrank(fitp, zc, rank):
     """Per layer: D = diag(zc[l]) (scalar per mode on its block);
-    residual LS rank-r correction."""
+    residual LS rank-r correction. Block dim differs by layer
+    (d_l = 1 + M_l: L0 has M=1, deeper layers M=N)."""
     L, N = tcg.L, tcg.N
-    d = 1 + fitp[0]["G_on"]["b"][0].shape[1]
     Ms = []
     for l in range(L):
+        d = 1 + fitp[0]["G_on"]["b"][l].shape[1]
         Z = np.concatenate([stack_layer(p, "G_on", l)[:, None]
                             for p in fitp], axis=1)     # (N*d) x nfit
         T = np.concatenate([stack_layer(p, "G_ex", l)[:, None]

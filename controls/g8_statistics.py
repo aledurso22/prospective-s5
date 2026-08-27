@@ -43,6 +43,10 @@ def load_finals():
         for arm, row in g1["arms"].items():
             if "finals15" in row:
                 F[arm] = {int(s): v for s, v in row["finals15"].items()}
+    gb_path = os.path.join(OUT, "gb_summary.json")
+    if os.path.exists(gb_path):
+        gb = json.load(open(gb_path))
+        F["pc0_adam"] = {int(s): v for s, v in gb["finals"].items()}
     return F
 
 

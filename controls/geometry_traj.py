@@ -15,6 +15,9 @@ Arms:
                (du, dv): r_alpha = du*u + dv*v, r_phi = u*dv - v*du.
                No gauge fixing. Isolates the coordinate-conditioning
                correction (eta_eff = eta/rho^2 removed by construction).
+               lr_scale scales the (alpha, phi) meta LR (refinement A:
+               the rho^-2 factor is absent here, so the original meta-LR
+               is expected to be too hot by ~rho^2).
   polar_gauge  polar + layerwise gauge fix: r_alpha demeaned per layer
                before the alpha update (sum_j alpha~_j = 0 preserved;
                init alpha = 0 satisfies it). phi updates identical.
@@ -22,6 +25,27 @@ Arms:
                meta step is replaced by Adam on g_hat := (-LR)*c with
                lr = LR_M (b1 .9, b2 .999, eps 1e-8, mirroring cvm.adam;
                one fixed LR, no sweep).
+  e1clip       E1 clip-aware RoutePC (refinement D): the delayed
+               residual respects the ACTIVE global-clip Jacobian
+               D_x clip(x) = (C/||x||)(I - xhat xhat^T) (||x|| > C,
+               which fires 100% of steps here). Implementation: transform
+               the teacher h_n by D_clip (symmetric) evaluated at the
+               PREVIOUS step's pre-clip flat gradient, then the identical
+               PC0 chain/update. r̂ = J^T D_clip h.
+  e2action     E2 full optimizer-action-aware RoutePC (refinement D):
+               residual [D_w A]^T h where A is the one-step
+               clip+Adam-direction action (the lr factor stays in PC0's
+               unchanged meta update, preserving protocol scale):
+               h -> D1 D_clip h with D1 = d(Adam direction)/d(clipped
+               grad), using the previous step's FROZEN Adam moments and
+               step index. No backprop through g_n, history, or g_{n+1};
+               BPTT/exact calls stay zero.
+  aae2adam     RoutePC-AA (residual x MetaOpt 2x2, missing cell):
+               the e2action action-aware residual + Adam MetaOpt for w
+               (pc0_adam's update, one fixed LR = LR_M). Registered
+               prediction: may not beat E2/pc0_adam on median if both
+               modifications repair the same pathology; the possible
+               advantage is failure rate / w-geometry stability.
 
 Exact-teacher probes (offline diagnostic, audited): every CKPT_EVERY
 steps, r_exact is built from the SAME stored previous blocks and the
@@ -56,9 +80,17 @@ def _cos_real(a, b):
 
 
 def train_arm(arm, seed, clip=cvm.CLIP, exact_probes=True,
-              ckpt_every=CKPT_EVERY):
+              ckpt_every=CKPT_EVERY, lr_scale=1.0, extra=False,
+              ra_probe=False):
     """Frozen-protocol run with full logging. Returns (out, traj) where
-    traj holds per-step arrays; out holds final_loss/finite."""
+    traj holds per-step arrays; out holds final_loss/finite. lr_scale
+    scales the polar arms' (alpha, phi) meta LR. extra=True additionally
+    logs ||theta_{n+1}-theta_n|| and the (a,B)-block share of the
+    pre-clip flat gradient (refinement C). ra_probe=True logs, every
+    ckpt_every steps, R_A = ||dA/d radial w|| / ||dA/d tangential w||
+    of the actual clip+Adam action at the current context (numeric JVP:
+    perturb all w by x(1+d) vs x e^{i d}); distinguishes "radial
+    residual exists" from "radial ACTION sensitivity is null"."""
     params = tcg.init_params(seed)
     rng = np.random.RandomState(1000 + seed)
     L, N = tcg.L, tcg.N
@@ -78,6 +110,11 @@ def train_arm(arm, seed, clip=cvm.CLIP, exact_probes=True,
     rnorm = np.zeros((STEPS, L, N))
     clip_fire = np.zeros(STEPS, bool)
     preclip = np.zeros(STEPS)
+    dtheta = np.zeros(STEPS)
+    ab_share = np.zeros(STEPS)
+    res_rad = np.zeros(STEPS)          # radial/tangential residual
+    res_tan = np.zeros(STEPS)          # decomposition (refinement D)
+    ra_glob, ra_layer = [], []         # R_A action-sensitivity probe
     ex_cos, ex_eps = [], []
     for step in range(1, STEPS + 1):
         x, y = make_data(rng)
@@ -89,11 +126,39 @@ def train_arm(arm, seed, clip=cvm.CLIP, exact_probes=True,
             w = [np.exp(al + 1j * ph) for al, ph in zip(alpha, phi)]
 
         if prev is not None and arm != "online":
-            Gp, th_all, u_all, sig_all = prev
-            c = chain_c_stored(Gp, th_all, u_all, sig_all, h_n)
+            Gp, th_all, u_all, sig_all, xp, mp, vp, tp = prev
+            if arm in ("e1clip", "e2action", "aae2adam"):
+                # transform the teacher by the clip (and Adam-direction)
+                # Jacobians of the PREVIOUS step's action (refinement D)
+                n_x = float(np.linalg.norm(xp))
+                if n_x > cvm.CLIP:
+                    xh = xp / n_x
+                    h_t = (cvm.CLIP / n_x) * (
+                        h_n - xh * float(np.dot(xh, h_n)))
+                else:
+                    h_t = h_n
+                if arm == "e2action" or arm == "aae2adam":
+                    yp = (cvm.CLIP / n_x) * xp if n_x > cvm.CLIP else xp
+                    mn = 0.9 * mp + 0.1 * yp
+                    vn = 0.999 * vp + 0.001 * yp ** 2
+                    mh = mn / (1 - 0.9 ** tp)
+                    vh = vn / (1 - 0.999 ** tp)
+                    sq = np.sqrt(vh) + 1e-8
+                    dA = (0.1 / (1 - 0.9 ** tp)) / sq \
+                        - mh * (0.001 / (1 - 0.999 ** tp)) * yp \
+                        / (sq ** 2 * np.sqrt(vh))
+                    h_t = dA * h_t
+                c = chain_c_stored(Gp, th_all, u_all, sig_all, h_t)
+            else:
+                c = chain_c_stored(Gp, th_all, u_all, sig_all, h_n)
             for l in range(L):
                 rnorm[step - 1, l] = np.abs(c[l])
-            if arm == "pc0":
+                if extra:
+                    w_hat = w[l] / np.maximum(np.abs(w[l]), 1e-30)
+                    proj = np.conj(w_hat) * c[l]
+                    res_rad[step - 1] += np.abs(proj.real).sum()
+                    res_tan[step - 1] += np.abs(proj.imag).sum()
+            if arm in ("pc0", "e1clip", "e2action"):
                 w = [wl - LR_M * (-LR) * cl for wl, cl in zip(w, c)]
             elif arm == "pcphase":
                 w = [wl - LR_M * (-LR) * cl for wl, cl in zip(w, c)]
@@ -101,7 +166,7 @@ def train_arm(arm, seed, clip=cvm.CLIP, exact_probes=True,
             elif arm == "real":
                 w = [np.real(wl - LR_M * (-LR) * cl.real) + 0j
                      for wl, cl in zip(w, c)]
-            elif arm == "pc0_adam":
+            elif arm in ("pc0_adam", "aae2adam"):
                 t = step - 1                       # meta step index
                 for l in range(L):
                     gl = (-LR) * c[l]              # the descended gradient
@@ -121,8 +186,8 @@ def train_arm(arm, seed, clip=cvm.CLIP, exact_probes=True,
                     if arm == "polar_gauge":
                         r_al = r_al - r_al.mean()
                     r_ph = u_ * dv - v_ * du
-                    alpha[l] = alpha[l] - LR_M * (-LR) * r_al
-                    phi[l] = phi[l] - LR_M * (-LR) * r_ph
+                    alpha[l] = alpha[l] - lr_scale * LR_M * (-LR) * r_al
+                    phi[l] = phi[l] - lr_scale * LR_M * (-LR) * r_ph
                 w = [np.exp(al + 1j * ph) for al, ph in zip(alpha, phi)]
 
             # exact-teacher probe (diagnostic, audited)
@@ -141,19 +206,54 @@ def train_arm(arm, seed, clip=cvm.CLIP, exact_probes=True,
                 + (np.abs(G["b"][l]) ** 2).sum(axis=1))
         w_tr[step - 1] = np.asarray(w)
 
+        if ra_probe and step % ckpt_every == 0:
+            # numeric JVP of the actual clip+Adam action at (G, params,
+            # current moments, step): radial vs tangential w perturbation
+            def _adir(wlist):
+                gx = tcg.flat_grads(cvm.scale_by_w(G, wlist), params)
+                yc = cvm.clip(gx)
+                mh_ = (0.9 * m + 0.1 * yc) / (1 - 0.9 ** step)
+                vh_ = (0.999 * v + 0.001 * yc ** 2) / (1 - 0.999 ** step)
+                return mh_ / (np.sqrt(vh_) + 1e-8)
+            d = 1e-4
+            a0 = _adir(w)
+            a_r = _adir([wl * (1 + d) for wl in w])
+            a_t = _adir([wl * np.exp(1j * d) for wl in w])
+            num = float(np.linalg.norm(a_r - a0))
+            den = float(np.linalg.norm(a_t - a0))
+            ra_glob.append(num / (den + 1e-30))
+            row_l = []
+            for l in range(L):
+                wr = [wl_.copy() for wl_ in w]
+                wt = [wl_.copy() for wl_ in w]
+                wr[l] = wr[l] * (1 + d)
+                wt[l] = wt[l] * np.exp(1j * d)
+                row_l.append(float(
+                    np.linalg.norm(_adir(wr) - a0)
+                    / (np.linalg.norm(_adir(wt) - a0) + 1e-30)))
+            ra_layer.append(row_l)
+
         G_use = cvm.scale_by_w(G, w)
         g_flat = tcg.flat_grads(G_use, params)
         n0 = float(np.linalg.norm(g_flat))
         preclip[step - 1] = n0
         clip_fire[step - 1] = n0 > clip
         g = cvm.clip(g_flat) if clip <= 1e10 else g_flat * (clip / n0)
+        flat_prev = flat
+        m_pre, v_pre = m, v
         flat, m, v = cvm.adam(flat, g, m, v, step)
+        if extra:
+            dtheta[step - 1] = float(np.linalg.norm(flat - flat_prev))
+            ab = sum(2 * tcg.N + 2 * G["b"][l].size for l in range(L))
+            ab_share[step - 1] = float(
+                np.linalg.norm(g_flat[:ab]) / (n0 + 1e-30))
         prev = (dict(a=[ga.copy() for ga in G["a"]],
                      b=[gb.copy() for gb in G["b"]]),
                 [th.copy() for th in params["theta"]],
                 [tcg.sig(params["rho"][l]) for l in range(L)],
                 [tcg.sig(params["rho"][l]) * (1 - tcg.sig(params["rho"][l]))
-                 for l in range(L)])
+                 for l in range(L)],
+                g_flat, m_pre, v_pre, step)
         params = tcg.pack(params, flat)
         if step % 500 == 0:
             print(f"    {arm} s{seed} step {step}: loss {loss:.4f}",
@@ -161,6 +261,9 @@ def train_arm(arm, seed, clip=cvm.CLIP, exact_probes=True,
 
     traj = dict(losses=losses, w=w_tr, gnorm=gnorm, rnorm=rnorm,
                 clip_fire=clip_fire, preclip=preclip,
+                dtheta=dtheta, ab_share=ab_share,
+                res_rad=res_rad, res_tan=res_tan,
+                ra_glob=np.asarray(ra_glob), ra_layer=np.asarray(ra_layer),
                 ex_cos=np.asarray(ex_cos), ex_eps=np.asarray(ex_eps),
                 ckpt_every=ckpt_every)
     out = dict(final_loss=float(losses[-100:].mean()),
