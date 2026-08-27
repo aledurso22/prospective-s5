@@ -1,6 +1,7 @@
 # Phase B9 — state-lifecycle audit + oracle marginal-utility diagnostic
 
-Branch `credit-memory-repair`. Requested **before** any new
+Branch `S5-CCM-scale-validation` (current checkout, carried over from
+the preceding S5-prep phase; no algorithm here touches S5 code). Requested **before** any new
 predictor/resurrection mechanism and before any S5 run. Parts 1-2 are a
 pure code-reading audit of the existing toy machinery (no new code
 required, no training-algorithm changes). Part 3-4 add one new,
