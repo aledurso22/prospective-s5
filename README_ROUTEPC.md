@@ -84,7 +84,7 @@ Expected: online `[0.0727, 0.0224, 0.0284, 0.0109, 0.0118]` (median
 
 | control | result | meaning |
 |---|---|---|
-| 2×2 (online/PC0/BPTT/BPTT+w) | BPTT+w ≈ BPTT ±2e-05 | credit-repair-specific, **not** generic preconditioning |
+| 2×2 (online/PC0/BPTT/BPTT+w) | BPTT+w ≈ BPTT ±2e-05 | credit-regime-specific interaction, **not** generic preconditioning; later audits show it is clipped-Adam/path-dependent, not static BPTT reconstruction |
 | norm-matched PC0 | == PC0 (median 0.0073) at ‖M_w g‖/‖g‖ up to 564 | **direction, not gain** |
 | LR control | best tuned-Adam LR median 0.0136 | not a learning-rate effect |
 | D1 exact-D⁻¹ factorization | cos 1.0, rel 2.4e-15 | placement/factorization theory exact |

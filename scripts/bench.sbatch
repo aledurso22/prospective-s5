@@ -39,7 +39,9 @@ else
     # full sequential MNIST: T=784, 60k train, final eval on all 10k
     TASKFLAGS="--subset 0 --test-subset 10000 --eval-subset 2000"
 fi
-MODELFLAGS="--d-model 96 --state-size 64 --n-layers 3 --dropout 0.1 --batch-size 64 --lr 1e-3 --scan assoc --epochs 3"
+# Historical S5 optimizer is unclipped Adam. Keep --clip explicit so a
+# clipping experiment can never enter this benchmark silently.
+MODELFLAGS="--d-model 96 --state-size 64 --n-layers 3 --dropout 0.1 --batch-size 64 --lr 1e-3 --scan assoc --epochs 3 --clip 0"
 
 run() {  # run ARM [extra flags]
     local ARM="$1"; shift

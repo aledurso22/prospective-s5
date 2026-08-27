@@ -10,6 +10,7 @@ cluster launch or after touching `toyrig/`, `ssm/`, or `train_bench.py`.
 | `test_online_s5_jax.py` | ~1 min | JAX online S5 gradient vs the numpy rig (~1e-7). |
 | `test_scan.py` | ~1 min | all scan implementations (S5, prospective 2×2, conv) vs sequential references. |
 | `test_modal_geometry_convention.py` | ~1 min | S5 modal geometry: w=1 == no meta bitwise, conj(w) leaf convention, per-mode independence, C/D untouched, jit/eager agreement. |
+| `test_bench_contract.py` | seconds | S5 benchmark contract: historical `--clip 0` default, clipping/chi summaries, and zero exact/BPTT structural counters for every causal RoutePC arm. |
 | `test_external_rig.py` | seconds | independent second-agent rig: FD-correct gradients, D1 restoration, top-layer exactness (see `../INDEPENDENT_VALIDATION.md`). |
 
 Former names: `check_route_pc.py`, `check_routeA_meta.py`,

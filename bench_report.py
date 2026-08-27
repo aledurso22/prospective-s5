@@ -34,7 +34,8 @@ RESULTS_DIR = os.path.join(HERE, "results", "bench")
 GATE_H = 0.2
 
 ARMS = ["baseline", "online", "tbptt", "routeA", "scalarLive", "routePC",
-        "routePCreal", "frozenPhase", "frozenMag"]
+        "routePCreal", "routePCphase", "routePCadam", "frozenPhase",
+        "frozenMag"]
 
 
 def collect():
@@ -42,6 +43,11 @@ def collect():
     out = {}
     for path in sorted(glob.glob(os.path.join(RESULTS_DIR,
                                               "metrics_*.json"))):
+        # Stage 0 has its own clip-aware paired report. Mixing those tagged
+        # cells here would silently overwrite the historical benchmark cell
+        # for the same (task, arm, seed).
+        if "_stage0_" in os.path.basename(path):
+            continue
         with open(path) as f:
             m = json.load(f)
         cfg = m["config"]

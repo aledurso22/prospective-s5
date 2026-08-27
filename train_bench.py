@@ -30,7 +30,7 @@ Arms (--arm):
   routePCadam RECOMMENDED PRIMARY (FINAL_MODAL_GEOMETRY_AUDIT.md):
               routePC with Adam MetaOpt for w instead of plain SGD —
               best 15-seed toy evidence (median 0.0120 vs online 0.0226,
-              3/15 marginal-only failures, only statistically supported
+              3/15 failures (ratios 1.165, 1.253, 1.767), only supported
               win: sign p 0.035, Wilcoxon 0.008); bounded radius with
               relative modal gain retained.
   frozenPhase w = exp(i arg w_routeA) loaded from --w-file, never updated
@@ -312,7 +312,7 @@ class TrainState(train_state.TrainState):
     dropout_rng: jax.Array
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv=None) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--task", choices=["smnist", "psmnist", "copy"],
                    required=True)
@@ -339,12 +339,11 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--downsample", type=int, default=1, choices=[1, 2])
     p.add_argument("--scan", choices=["assoc", "lax"], default="assoc")
     p.add_argument("--tbptt-window", type=int, default=64)
-    p.add_argument("--clip", type=float, default=1.0,
+    p.add_argument("--clip", type=float, default=0.0,
                    help="global-norm gradient clip before Adam (0 = "
-                        "disabled). The toy mechanism regime is "
-                        "clipped-Adam; p_clip and pre-clip norm/clip "
-                        "ratio are recorded in every run's metrics as "
-                        "primary mechanistic covariates.")
+                        "disabled; historical S5 default). Clipping is an "
+                        "explicit experimental factor. p_clip, pre-clip "
+                        "norms, and chi=||g_pre||/clip are recorded.")
     p.add_argument("--w-file", type=str, default="",
                    help="routeA w .npz for the frozen arms")
     p.add_argument("--seq-len", type=int, default=120, help="copy: T")
@@ -370,7 +369,81 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--target-loss", type=float, default=0.0,
                    help="if > 0, record the first step/wall-time at which "
                         "train loss <= target (time-to-target metric)")
-    return p.parse_args()
+    args = p.parse_args(argv)
+    if args.clip < 0:
+        p.error("--clip must be nonnegative (0 disables clipping)")
+    return args
+
+
+CAUSAL_ROUTEPC_ARMS = ("routePC", "routePCreal", "routePCphase",
+                       "routePCadam")
+
+
+def credit_audit(arm: str, steps: int) -> dict:
+    """Structural exact-credit counters for one completed S5 run.
+
+    The JAX implementation has no instrumentable ``exact_lambda`` entry
+    point, so these counters describe which differentiated graph is built
+    once per optimizer step. In particular, causal RoutePC arms build only
+    the online custom-VJP graph; their exact/BPTT counters are asserted zero.
+    """
+    bptt = steps if arm in ("baseline", "routeA", "scalarLive") else 0
+    tbptt = steps if arm == "tbptt" else 0
+    audit = dict(
+        accounting="structural graph count (one differentiated graph per step)",
+        teacher=("exact-bptt" if arm in ("routeA", "scalarLive") else
+                 "realized-online" if arm in CAUSAL_ROUTEPC_ARMS else None),
+        exact_gradient_path=bool(bptt),
+        exact_grad_calls=int(bptt),
+        exact_lambda_calls=0,
+        bptt_calls=int(bptt),
+        tbptt_calls=int(tbptt),
+        bptt_calls_in_deployed_rule=bool(bptt),
+    )
+    if arm in CAUSAL_ROUTEPC_ARMS:
+        assert audit["exact_grad_calls"] == 0
+        assert audit["exact_lambda_calls"] == 0
+        assert audit["bptt_calls"] == 0
+    return audit
+
+
+def clipping_instrumentation(gnorms, clip: float) -> dict:
+    """Pre-clip norm and chi_n=||g_n^pre||/C distributions."""
+    norms = np.asarray(gnorms, dtype=float)
+    if norms.size == 0:
+        raise ValueError("cannot summarize clipping without optimizer steps")
+    norm_dist = dict(
+        p50=float(np.percentile(norms, 50)),
+        p90=float(np.percentile(norms, 90)),
+        max=float(np.max(norms)),
+    )
+    if clip > 0:
+        chi_values = norms / clip
+        chi = dict(
+            defined=True,
+            threshold=float(clip),
+            p50=float(np.percentile(chi_values, 50)),
+            p90=float(np.percentile(chi_values, 90)),
+            max=float(np.max(chi_values)),
+        )
+        p_clip = float(np.mean(norms > clip))
+    else:
+        # chi is undefined at C=0; retain the key and make that explicit
+        # rather than inventing infinities or a fake threshold.
+        chi = dict(defined=False, threshold=None, p50=None, p90=None,
+                   max=None, reason="clipping disabled (C=0)")
+        p_clip = 0.0
+    return dict(
+        clip=float(clip),
+        clip_enabled=bool(clip > 0),
+        p_clip=p_clip,
+        preclip_norm=norm_dist,
+        chi=chi,
+        # Backward-compatible name used by the B1--B5 instrumentation.
+        preclip_ratio=(dict(p50=chi["p50"], p90=chi["p90"],
+                            max=chi["max"])
+                       if chi["defined"] else None),
+    )
 
 
 def main() -> None:
@@ -706,6 +779,10 @@ def main() -> None:
 
     final_loss, final_acc = evaluate(x_test, y_test, 512)
     wall = time.time() - t_start
+    finite = bool(np.isfinite(final_loss) and np.isfinite(final_acc)
+                  and all(np.isfinite(row["train_loss"])
+                          and np.isfinite(row["test_loss"])
+                          for row in history))
     print(f"FINAL  task={args.task} arm={args.arm} seed={args.seed}  "
           f"test acc={final_acc:.4f}  test loss={final_loss:.4f}  "
           f"wall={wall:.1f}s  ({step / wall:.2f} steps/s)")
@@ -719,7 +796,8 @@ def main() -> None:
         save_meta(meta, w_path)
         print(f"wrote {w_path}")
 
-    config = dict(task=args.task, arm=args.arm, model_type=model_type,
+    config = dict(task=args.task, arm=args.arm, tag=args.tag,
+                  model_type=model_type,
                   learning_rule=learning_rule,
                   state_prospective=bool(args.state_prospective),
                   gamma=(args.gamma if args.state_prospective else None),
@@ -748,17 +826,10 @@ def main() -> None:
                   copy_k=(args.copy_k if args.task == "copy" else None),
                   copy_alpha=(args.copy_alpha if args.task == "copy"
                               else None))
-    # audit: where exact (non-causal) credit can enter this arm.
-    # routePC/routePCreal build NO exact-gradient path at all (no teacher
-    # model, no reverse-time cotangent) — the zero-BPTT invariant is
-    # structural here; routeA/scalarLive call an exact-BPTT teacher.
-    audit = dict(teacher=("exact-bptt" if teacher is not None else
-                          "realized-online" if args.arm in
-                          ("routePC", "routePCreal", "routePCphase", "routePCadam")
-                          else None),
-                   exact_gradient_path=bool(teacher is not None),
-                   bptt_calls_in_deployed_rule=(
-                       args.arm in ("routeA", "scalarLive")))
+    # Numeric structural counters make the zero-exact/BPTT invariant explicit
+    # in every metrics file. Causal arms are asserted zero by credit_audit.
+    audit = credit_audit(args.arm, step)
+    clip_stats = clipping_instrumentation(gnorms, args.clip)
     instrumentation = dict(
         wall_time_sec=wall, total_steps=step, steps_per_sec=step / wall,
         peak_device_memory_bytes=peak_device_memory(),
@@ -769,27 +840,38 @@ def main() -> None:
         time_to_target=(dict(target=args.target_loss, step=target_step,
                              wall_time_sec=target_wall)
                         if args.target_loss > 0 else None),
-        clip=args.clip,
-        p_clip=(float(np.mean(np.asarray(gnorms) > args.clip))
-                if args.clip > 0 else 0.0),
-        preclip_norm=dict(
-            p50=float(np.percentile(gnorms, 50)),
-            p90=float(np.percentile(gnorms, 90)),
-            max=float(np.max(gnorms))),
-        preclip_ratio=(dict(
-            p50=float(np.percentile(np.asarray(gnorms) / args.clip, 50)),
-            p90=float(np.percentile(np.asarray(gnorms) / args.clip, 90)),
-            max=float(np.max(np.asarray(gnorms) / args.clip)))
-            if args.clip > 0 else None))
+        **clip_stats)
+    prov = provenance()
+    manifest = dict(
+        git_commit=prov["git_commit"],
+        git_branch=prov["git_branch"],
+        git_dirty=prov["git_dirty"],
+        task=args.task,
+        arm=args.arm,
+        seed=args.seed,
+        clip_threshold=args.clip,
+        optimizer=config["optimizer"],
+        meta_optimizer=config["meta_optimizer"],
+        sequence=dict(length=int(T_in), task=args.task,
+                      tbptt_window=config["tbptt_window"]),
+        model=dict(model_type=model_type, d_model=args.d_model,
+                   state_size=args.state_size, n_layers=args.n_layers,
+                   dropout=args.dropout),
+        exact_credit_audit=audit,
+        clipping=dict(p_clip=clip_stats["p_clip"],
+                      preclip_norm=clip_stats["preclip_norm"],
+                      chi=clip_stats["chi"]),
+    )
     metrics = dict(config=config, params=n_params, history=history,
                    final_test_acc=final_acc, final_test_loss=final_loss,
+                   finite=finite,
                    final_eval_samples=len(x_test),
                    per_epoch_eval_samples=len(x_ev),
                    wall_time_sec=wall, total_steps=step,
                    steps_per_sec=step / wall,
                    device=str(jax.devices()[0]), w_file=w_path or None,
                    audit=audit, instrumentation=instrumentation,
-                   provenance=provenance())
+                   manifest=manifest, provenance=prov)
     out_path = os.path.join(
         RESULTS_DIR,
         f"metrics_{args.task}_{args.arm}{args.tag}_s{args.seed}.json")

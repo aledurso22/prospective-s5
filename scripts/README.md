@@ -7,6 +7,8 @@ SLURM launchers for the S5 benchmark. Machine-specific details
 
 | file | what |
 |---|---|
+| `stage0_grid.sh <partition> <account> <task> [seeds...]` | submits only the paired Stage 0 optimizer/credit matrix; defaults to three seeds |
+| `stage0.sbatch` | four matched cells per `(task, seed)`: BPTT/Online x clip 0/1.0; no correction arms |
 | `bench_grid.sh <partition> <account> [seeds...]` | submits one job per (task, seed) |
 | `bench.sbatch` | the per-(task,seed) job: gates first (baseline, online), inline headroom check (h ≥ 0.2, exit 42 = gate-skip), then mechanism arms + tbptt |
 | `train.sbatch` | plain `train.py` wrapper (baseline/prospective models) |
@@ -35,14 +37,17 @@ python -m tests.test_scan && python -m tests.test_online_s5_jax && \
 
 # training smokes (tiny, minutes each):
 python train_bench.py --task smnist --arm baseline --subset 2000 \
-    --epochs 1 --batch-size 32 --d-model 32 --state-size 16 --n-layers 2
+    --epochs 1 --batch-size 32 --d-model 32 --state-size 16 --n-layers 2 \
+    --clip 0
 python train_bench.py --task smnist --arm online   --subset 2000 \
-    --epochs 1 --batch-size 32 --d-model 32 --state-size 16 --n-layers 2
+    --epochs 1 --batch-size 32 --d-model 32 --state-size 16 --n-layers 2 \
+    --clip 0
 python train_bench.py --task smnist --arm routePC  --subset 2000 \
-    --epochs 1 --batch-size 32 --d-model 32 --state-size 16 --n-layers 2
+    --epochs 1 --batch-size 32 --d-model 32 --state-size 16 --n-layers 2 \
+    --clip 1.0
 python train_bench.py --task smnist --arm baseline --state-prospective \
     --gamma 0 --rho-init 1e-3 --subset 2000 --epochs 1 --batch-size 32 \
-    --d-model 32 --state-size 16 --n-layers 2
+    --d-model 32 --state-size 16 --n-layers 2 --clip 0
 ```
 
 (For state-prospective, use `--rho-init 1e-3` at T~784: the parity
@@ -52,7 +57,23 @@ sMNIST length. This is the known ghost-lane regime, not a wiring bug.)
 Check each `results/bench/metrics_*.json` for the `provenance`,
 `instrumentation`, and `audit` blocks.
 
-## Grid launch (the expensive sweep — currently NOT launched)
+## Stage 0 (required before any correction pilot)
+
+Clipping is an explicit factor. The trainer's historically compatible
+default is `--clip 0`; Stage 0 passes both thresholds explicitly.
+
+```bash
+bash scripts/stage0_grid.sh <partition> <account> smnist 0 1 2
+# after all three paired jobs finish:
+python stage0_report.py --task smnist
+```
+
+The report requires at least three paired seeds, a positive Online→BPTT
+loss gap on every seed, and median relative headroom `h >= 0.2` in the
+clipped regime. Passing authorizes only the small correction pilot. It never
+authorizes or launches the large sweep.
+
+## Grid launch (expensive sweep — blocked pending Stage 0 + pilot report)
 
 ```bash
 bash scripts/bench_grid.sh <partition> <account> 0 1 2

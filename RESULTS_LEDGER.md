@@ -47,8 +47,10 @@ Script: `controls/control_2x2_normmatch.py` · artifact:
 Interaction I_i = (online−PC0) − (BPTT−BPTT+w): per-seed
 [0.05599, 0.01930, 0.02590, −0.07696, 0.00446]; median **+0.0193**,
 mean +0.0055, SD 0.0504. BPTT+w ≈ BPTT (±2e-05) ⇒ M_w does nothing on
-exact gradients ⇒ PC0 is **temporal-credit repair, not generic
-preconditioning**.
+exact gradients ⇒ the clipped-Adam interaction is **credit-regime
+specific, not generic preconditioning**. Later B/M audits show that this
+does not mean learned `w` reconstructs exact credit or has
+optimizer-independent one-step utility.
 
 ## 3. Norm-matched PC0 (DEPLOYABLE diagnostic)
 
@@ -120,7 +122,9 @@ seed ⇒ phase is representationally valuable; the causal factorial tie is an
 |---|---|---|
 | rot-RNN generality (D6 v1/v2) | `diagnostics/rot_rnn_generality{,2}.py` | barrier phenomena generalize; P3 FAIL — the large frozen-orientation benefit is **S5-specific in magnitude** |
 | CPU bench gates | `diagnostics/bench_copy.py`, `diagnostics/bench_smnist.py` | copy saturates (degenerate discriminator); sMNIST headroom 0.12 < 0.2 at CPU budget |
-| **cluster benchmark** | `train_bench.py` + `scripts/bench*.sbatch/bench_grid.sh` + `bench_report.py` | 8 arms × 3 tasks (+ opt-in `--arm routePCphase` from C1), paired streams, in-job headroom gate h≥0.2, CPU-smoke-clean, **UNLAUNCHED** |
+| **mechanism-first M1–M6 + null amendment** | `controls/m1_m6_action_mechanism.py`, `controls/m1_m4_specificity.py` | learned actual one-step utility null-to-harmful and not better than shuffled/random controls; static `w_C` strongly useful; reset Adam exposes a late benefit but clipped SGD/accumulated Adam do not; `hat w_F` action unstable 0/20; lag correlation fails shuffle/exact/top localization; **STOP mechanism search** |
+| **S5 Stage 0** | `train_bench.py` + `scripts/stage0*.{sh,sbatch}` + `stage0_report.py` | paired BPTT/Online × clip 0/1.0, three-seed minimum, explicit clipping/audit manifests, **READY / UNLAUNCHED** |
+| **large cluster benchmark** | `scripts/bench.sbatch/bench_grid.sh` + `bench_report.py` | explicit historical clip=0; RoutePCAdam/Phase included in reporting; **BLOCKED pending Stage 0 + correction-pilot report** |
 
 ## 9. Solver lane (separate positive, archived)
 
@@ -186,11 +190,12 @@ Budgets by registered rule (first K where median L_BPTT(K) ≤
 K = 129 / 184 / 280 (+1500 reference). Δ_credit positive **5/5 at every
 K**. **BPTT+w is WORSE than BPTT at every budget on (nearly) every
 seed** (e.g. K=129: 0.0445→0.0637; K=280: 0.0024→0.0114 medians) —
-the geometry learned for online-credit repair actively miscalibrates
+the geometry learned in the defective-online-credit regime actively miscalibrates
 exact credit. Interaction I(K) medians: +0.0022 / +0.0037 / +0.0120 /
 +0.0211 (final). **Verdict: the generic-preconditioning hypothesis is
 rejected with headroom present, at every budget** — the final-step 2×2
-floor was not the limitation; PC0's benefit is credit-repair-specific.
+floor was not the limitation. G3X/M1 later restrict this interaction to
+clipped-Adam closed-loop behavior rather than static exact-credit repair.
 
 ## 11. Modal-geometry audit (G-program, branch `geometry/modal-audit`)
 
@@ -222,18 +227,21 @@ arms 0 BPTT.
 - **G7/GE-SIG**: every failure = persistent meta-residual explosion
   (RESIDUAL_SPIKE); teacher-alignment collapse REFUTED as precursor.
 - **G8**: only pc0_adam has a supported win over online (median 0.0120,
-  ratio 0.597, 12/15, sign p 0.035, Wilcoxon 0.008; 3/15 marginal-only
-  failures).
+  ratio 0.597, 12/15, sign p 0.035, Wilcoxon 0.008; 3/15 failures with
+  exact ratios 1.253, 1.767, 1.165 — not all marginal).
 
 **Primary S5 candidate: pc0_adam (PC0 + Adam MetaOpt for w).**
 Controls: PC0 full complex, routePCphase, E2 (mechanistic
 action-Jacobian control), AA. Not carried: polar variants, causal
 2×2/low-rank, block-metric MetaOpt (preconditions unmet).
 
-## 12. Bridge audit (B1–B5, analysis-only; `controls/b1_b4_bridge_audit.py`)
+## 12. Bridge audit (B1–B8, analysis-only)
 
 15 bitwise-gated pc0_adam replays (training exact calls 0/0), K ∈
-{500, 1000, 1500}, held-out probes.
+{500, 1000, 1500}, held-out probes. Scripts:
+`controls/b1_b4_bridge_audit.py` and `controls/b6_b8_bridge_audit.py`;
+artifacts: `results/geometry_audit/b1_b4_summary.json` and
+`b6_b8_summary.json`.
 
 - **B1**: learned-w exact-gradient alignment — ΔC ≈ 0 at every layer
   and checkpoint (K=1500 medians: L0 0.448→0.466, L1 0.326→0.322, L2
@@ -242,21 +250,135 @@ action-Jacobian control), AA. Not carried: polar variants, causal
   is NOT a static exact-credit approximation at its own checkpoints.**
 - **B2**: phase correspondence with the analytic credit statistic is
   strong — MRL(arg c_g^stat, arg w) = 0.80–0.96 per layer; relative
-  log-gain correlation ≈ 0. Credit-derived in PHASE, not expressed as
-  static cosine.
+  log-gain correlation ≈ 0. B7 shows that this raw MRL is substantially
+  distributional rather than mode-specific.
 - **B3**: transplant at K=1500 — identity 0.361 / self 0.385 / off-diag
-  0.366 (lower layers): the small static gain is mostly shared, not
-  seed-specific.
+  0.366 (lower layers); B8 uncertainty does not support either small
+  difference.
 - **B4**: mode shuffle ≈ learned ≈ identity (static effect too small
   for assignment to matter).
 - **B5**: exact pc0_adam failure ratios — s3 1.253, s9 1.767, s10
-  1.165 (marginal; PC0's seed-3 was 8.16).
-- **S5 instrumentation**: every run records p_clip + pre-clip norm/clip
-  ratio distribution; benchmark optimizer is now
-  chain(clip_by_global_norm(--clip), adam), default clip 1.0 (the toy's
-  regime; S5 smoke shows p_clip = 1.0 too).
+  1.165. They are not all marginal (PC0's seed-3 was 8.16).
+- **B6**: learned phase × analytic gain does not rescue static alignment.
+  At K=1500, `(C_id,C_learned,C_hybrid,C_oracle)` is
+  `(0.448,0.466,0.421,0.958)` / `(0.326,0.322,0.291,0.823)` /
+  `(0.503,0.540,0.467,0.897)` / `(1.000,0.987,0.897,1.000)` for
+  L0–L3. Paired hybrid-minus-learned medians are
+  `+0.002/-0.037/-0.068/-0.095`. The proposed “correct phase, destructive
+  learned gain” explanation is **not supported**.
+- **B7**: pooled median `|arg c_g^stat|` at K=1500 is
+  `0.291/0.270/0.386/0.384` rad, so phase effects are nontrivial. But
+  correct MRL `0.961/0.907/0.885/0.889` is close to the 256-shuffle null
+  `0.916/0.887/0.864/0.837`; paired correct-minus-shuffle medians are only
+  `+0.039/+0.012/-0.020/+0.056`. High raw MRL is weak evidence for
+  mode-specific correspondence.
+- **B8**: recipient-paired transplant differences cross zero:
+  self−identity `+0.00375` (bootstrap 95% interval
+  `[-0.00281,+0.03597]`, 9/15 positive); off-diagonal−identity `+0.00018`
+  (`[-0.00198,+0.00485]`, 8/15). Do not infer shared defect structure.
+  D2's identity 0.596 is global (L0–L3 + readout), RouteA params, five
+  seeds; bridge 0.361 is lower-only (L0–L2), RoutePCAdam params, 15 seeds.
+  At RoutePCAdam params/seeds 0–4, global aggregation raises 0.342→0.569
+  (paired +0.183, interval [+0.113,+0.292]); the RouteA-vs-RoutePCAdam
+  global difference is heterogeneous and the seed-set shift is small.
 
-Bridge reading: the geometry is credit-derived in phase (MRL ~0.9) but
-its benefit is realized through the clipped-Adam update dynamics, not
-through static gradient-direction improvement. E2 wording downgraded
-per directive ("at the inherited registered MetaOpt settings…").
+**Bridge reading:** learned phase has high raw MRL with the analytic
+eligibility-credit statistic, but the shuffle audit shows that much of it
+comes from common phase concentration. Neither learned nor hybrid geometry
+improves static exact-gradient alignment. The causal benefit is separately
+known to be mediated by clipped-Adam geometry; the mechanism connecting the
+residual phase correspondence to that benefit remains open.
+
+## 13. Mechanism-first action audit (M1–M6, analysis-only)
+
+Script: `controls/m1_m6_action_mechanism.py`; artifact:
+`results/geometry_audit/m1_m6_action_summary.json`. All 15 RoutePCAdam
+replays are bitwise-gated and make zero exact-gradient/exact-lambda calls
+during training. Offline probes use frozen clones only. The analytic
+clip+Adam action gradient passes finite differences at `3.0e-6` relative
+error.
+
+- **M1 actual post-update utility:** learned-minus-identity median
+  `F_{n+1}` differences at K=500/1000/1500 are
+  `-4.26e-6/+1.22e-5/+2.40e-5` (improves 8/6/4 of 15). Learned phase only
+  is small but consistently negative
+  (`-1.01e-5/-1.79e-5/-1.05e-5`, 11/15 each). Static `w_C` is strongly
+  useful (`-1.202e-3/-1.356e-3/-0.411e-3`, 15/15, 15/15, 13/15).
+  **Learned `w` does not improve the actual one-step objective under its
+  accumulated Adam state.**
+- **M2 credit versus action oracle:** 60 bounded fits at 20 representative
+  checkpoints all reached the iteration limit; 0/20 `hat w_F` estimates
+  are stable across starts in either geometry or induced optimizer action.
+  At K=500/1500, learned action cosine to the best fitted action is
+  `0.699/0.651`, essentially identity's `0.696/0.650`; learned regret is
+  `1.142e-3/0.985e-3`, again identity-level
+  (`1.129e-3/0.960e-3`). `w_C` is closer (`0.856/0.797`) and has lower
+  regret (`0.424e-3/0.396e-3`). Pairwise fit-action cosine itself is only
+  `0.960/0.935` median (minimum `0.886/0.879`), so do not treat any raw
+  `w` distance as primary or claim `w_C = w_F`.
+- **M3 optimizer-state dependence:** accumulated Adam repeats M1. With
+  `m=v=0` but optimizer time retained, medians are
+  `-2.40e-4/+2.43e-4/-8.50e-4` (K=1500: 12/15 improve, sign `p=0.0176`);
+  clipped SGD is near zero (`-2.57e-6/-5.14e-6/+0.53e-6`). The immediate
+  globally normalized-gradient direction is not sufficient. Reset Adam's
+  coordinatewise normalization exposes a late one-step benefit, while the
+  actual accumulated state cancels it; the full-training win remains
+  path-dependent.
+- **M4 correlation identity, narrowly scoped:** at optimizer time `n`, the
+  positive drive is `c_n=J_{n-1}^dagger g_n^on`; the descended
+  meta-gradient is `-LR*c_n`. For corrected complex `B` blocks exactly,
+  `c^B_{n,j}=sum_k conj(G^B_{n,jk})G^B_{n-1,jk}` (max relative error
+  `3.33e-16`). The `(rho,theta)` recurrence block has additional derived
+  reparameterization factors and is not assigned this raw identity; readout
+  `c` is uncorrected. EMA/Adam-filtered optimizer-time correlation has raw
+  phase MRL `0.894–0.966` / `0.838–0.916` with learned `w`, and EMA has
+  `0.792–0.883` with sequence-time `c_g^stat`, but common phase
+  concentration remains a confound.
+- **M5:** B6/B7 remain the decisive phase-specificity controls. At K=1500,
+  static-oracle median `|arg w_C|` is `1.013/0.933/0.736/~0` rad and median
+  magnitude is `10.45/3.94/2.55/1.00` for L0–L3.
+- **M6:** not feasible. No action-stable `hat w_F` exists at the 20 tested
+  checkpoints, so target motion, tracking lag, and curvature were not
+  compared.
+- **M1 null amendment:** 128 deterministic within-layer learned-value
+  shuffles and 128 marginal-matched random complex controls per checkpoint.
+  Learned-minus-shuffle/random median `F_{n+1}` is
+  `-1.23e-5/-1.24e-5` at K500, `+0.64e-6/+4.93e-6` at K1000, and
+  `-0.76e-6/+3.03e-6` at K1500. Learned beats the two per-snapshot null
+  medians on `10/11`, `7/7`, and `8/7` of 15 seeds. **No learned-controller
+  specificity.**
+- **M4 credit-specificity amendment:** for the exact complex-B drive
+  `K_drive=conj(g_n^dagger g_{n+1})`, K1500 online MRL versus `c_g^stat` is
+  `0.773/0.797/0.757/0.867`, but correct-minus-256-shuffle is only
+  `+0.018/+0.039/-0.022/+0.044` for L0–L3. Exact-gradient controls give MRL
+  `0.889/0.901/0.758/0.867` and specificity
+  `+0.024/+0.030/+0.007/+0.039`. Although online/exact gradient relative
+  error is `0.979/0.986/0.912` in L0–L2 and `2.0e-15` in exact L3, the
+  correspondence is not stronger for online than exact gradients and does
+  not localize below the top exact layer.
+
+**Mechanism verdict:** static alignment, actual one-step utility of learned
+`w`, and optimizer-aware one-step optimality all fail as explanations. The
+exact B-block lag-one correlation and reset-Adam result identify real signal
+and optimizer dependence, but learned `w` fails shuffled/random M1 nulls and
+the correlation fails shuffle/exact/top-layer specificity controls.
+`M1_specific=false`, `M4_specific=false`: **the pre-registered stopping rule
+fires. Stop the mechanism search; do not automatically add a multi-step
+counterfactual or algorithm variant.** The training benefit remains
+clipped-Adam-mediated but its temporal-credit bridge is unsupported.
+
+## 14. S5 clipping contract and Stage 0
+
+- Historical compatibility restored: `train_bench.py --clip 0` is the
+  default (unclipped Adam); cluster commands state clip explicitly.
+- Every new metrics JSON retains `p_clip`, pre-clip norm distribution, and
+  `chi=||g_pre||/C` distribution when C>0 (`chi.defined=false` when C=0),
+  plus numeric structural exact-gradient/exact-lambda/BPTT counters.
+- Every run has a manifest with git commit, arm, seed, clip threshold,
+  optimizer/MetaOpt, sequence/model config, audit counters, clipping
+  diagnostics, memory, and throughput.
+- `scripts/stage0.sbatch` / `stage0_grid.sh` run only the matched
+  `{BPTT,Online} x {clip=0,clip=1.0}` matrix. `stage0_report.py` requires
+  at least three paired seeds, a positive clipped Online→BPTT gap on every
+  seed, and median relative headroom ≥0.2 before allowing the small
+  correction pilot. The large sweep remains unlaunched.
