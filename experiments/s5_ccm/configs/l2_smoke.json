@@ -1,0 +1,21 @@
+{
+  "arm": "online",
+  "task": "copy",
+  "n_layers": 2,
+  "d_model": 8,
+  "state_size": 6,
+  "dropout": 0.0,
+  "scan": "lax",
+  "seed": 0,
+  "lr": 1e-3,
+  "clip": 0.0,
+  "batch_size": 8,
+  "steps": 20,
+  "subset": 64,
+  "test_subset": 32,
+  "eval_subset": 32,
+  "seq_len": 30,
+  "copy_k": 4,
+  "copy_alpha": 4,
+  "diagnostic_checkpoints": "1,10,20"
+}

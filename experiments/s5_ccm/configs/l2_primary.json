@@ -1,0 +1,18 @@
+{
+  "task": "smnist",
+  "n_layers": 2,
+  "d_model": 96,
+  "state_size": 64,
+  "dropout": 0.1,
+  "scan": "assoc",
+  "lr": 1e-3,
+  "clip": 0.0,
+  "batch_size": 64,
+  "epochs": 3,
+  "subset": 0,
+  "test_subset": 10000,
+  "eval_subset": 2000,
+  "downsample": 1,
+  "standardize": 1,
+  "diagnostic_checkpoints": "0,200,600,1200,2400"
+}
