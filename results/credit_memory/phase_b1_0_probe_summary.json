@@ -1,0 +1,56 @@
+{
+  "git": "8b294e66aa2da5c2f71f4796b7876674a9353c50",
+  "config": {
+    "N": 6,
+    "T": 40,
+    "BATCH": 8
+  },
+  "rows": [
+    {
+      "seed": 0,
+      "causal_vs_bptt_rel_err": 7.854896724166664e-16,
+      "causal_vs_bptt_cos_check": 1.0,
+      "online_cos_vs_bptt": 0.40979457274919007,
+      "causal_cos_vs_bptt": 1.0,
+      "G_bptt_norm": 74.61547102747785,
+      "G_online_norm": 17.957673150832953
+    },
+    {
+      "seed": 1,
+      "causal_vs_bptt_rel_err": 7.127558218880144e-16,
+      "causal_vs_bptt_cos_check": 1.0000000000000004,
+      "online_cos_vs_bptt": 0.952389689641117,
+      "causal_cos_vs_bptt": 1.0000000000000004,
+      "G_bptt_norm": 35.56076060899644,
+      "G_online_norm": 11.698338330981137
+    },
+    {
+      "seed": 2,
+      "causal_vs_bptt_rel_err": 6.205000666013558e-16,
+      "causal_vs_bptt_cos_check": 1.0,
+      "online_cos_vs_bptt": 0.9735792178491204,
+      "causal_cos_vs_bptt": 1.0,
+      "G_bptt_norm": 58.8163222281709,
+      "G_online_norm": 39.33448394708021
+    },
+    {
+      "seed": 3,
+      "causal_vs_bptt_rel_err": 2.3505256797377756e-16,
+      "causal_vs_bptt_cos_check": 0.9999999999999999,
+      "online_cos_vs_bptt": 0.690708342656581,
+      "causal_cos_vs_bptt": 0.9999999999999999,
+      "G_bptt_norm": 83.58533843592951,
+      "G_online_norm": 32.4077028558789
+    },
+    {
+      "seed": 4,
+      "causal_vs_bptt_rel_err": 1.027010316036267e-15,
+      "causal_vs_bptt_cos_check": 1.0000000000000002,
+      "online_cos_vs_bptt": 0.856260089556099,
+      "causal_cos_vs_bptt": 1.0000000000000002,
+      "G_bptt_norm": 16.919324131955637,
+      "G_online_norm": 6.127900988616972
+    }
+  ],
+  "all_exact_pass": true
+}
