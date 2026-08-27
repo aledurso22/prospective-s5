@@ -1,0 +1,470 @@
+{
+  "git": "3ebad9058e44a753784a2634b2324a06a9bdaac4",
+  "config": {
+    "N": 6,
+    "T": 60,
+    "BATCH": 8,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "n_cal_traj": 4
+  },
+  "rows": [
+    {
+      "seed": 0,
+      "mode": 0,
+      "cos_R0_vs_oracle": 0.2151614009535139,
+      "cos_R1_vs_oracle": 0.4007660892609273,
+      "cos_R2_vs_oracle": 0.813463078040058,
+      "top_coordinate_R1": 6,
+      "is_top_coordinate_upper_or_lower": "Q (upper mode j=0)"
+    },
+    {
+      "seed": 0,
+      "mode": 1,
+      "cos_R0_vs_oracle": 0.22637367001922343,
+      "cos_R1_vs_oracle": 0.5930924747533137,
+      "cos_R2_vs_oracle": 0.7637371155748114,
+      "top_coordinate_R1": 4,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=4)"
+    },
+    {
+      "seed": 0,
+      "mode": 2,
+      "cos_R0_vs_oracle": 0.1223823083453978,
+      "cos_R1_vs_oracle": 0.8935371465839979,
+      "cos_R2_vs_oracle": 0.9594549751419011,
+      "top_coordinate_R1": 9,
+      "is_top_coordinate_upper_or_lower": "Q (upper mode j=3)"
+    },
+    {
+      "seed": 0,
+      "mode": 3,
+      "cos_R0_vs_oracle": 0.6778475271982278,
+      "cos_R1_vs_oracle": 0.8619655262157103,
+      "cos_R2_vs_oracle": 0.887658047273431,
+      "top_coordinate_R1": 5,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=5)"
+    },
+    {
+      "seed": 0,
+      "mode": 4,
+      "cos_R0_vs_oracle": 0.43236756663275405,
+      "cos_R1_vs_oracle": 0.3900814622598756,
+      "cos_R2_vs_oracle": 0.6098975297915785,
+      "top_coordinate_R1": 11,
+      "is_top_coordinate_upper_or_lower": "Q (upper mode j=5)"
+    },
+    {
+      "seed": 0,
+      "mode": 5,
+      "cos_R0_vs_oracle": 0.2617150628745143,
+      "cos_R1_vs_oracle": 0.8467917175629149,
+      "cos_R2_vs_oracle": 0.8793318251658105,
+      "top_coordinate_R1": 9,
+      "is_top_coordinate_upper_or_lower": "Q (upper mode j=3)"
+    },
+    {
+      "seed": 1,
+      "mode": 0,
+      "cos_R0_vs_oracle": 0.0700781705878186,
+      "cos_R1_vs_oracle": 0.4575674442392687,
+      "cos_R2_vs_oracle": 0.9350134165097396,
+      "top_coordinate_R1": 2,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=2)"
+    },
+    {
+      "seed": 1,
+      "mode": 1,
+      "cos_R0_vs_oracle": 0.4891893758582394,
+      "cos_R1_vs_oracle": 0.14702419183599766,
+      "cos_R2_vs_oracle": 0.7751932946740369,
+      "top_coordinate_R1": 3,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=3)"
+    },
+    {
+      "seed": 1,
+      "mode": 2,
+      "cos_R0_vs_oracle": 0.08292059900939555,
+      "cos_R1_vs_oracle": 0.4303749675383626,
+      "cos_R2_vs_oracle": 0.9484273498828389,
+      "top_coordinate_R1": 0,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=0)"
+    },
+    {
+      "seed": 1,
+      "mode": 3,
+      "cos_R0_vs_oracle": 0.7037645906448865,
+      "cos_R1_vs_oracle": 0.9420241979396913,
+      "cos_R2_vs_oracle": 0.86354439194383,
+      "top_coordinate_R1": 11,
+      "is_top_coordinate_upper_or_lower": "Q (upper mode j=5)"
+    },
+    {
+      "seed": 1,
+      "mode": 4,
+      "cos_R0_vs_oracle": 0.2330181427401542,
+      "cos_R1_vs_oracle": 0.8668314348101315,
+      "cos_R2_vs_oracle": 0.9489126046697629,
+      "top_coordinate_R1": 0,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=0)"
+    },
+    {
+      "seed": 1,
+      "mode": 5,
+      "cos_R0_vs_oracle": 0.17979808608719258,
+      "cos_R1_vs_oracle": 0.6638568108613687,
+      "cos_R2_vs_oracle": 0.898480454489025,
+      "top_coordinate_R1": 0,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=0)"
+    },
+    {
+      "seed": 2,
+      "mode": 0,
+      "cos_R0_vs_oracle": 0.049614675134477246,
+      "cos_R1_vs_oracle": 0.7747096041677966,
+      "cos_R2_vs_oracle": 0.7814030301150563,
+      "top_coordinate_R1": 11,
+      "is_top_coordinate_upper_or_lower": "Q (upper mode j=5)"
+    },
+    {
+      "seed": 2,
+      "mode": 1,
+      "cos_R0_vs_oracle": 0.37062536629864296,
+      "cos_R1_vs_oracle": 0.3277156531734196,
+      "cos_R2_vs_oracle": 0.8981977337529377,
+      "top_coordinate_R1": 3,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=3)"
+    },
+    {
+      "seed": 2,
+      "mode": 2,
+      "cos_R0_vs_oracle": 0.36990423916651727,
+      "cos_R1_vs_oracle": 0.8498647096284386,
+      "cos_R2_vs_oracle": 0.8877049804408798,
+      "top_coordinate_R1": 5,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=5)"
+    },
+    {
+      "seed": 2,
+      "mode": 3,
+      "cos_R0_vs_oracle": 0.5759725964193292,
+      "cos_R1_vs_oracle": 0.6872298060645713,
+      "cos_R2_vs_oracle": 0.8503111212127074,
+      "top_coordinate_R1": 11,
+      "is_top_coordinate_upper_or_lower": "Q (upper mode j=5)"
+    },
+    {
+      "seed": 2,
+      "mode": 4,
+      "cos_R0_vs_oracle": 0.4457791439266207,
+      "cos_R1_vs_oracle": 0.1956869118374553,
+      "cos_R2_vs_oracle": 0.5599745271384883,
+      "top_coordinate_R1": 2,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=2)"
+    },
+    {
+      "seed": 2,
+      "mode": 5,
+      "cos_R0_vs_oracle": 0.03558737953213303,
+      "cos_R1_vs_oracle": 0.3391586208287091,
+      "cos_R2_vs_oracle": 0.8060789069341416,
+      "top_coordinate_R1": 3,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=3)"
+    },
+    {
+      "seed": 3,
+      "mode": 0,
+      "cos_R0_vs_oracle": 0.613237055534245,
+      "cos_R1_vs_oracle": 0.785335894219566,
+      "cos_R2_vs_oracle": 0.8342610834035988,
+      "top_coordinate_R1": 11,
+      "is_top_coordinate_upper_or_lower": "Q (upper mode j=5)"
+    },
+    {
+      "seed": 3,
+      "mode": 1,
+      "cos_R0_vs_oracle": 0.08716762612415799,
+      "cos_R1_vs_oracle": 0.2172054674840578,
+      "cos_R2_vs_oracle": 0.9235727411754964,
+      "top_coordinate_R1": 5,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=5)"
+    },
+    {
+      "seed": 3,
+      "mode": 2,
+      "cos_R0_vs_oracle": 0.07275567234820222,
+      "cos_R1_vs_oracle": 0.2164679319335032,
+      "cos_R2_vs_oracle": 0.8786105978596244,
+      "top_coordinate_R1": 11,
+      "is_top_coordinate_upper_or_lower": "Q (upper mode j=5)"
+    },
+    {
+      "seed": 3,
+      "mode": 3,
+      "cos_R0_vs_oracle": 0.4476481153315076,
+      "cos_R1_vs_oracle": 0.7052432747712919,
+      "cos_R2_vs_oracle": 0.4945283682016082,
+      "top_coordinate_R1": 11,
+      "is_top_coordinate_upper_or_lower": "Q (upper mode j=5)"
+    },
+    {
+      "seed": 3,
+      "mode": 4,
+      "cos_R0_vs_oracle": 0.022599328570853176,
+      "cos_R1_vs_oracle": 0.16221890155176716,
+      "cos_R2_vs_oracle": 0.41038412651016637,
+      "top_coordinate_R1": 4,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=4)"
+    },
+    {
+      "seed": 3,
+      "mode": 5,
+      "cos_R0_vs_oracle": 0.11555613086256263,
+      "cos_R1_vs_oracle": 0.07142467653896425,
+      "cos_R2_vs_oracle": 0.5187133025962741,
+      "top_coordinate_R1": 5,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=5)"
+    },
+    {
+      "seed": 4,
+      "mode": 0,
+      "cos_R0_vs_oracle": 0.14442011160184937,
+      "cos_R1_vs_oracle": 0.6402274584831696,
+      "cos_R2_vs_oracle": 0.9844283350753874,
+      "top_coordinate_R1": 0,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=0)"
+    },
+    {
+      "seed": 4,
+      "mode": 1,
+      "cos_R0_vs_oracle": 0.11571332763626017,
+      "cos_R1_vs_oracle": 0.9462917893278476,
+      "cos_R2_vs_oracle": 0.9870288569611908,
+      "top_coordinate_R1": 9,
+      "is_top_coordinate_upper_or_lower": "Q (upper mode j=3)"
+    },
+    {
+      "seed": 4,
+      "mode": 2,
+      "cos_R0_vs_oracle": 0.16733395037311208,
+      "cos_R1_vs_oracle": 0.5556279247221589,
+      "cos_R2_vs_oracle": 0.9962993658926694,
+      "top_coordinate_R1": 7,
+      "is_top_coordinate_upper_or_lower": "Q (upper mode j=1)"
+    },
+    {
+      "seed": 4,
+      "mode": 3,
+      "cos_R0_vs_oracle": 0.41602710856902947,
+      "cos_R1_vs_oracle": 0.4122671007971815,
+      "cos_R2_vs_oracle": 0.6312101845733482,
+      "top_coordinate_R1": 4,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=4)"
+    },
+    {
+      "seed": 4,
+      "mode": 4,
+      "cos_R0_vs_oracle": 0.5584057704361001,
+      "cos_R1_vs_oracle": 0.7071374868901823,
+      "cos_R2_vs_oracle": 0.9630504118618458,
+      "top_coordinate_R1": 8,
+      "is_top_coordinate_upper_or_lower": "Q (upper mode j=2)"
+    },
+    {
+      "seed": 4,
+      "mode": 5,
+      "cos_R0_vs_oracle": 0.7076681514093904,
+      "cos_R1_vs_oracle": 0.8023181384807695,
+      "cos_R2_vs_oracle": 0.8883226049554999,
+      "top_coordinate_R1": 10,
+      "is_top_coordinate_upper_or_lower": "Q (upper mode j=4)"
+    },
+    {
+      "seed": 5,
+      "mode": 0,
+      "cos_R0_vs_oracle": 0.3108741789692256,
+      "cos_R1_vs_oracle": 0.23673190902304672,
+      "cos_R2_vs_oracle": 0.8458436173740707,
+      "top_coordinate_R1": 2,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=2)"
+    },
+    {
+      "seed": 5,
+      "mode": 1,
+      "cos_R0_vs_oracle": 0.11596938962384559,
+      "cos_R1_vs_oracle": 0.1936789921988862,
+      "cos_R2_vs_oracle": 0.2829310349721462,
+      "top_coordinate_R1": 8,
+      "is_top_coordinate_upper_or_lower": "Q (upper mode j=2)"
+    },
+    {
+      "seed": 5,
+      "mode": 2,
+      "cos_R0_vs_oracle": 0.2387695086344194,
+      "cos_R1_vs_oracle": 0.48504177449099684,
+      "cos_R2_vs_oracle": 0.9865825373546069,
+      "top_coordinate_R1": 6,
+      "is_top_coordinate_upper_or_lower": "Q (upper mode j=0)"
+    },
+    {
+      "seed": 5,
+      "mode": 3,
+      "cos_R0_vs_oracle": 0.08120430245268492,
+      "cos_R1_vs_oracle": 0.9797531525912485,
+      "cos_R2_vs_oracle": 0.9881859646019495,
+      "top_coordinate_R1": 10,
+      "is_top_coordinate_upper_or_lower": "Q (upper mode j=4)"
+    },
+    {
+      "seed": 5,
+      "mode": 4,
+      "cos_R0_vs_oracle": 0.12458189268701048,
+      "cos_R1_vs_oracle": 0.8366487017293985,
+      "cos_R2_vs_oracle": 0.9490533511036592,
+      "top_coordinate_R1": 7,
+      "is_top_coordinate_upper_or_lower": "Q (upper mode j=1)"
+    },
+    {
+      "seed": 5,
+      "mode": 5,
+      "cos_R0_vs_oracle": 0.1983419391496975,
+      "cos_R1_vs_oracle": 0.3496170303508564,
+      "cos_R2_vs_oracle": 0.6782245066633467,
+      "top_coordinate_R1": 5,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=5)"
+    },
+    {
+      "seed": 6,
+      "mode": 0,
+      "cos_R0_vs_oracle": 0.3647606960378226,
+      "cos_R1_vs_oracle": 0.3058107055404234,
+      "cos_R2_vs_oracle": 0.6146949853072938,
+      "top_coordinate_R1": 3,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=3)"
+    },
+    {
+      "seed": 6,
+      "mode": 1,
+      "cos_R0_vs_oracle": 0.30566321313085215,
+      "cos_R1_vs_oracle": 0.15919543593063423,
+      "cos_R2_vs_oracle": 0.7797343907777325,
+      "top_coordinate_R1": 4,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=4)"
+    },
+    {
+      "seed": 6,
+      "mode": 2,
+      "cos_R0_vs_oracle": 0.14171671541298433,
+      "cos_R1_vs_oracle": 0.18143434000385628,
+      "cos_R2_vs_oracle": 0.957751870710361,
+      "top_coordinate_R1": 4,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=4)"
+    },
+    {
+      "seed": 6,
+      "mode": 3,
+      "cos_R0_vs_oracle": 0.4242115077053747,
+      "cos_R1_vs_oracle": 0.2685302422642369,
+      "cos_R2_vs_oracle": 0.5242841844858311,
+      "top_coordinate_R1": 6,
+      "is_top_coordinate_upper_or_lower": "Q (upper mode j=0)"
+    },
+    {
+      "seed": 6,
+      "mode": 4,
+      "cos_R0_vs_oracle": 0.4354721079273969,
+      "cos_R1_vs_oracle": 0.26027931112034347,
+      "cos_R2_vs_oracle": 0.5842067991118326,
+      "top_coordinate_R1": 6,
+      "is_top_coordinate_upper_or_lower": "Q (upper mode j=0)"
+    },
+    {
+      "seed": 6,
+      "mode": 5,
+      "cos_R0_vs_oracle": 0.4911387771599612,
+      "cos_R1_vs_oracle": 0.5121033249128957,
+      "cos_R2_vs_oracle": 0.9168235882595701,
+      "top_coordinate_R1": 3,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=3)"
+    },
+    {
+      "seed": 7,
+      "mode": 0,
+      "cos_R0_vs_oracle": 0.08961867268460004,
+      "cos_R1_vs_oracle": 0.1194581227936177,
+      "cos_R2_vs_oracle": 0.821261550226507,
+      "top_coordinate_R1": 2,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=2)"
+    },
+    {
+      "seed": 7,
+      "mode": 1,
+      "cos_R0_vs_oracle": 0.6483573031877803,
+      "cos_R1_vs_oracle": 0.8486247808957476,
+      "cos_R2_vs_oracle": 0.8440153726276709,
+      "top_coordinate_R1": 5,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=5)"
+    },
+    {
+      "seed": 7,
+      "mode": 2,
+      "cos_R0_vs_oracle": 0.13872154225328254,
+      "cos_R1_vs_oracle": 0.4640623690460033,
+      "cos_R2_vs_oracle": 0.9516433812012739,
+      "top_coordinate_R1": 3,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=3)"
+    },
+    {
+      "seed": 7,
+      "mode": 3,
+      "cos_R0_vs_oracle": 0.17028566069645248,
+      "cos_R1_vs_oracle": 0.9089610762929039,
+      "cos_R2_vs_oracle": 0.8403443456731483,
+      "top_coordinate_R1": 8,
+      "is_top_coordinate_upper_or_lower": "Q (upper mode j=2)"
+    },
+    {
+      "seed": 7,
+      "mode": 4,
+      "cos_R0_vs_oracle": 0.26965234512627273,
+      "cos_R1_vs_oracle": 0.15517682549172596,
+      "cos_R2_vs_oracle": 0.8649088444371716,
+      "top_coordinate_R1": 2,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=2)"
+    },
+    {
+      "seed": 7,
+      "mode": 5,
+      "cos_R0_vs_oracle": 0.06328657348628453,
+      "cos_R1_vs_oracle": 0.4760691117508946,
+      "cos_R2_vs_oracle": 0.9795742586542328,
+      "top_coordinate_R1": 0,
+      "is_top_coordinate_upper_or_lower": "P (upper mode j=0)"
+    }
+  ],
+  "aggregate": {
+    "cos_R0_vs_oracle": {
+      "median": 0.2296959063796888,
+      "mean": 0.28381788701150534,
+      "min": 0.022599328570853176
+    },
+    "cos_R1_vs_oracle": {
+      "median": 0.47006574039844895,
+      "mean": 0.5131504587747943,
+      "min": 0.07142467653896425
+    },
+    "cos_R2_vs_oracle": {
+      "median": 0.8642266181905008,
+      "mean": 0.8122345613616698,
+      "min": 0.2829310349721462
+    }
+  }
+}
