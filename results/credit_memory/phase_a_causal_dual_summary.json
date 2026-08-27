@@ -1,0 +1,178 @@
+{
+  "git": "6e52994767e50828bab3c4a33994a1f57a346784",
+  "rows": [
+    {
+      "case": "idealized_complex_linear",
+      "seed": 0,
+      "T": 40,
+      "G_exact": [
+        28.789146170519743,
+        -6.578975089584734
+      ],
+      "G_E1": [
+        28.789146170519736,
+        -6.578975089584737
+      ],
+      "rel_err": 2.569679967173772e-16,
+      "passed": true
+    },
+    {
+      "case": "idealized_complex_linear",
+      "seed": 1,
+      "T": 40,
+      "G_exact": [
+        9.741160029395235,
+        -0.8638452599699464
+      ],
+      "G_E1": [
+        9.741160029395237,
+        -0.8638452599699453
+      ],
+      "rel_err": 2.1420201740235831e-16,
+      "passed": true
+    },
+    {
+      "case": "idealized_complex_linear",
+      "seed": 2,
+      "T": 40,
+      "G_exact": [
+        7.158365807383511,
+        -0.4366200955346571
+      ],
+      "G_E1": [
+        7.158365807383511,
+        -0.4366200955346551
+      ],
+      "rel_err": 2.7865220878413426e-16,
+      "passed": true
+    },
+    {
+      "case": "idealized_complex_linear",
+      "seed": 3,
+      "T": 40,
+      "G_exact": [
+        2.5699786072050514,
+        -1.0788596704685212
+      ],
+      "G_E1": [
+        2.5699786072050435,
+        -1.078859670468523
+      ],
+      "rel_err": 2.9378844812662447e-15,
+      "passed": true
+    },
+    {
+      "case": "idealized_complex_linear",
+      "seed": 4,
+      "T": 40,
+      "G_exact": [
+        0.042396394121702485,
+        -2.0708558628269818
+      ],
+      "G_E1": [
+        0.04239639412171092,
+        -2.070855862826977
+      ],
+      "rel_err": 4.7070940149130926e-15,
+      "passed": true
+    },
+    {
+      "case": "repo_re_coupled",
+      "seed": 0,
+      "N": 3,
+      "T": 14,
+      "BATCH": 3,
+      "naive_single_channel_rel_err": 0.7554734435684893,
+      "causal_dual_two_channel_rel_err": 2.112627837546206e-16,
+      "passed": true,
+      "fd_sanity_rel_errs": [
+        6.032075443017531e-07,
+        1.7977249008162072e-08,
+        1.0011691778260603e-08
+      ],
+      "fd_sanity_passed": true
+    },
+    {
+      "case": "repo_re_coupled",
+      "seed": 1,
+      "N": 3,
+      "T": 14,
+      "BATCH": 3,
+      "naive_single_channel_rel_err": 0.6518442368895024,
+      "causal_dual_two_channel_rel_err": 8.446218077999656e-16,
+      "passed": true,
+      "fd_sanity_rel_errs": [
+        4.487168538513706e-06,
+        1.091315186735317e-08,
+        2.7353550021155583e-09
+      ],
+      "fd_sanity_passed": true
+    },
+    {
+      "case": "repo_re_coupled",
+      "seed": 2,
+      "N": 3,
+      "T": 14,
+      "BATCH": 3,
+      "naive_single_channel_rel_err": 1.1999657748993662,
+      "causal_dual_two_channel_rel_err": 5.600848083173866e-16,
+      "passed": true,
+      "fd_sanity_rel_errs": [
+        4.779797432625647e-06,
+        1.6989508019633703e-09,
+        1.923470066206739e-08
+      ],
+      "fd_sanity_passed": true
+    },
+    {
+      "case": "repo_re_coupled",
+      "seed": 3,
+      "N": 3,
+      "T": 14,
+      "BATCH": 3,
+      "naive_single_channel_rel_err": 1.4772649230243518,
+      "causal_dual_two_channel_rel_err": 1.4475217743431504e-15,
+      "passed": true,
+      "fd_sanity_rel_errs": [
+        3.800427058774984e-08,
+        7.513927499331916e-08,
+        7.910319269497064e-10
+      ],
+      "fd_sanity_passed": true
+    },
+    {
+      "case": "repo_re_coupled",
+      "seed": 4,
+      "N": 3,
+      "T": 14,
+      "BATCH": 3,
+      "naive_single_channel_rel_err": 1.9682363192605874,
+      "causal_dual_two_channel_rel_err": 3.1689656118515073e-15,
+      "passed": true,
+      "fd_sanity_rel_errs": [
+        4.1804207054186396e-08,
+        8.723225295964419e-10,
+        1.706291401455123e-07
+      ],
+      "fd_sanity_passed": true
+    },
+    {
+      "case": "repo_re_coupled",
+      "seed": 99,
+      "N": 5,
+      "T": 30,
+      "BATCH": 2,
+      "naive_single_channel_rel_err": 0.7529372171104981,
+      "causal_dual_two_channel_rel_err": 2.1498151684489134e-16,
+      "passed": true,
+      "fd_sanity_rel_errs": [
+        1.6914358317756494e-07,
+        9.52491903629089e-09,
+        4.864376815799967e-10
+      ],
+      "fd_sanity_passed": true
+    }
+  ],
+  "all_identity_checks_passed": true,
+  "all_fd_sanity_checks_passed": true
+}
