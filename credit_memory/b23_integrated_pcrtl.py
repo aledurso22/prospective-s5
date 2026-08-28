@@ -188,13 +188,82 @@ def local_and_prefix_gradients(params, u, ytgt):
 
 
 # ---------------------------------------------------------------------------
-# Part E: independent reference via finite differences on the SAME
-# cascade forward pass -- deliberately not sharing any code path with
-# local_and_prefix_gradients (an established verification method used
-# throughout this project where an independent exact-adjoint reference
-# would cost more implementation time than it buys in confidence).
+# Part E: independent ANALYTIC reference (reverse-mode adjoint on the
+# full companion-form state-space cascade -- true machine precision,
+# not a finite-difference approximation). A first version of this
+# module used central finite differences as the sole reference and
+# only exercised L up to 3 in main(), while the written report claimed
+# results through L=5 from an ad-hoc interactive session that was never
+# saved into this file -- a real reproducibility gap, corrected here:
+# this is now the primary reference, FD is kept only as an extra
+# sanity check (see verify_fd_sanity), and main() below exercises
+# every depth the report claims.
 # ---------------------------------------------------------------------------
-def bptt_gradients_cascade(params, u, ytgt, eps=1e-6):
+def companion_from_coeffs(a, b):
+    r = len(a)
+    A = np.zeros((r, r))
+    A[:-1, 1:] = np.eye(r - 1)
+    A[-1, :] = -a[::-1]
+    B = np.zeros((r, 1)); B[-1, 0] = 1.0
+    C = b[::-1].reshape(1, r)
+    return A, B, C
+
+
+def analytic_gradients_cascade(params, u, ytgt):
+    """Exact reverse-mode adjoint through the full companion-form
+    cascade -- backward through TIME within each layer, and backward
+    through LAYERS via each layer's own dL/dy propagated to dL/du of
+    the layer below (the y[t]=C@x[t-1] one-step-delay convention
+    verified directly in B22.1)."""
+    a, b, gain = params["a"], params["b"], params["gain"]
+    L_ = len(a)
+    T_ = len(u)
+
+    x_delayed_list = []
+    cur_in = u
+    for l in range(L_):
+        A, B, C = companion_from_coeffs(a[l], b[l])
+        r = len(a[l])
+        x = np.zeros((T_, r)); xp = np.zeros(r)
+        for t in range(T_):
+            xp = A @ xp + (B @ cur_in[t:t + 1]).ravel()
+            x[t] = xp
+        x_delayed = np.concatenate([np.zeros((1, r)), x[:-1]], axis=0)
+        y = x_delayed @ C.ravel()
+        x_delayed_list.append(x_delayed)
+        cur_in = y
+    yhat = gain * cur_in
+    err = (yhat - ytgt) / T_
+
+    grad_a = [np.zeros_like(al) for al in a]
+    grad_b = [np.zeros_like(bl) for bl in b]
+    dL_dy = [None] * L_
+    dL_dy[L_ - 1] = gain * err
+    for l in range(L_ - 1, -1, -1):
+        A, B, C = companion_from_coeffs(a[l], b[l])
+        r = len(a[l])
+        outer_err = dL_dy[l]
+        x_delayed = x_delayed_list[l]
+        lam = np.zeros((T_, r))
+        lam_next = np.zeros(r)
+        for t in reversed(range(T_)):
+            lam_t = (outer_err[t + 1] * C.ravel() + lam_next @ A) if t + 1 < T_ else np.zeros(r)
+            lam[t] = lam_t
+            lam_next = lam_t
+        grad_A = np.zeros((r, r))
+        for t in range(T_):
+            grad_A += np.outer(lam[t], x_delayed[t])
+        grad_C = np.einsum("t,tn->n", outer_err, x_delayed)
+        grad_a[l] = -grad_A[-1, :][::-1]
+        grad_b[l] = grad_C[::-1]
+        if l > 0:
+            dL_dy[l - 1] = lam @ B.ravel()
+    return grad_a, grad_b
+
+
+def verify_fd_sanity(params, u, ytgt, eps=1e-6):
+    """Finite-difference cross-check ONLY -- kept as an extra sanity
+    check per the phase's own instruction, not the primary reference."""
     a, b, gain = params["a"], params["b"], params["gain"]
     L_ = len(a)
 
@@ -225,18 +294,32 @@ def main() -> None:
         err = verify_width_vacuous([3, 4], n_list)
         print(f"  n={n_list}: max diff full-vs-reduced-cascade = {err:.2e}")
 
-    print("\nPart E: local+prefix gradients vs finite-difference BPTT reference")
-    for r_list in ([2, 2], [3, 4], [2, 3, 4]):
+    print("\nPart E: local+prefix gradients vs ANALYTIC adjoint reference (true machine precision)")
+    for r_list in ([2, 2], [3, 4], [2, 3, 4], [3, 3, 3, 3], [3, 3, 3, 3, 3]):
+        L_ = len(r_list)
         rng = np.random.RandomState(sum(r_list) + 7)
         params = build_cascade(r_list, seed=sum(r_list) + 7)
         T_ = 20
         u = rng.randn(T_)
         ytgt = rng.randn(T_)
         ga_pf, gb_pf = local_and_prefix_gradients(params, u, ytgt)
-        ga_bptt, gb_bptt = bptt_gradients_cascade(params, u, ytgt)
-        err_a = max(np.max(np.abs(ga_pf[l] - ga_bptt[l])) for l in range(len(r_list)))
-        err_b = max(np.max(np.abs(gb_pf[l] - gb_bptt[l])) for l in range(len(r_list)))
-        print(f"  r_list={r_list}: max err grad_a={err_a:.2e}  grad_b={err_b:.2e}")
+        ga_an, gb_an = analytic_gradients_cascade(params, u, ytgt)
+        err_a = max(np.max(np.abs(ga_pf[l] - ga_an[l])) for l in range(L_))
+        err_b = max(np.max(np.abs(gb_pf[l] - gb_an[l])) for l in range(L_))
+        print(f"  L={L_} r_list={r_list}: max err grad_a={err_a:.2e}  grad_b={err_b:.2e}  (analytic)")
+
+    print("\nPart E (sanity): finite-difference cross-check at one config, for comparison only")
+    r_list = [3, 4]
+    rng = np.random.RandomState(sum(r_list) + 7)
+    params = build_cascade(r_list, seed=sum(r_list) + 7)
+    T_ = 20
+    u = rng.randn(T_); ytgt = rng.randn(T_)
+    ga_fd, gb_fd = verify_fd_sanity(params, u, ytgt)
+    ga_an, gb_an = analytic_gradients_cascade(params, u, ytgt)
+    err_a = max(np.max(np.abs(ga_fd[l] - ga_an[l])) for l in range(2))
+    err_b = max(np.max(np.abs(gb_fd[l] - gb_an[l])) for l in range(2))
+    print(f"  r_list={r_list}: FD-vs-analytic max err grad_a={err_a:.2e}  grad_b={err_b:.2e}  "
+         f"(FD's own ~1e-6-eps resolution floor, NOT machine precision -- reported as such)")
 
 
 if __name__ == "__main__":

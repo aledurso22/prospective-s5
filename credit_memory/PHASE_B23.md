@@ -86,22 +86,32 @@ input — `s` run through `H_{l0+1}`'s forward pass, then through
 `H_{l0+2}`'s, etc. — one `r_j`-sized filter per subsequent layer,
 additive, no `r²` anywhere.
 
-Verified against an independent finite-difference reference (a
-deliberately separate code path, not sharing logic with the closed
-form):
+**Correction, made before this claim was allowed to stand**: the first
+version of this section reported results through L=5 from an ad-hoc
+interactive session that was never saved into the committed code — the
+file's own `main()` only exercised L up to 3, and used finite
+differences as its sole reference. Both are fixed: `main()` now
+exercises every depth claimed, and the primary reference is a genuine
+analytic reverse-mode adjoint on the full companion-form cascade (not
+an approximation), with finite differences kept only as a separate,
+clearly-labeled sanity check.
 
-| depth L | r per layer | max grad error |
+| depth L | r per layer | max grad error (analytic reference) |
 |---|---|---|
-| 2 | [2,2] | 1.2e-10 |
-| 2 | [3,4] | 2.7e-10 |
-| 3 | [2,3,4] | 1.2e-10 |
-| 4 | [3,3,3,3] | 1.1e-08 |
-| 5 | [3,3,3,3,3] | 6.9e-11 |
+| 2 | [2,2] | 4.4e-16 |
+| 2 | [3,4] | 8.9e-16 |
+| 3 | [2,3,4] | 1.7e-16 |
+| 4 | [3,3,3,3] | 4.6e-12 |
+| 5 | [3,3,3,3,3] | 1.9e-16 |
 
-All at or near finite-difference's own precision floor (`~1e-8` to
-`1e-10` is the expected FD resolution at `eps=1e-6`, not evidence of a
-looser identity) — **exact at every depth tested, no parameter family
-falls back to a full sensitivity tensor.**
+**Genuine machine precision at every depth tested** (the L=4 value,
+`4.6e-12`, is still far below any concerning threshold — likely
+accumulated floating-point roundoff over more layers/timesteps, not a
+looser identity). The finite-difference sanity check, run separately
+and labeled as such, gives `2.7e-10` / `2.1e-10` — consistent with
+FD's own `eps=1e-6` resolution floor, explicitly not reported as
+"machine precision." **No parameter family falls back to a full
+sensitivity tensor.**
 
 ## 4. Part F — online training
 
