@@ -566,15 +566,15 @@ def stack_naive_rtrl_grad(archs, h0s, U, family_layer, dLdh_flat_seq):
         return flatten_hs(new_hs)
 
     layer_idx, family = family_layer
-    if family == "R":
-        theta0 = archs[layer_idx]["R"].reshape(-1)
-        shape = archs[layer_idx]["R"].shape
-    elif family == "B":
-        theta0 = archs[layer_idx]["B"].reshape(-1)
-        shape = archs[layer_idx]["B"].shape
-    elif family == "C":
-        theta0 = archs[layer_idx]["C"].reshape(-1)
-        shape = archs[layer_idx]["C"].shape
+    if family in ("R", "B", "C"):
+        theta0 = archs[layer_idx][family].reshape(-1)
+        shape = archs[layer_idx][family].shape
+        to_param = lambda th: th.reshape(shape)
+    elif family == "psi":
+        theta0 = psi_flat(archs[layer_idx]["psi"])
+        arch_l = archs[layer_idx]
+        to_param = lambda th: psi_from_flat(th, arch_l["n"], arch_l["k"], arch_l["u_dim"],
+                                             arch_l["hidden"])
     else:
         raise ValueError(family)
     m = theta0.shape[0]
@@ -591,7 +591,7 @@ def stack_naive_rtrl_grad(archs, h0s, U, family_layer, dLdh_flat_seq):
 
         def f_theta(th):
             lp = [{} for _ in archs]
-            lp[layer_idx] = {family: th.reshape(shape)}
+            lp[layer_idx] = {family: to_param(th)}
             return stack_step_flat(h_flat, u_t, lp)
 
         J_h = np.asarray(jax.jacobian(f_h)(h_flat))
@@ -613,7 +613,7 @@ def stack_bptt_grad(archs, h0s, U, family_layer, target_fn):
 
     theta0 = archs[layer_idx][family]
     g = jax.grad(loss_of)(theta0)
-    return np.asarray(g).reshape(-1)
+    return np.asarray(psi_flat(g)) if family == "psi" else np.asarray(g).reshape(-1)
 
 
 def part6_gauge_test(seed=21):
