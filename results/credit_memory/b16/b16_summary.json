@@ -1,0 +1,577 @@
+{
+  "git": "8eb2cc803d2de981c6c5d463e858a2b655a71f97",
+  "part_a": [
+    {
+      "N": 6,
+      "G": 1,
+      "err_full_vs_grouped": 1.651531062408377e-15,
+      "err_grouped_vs_bptt": 8.094865239498416e-16,
+      "full_state_count": 72,
+      "grouped_state_count": 12
+    },
+    {
+      "N": 6,
+      "G": 1,
+      "err_full_vs_grouped": 9.595188639596974e-16,
+      "err_grouped_vs_bptt": 4.773784771739698e-16,
+      "full_state_count": 72,
+      "grouped_state_count": 12
+    },
+    {
+      "N": 6,
+      "G": 1,
+      "err_full_vs_grouped": 3.5062141771353667e-15,
+      "err_grouped_vs_bptt": 9.506482750045305e-16,
+      "full_state_count": 72,
+      "grouped_state_count": 12
+    },
+    {
+      "N": 6,
+      "G": 2,
+      "err_full_vs_grouped": 8.361562959829109e-16,
+      "err_grouped_vs_bptt": 9.751174276896775e-16,
+      "full_state_count": 72,
+      "grouped_state_count": 24
+    },
+    {
+      "N": 6,
+      "G": 2,
+      "err_full_vs_grouped": 1.100094091666879e-15,
+      "err_grouped_vs_bptt": 7.394685375702097e-16,
+      "full_state_count": 72,
+      "grouped_state_count": 24
+    },
+    {
+      "N": 6,
+      "G": 2,
+      "err_full_vs_grouped": 1.3593289122123623e-15,
+      "err_grouped_vs_bptt": 1.5671695054710626e-15,
+      "full_state_count": 72,
+      "grouped_state_count": 24
+    },
+    {
+      "N": 6,
+      "G": 4,
+      "err_full_vs_grouped": 9.454254553756624e-16,
+      "err_grouped_vs_bptt": 6.588041265856275e-16,
+      "full_state_count": 72,
+      "grouped_state_count": 48
+    },
+    {
+      "N": 6,
+      "G": 4,
+      "err_full_vs_grouped": 1.3907276222872577e-15,
+      "err_grouped_vs_bptt": 9.99812722998999e-16,
+      "full_state_count": 72,
+      "grouped_state_count": 48
+    },
+    {
+      "N": 6,
+      "G": 4,
+      "err_full_vs_grouped": 1.3148035487499664e-15,
+      "err_grouped_vs_bptt": 1.6631095558888516e-15,
+      "full_state_count": 72,
+      "grouped_state_count": 48
+    },
+    {
+      "N": 6,
+      "G": 6,
+      "err_full_vs_grouped": 8.524048466669628e-16,
+      "err_grouped_vs_bptt": 1.4908128295410064e-15,
+      "full_state_count": 72,
+      "grouped_state_count": 72
+    },
+    {
+      "N": 6,
+      "G": 6,
+      "err_full_vs_grouped": 3.537892250351568e-16,
+      "err_grouped_vs_bptt": 9.536116782018857e-16,
+      "full_state_count": 72,
+      "grouped_state_count": 72
+    },
+    {
+      "N": 6,
+      "G": 6,
+      "err_full_vs_grouped": 1.220650912499957e-15,
+      "err_grouped_vs_bptt": 5.146716148617017e-16,
+      "full_state_count": 72,
+      "grouped_state_count": 72
+    },
+    {
+      "N": 12,
+      "G": 1,
+      "err_full_vs_grouped": 9.299659658266189e-16,
+      "err_grouped_vs_bptt": 7.057945436281016e-16,
+      "full_state_count": 288,
+      "grouped_state_count": 24
+    },
+    {
+      "N": 12,
+      "G": 1,
+      "err_full_vs_grouped": 1.849023997496301e-15,
+      "err_grouped_vs_bptt": 4.399633094988146e-16,
+      "full_state_count": 288,
+      "grouped_state_count": 24
+    },
+    {
+      "N": 12,
+      "G": 1,
+      "err_full_vs_grouped": 1.6003648901589016e-15,
+      "err_grouped_vs_bptt": 7.363075687153531e-16,
+      "full_state_count": 288,
+      "grouped_state_count": 24
+    },
+    {
+      "N": 12,
+      "G": 2,
+      "err_full_vs_grouped": 1.6200685021336358e-15,
+      "err_grouped_vs_bptt": 8.444957887372073e-16,
+      "full_state_count": 288,
+      "grouped_state_count": 48
+    },
+    {
+      "N": 12,
+      "G": 2,
+      "err_full_vs_grouped": 2.1197622336986528e-15,
+      "err_grouped_vs_bptt": 1.1491331582560914e-15,
+      "full_state_count": 288,
+      "grouped_state_count": 48
+    },
+    {
+      "N": 12,
+      "G": 2,
+      "err_full_vs_grouped": 5.001292275541098e-16,
+      "err_grouped_vs_bptt": 1.7699831889360872e-15,
+      "full_state_count": 288,
+      "grouped_state_count": 48
+    },
+    {
+      "N": 12,
+      "G": 4,
+      "err_full_vs_grouped": 1.1371928732800212e-15,
+      "err_grouped_vs_bptt": 5.719054642074822e-16,
+      "full_state_count": 288,
+      "grouped_state_count": 96
+    },
+    {
+      "N": 12,
+      "G": 4,
+      "err_full_vs_grouped": 1.242161914144608e-15,
+      "err_grouped_vs_bptt": 1.127468665270092e-15,
+      "full_state_count": 288,
+      "grouped_state_count": 96
+    },
+    {
+      "N": 12,
+      "G": 4,
+      "err_full_vs_grouped": 1.4991736295060267e-15,
+      "err_grouped_vs_bptt": 1.5597148062708857e-15,
+      "full_state_count": 288,
+      "grouped_state_count": 96
+    },
+    {
+      "N": 12,
+      "G": 12,
+      "err_full_vs_grouped": 1.3592556672018925e-15,
+      "err_grouped_vs_bptt": 3.5915738873036425e-16,
+      "full_state_count": 288,
+      "grouped_state_count": 288
+    },
+    {
+      "N": 12,
+      "G": 12,
+      "err_full_vs_grouped": 3.7762341103651e-15,
+      "err_grouped_vs_bptt": 7.667473298345538e-16,
+      "full_state_count": 288,
+      "grouped_state_count": 288
+    },
+    {
+      "N": 12,
+      "G": 12,
+      "err_full_vs_grouped": 1.2714883788637936e-15,
+      "err_grouped_vs_bptt": 1.065263767100732e-15,
+      "full_state_count": 288,
+      "grouped_state_count": 288
+    },
+    {
+      "N": 24,
+      "G": 1,
+      "err_full_vs_grouped": 1.9591513582044236e-15,
+      "err_grouped_vs_bptt": 7.572779797270954e-16,
+      "full_state_count": 1152,
+      "grouped_state_count": 48
+    },
+    {
+      "N": 24,
+      "G": 1,
+      "err_full_vs_grouped": 3.9842053529231124e-15,
+      "err_grouped_vs_bptt": 7.383868533107551e-16,
+      "full_state_count": 1152,
+      "grouped_state_count": 48
+    },
+    {
+      "N": 24,
+      "G": 1,
+      "err_full_vs_grouped": 2.545841896267135e-15,
+      "err_grouped_vs_bptt": 1.7241755214720051e-15,
+      "full_state_count": 1152,
+      "grouped_state_count": 48
+    },
+    {
+      "N": 24,
+      "G": 2,
+      "err_full_vs_grouped": 1.7850354625750825e-15,
+      "err_grouped_vs_bptt": 1.0875232994046879e-15,
+      "full_state_count": 1152,
+      "grouped_state_count": 96
+    },
+    {
+      "N": 24,
+      "G": 2,
+      "err_full_vs_grouped": 3.1331150021731316e-15,
+      "err_grouped_vs_bptt": 8.173434371062264e-16,
+      "full_state_count": 1152,
+      "grouped_state_count": 96
+    },
+    {
+      "N": 24,
+      "G": 2,
+      "err_full_vs_grouped": 1.4645219476198363e-15,
+      "err_grouped_vs_bptt": 6.816200614624783e-16,
+      "full_state_count": 1152,
+      "grouped_state_count": 96
+    },
+    {
+      "N": 24,
+      "G": 4,
+      "err_full_vs_grouped": 1.0501195505760466e-15,
+      "err_grouped_vs_bptt": 4.638652181245792e-16,
+      "full_state_count": 1152,
+      "grouped_state_count": 192
+    },
+    {
+      "N": 24,
+      "G": 4,
+      "err_full_vs_grouped": 3.973330041371513e-15,
+      "err_grouped_vs_bptt": 1.031852004221822e-15,
+      "full_state_count": 1152,
+      "grouped_state_count": 192
+    },
+    {
+      "N": 24,
+      "G": 4,
+      "err_full_vs_grouped": 4.2230106187673944e-15,
+      "err_grouped_vs_bptt": 4.16820354387104e-16,
+      "full_state_count": 1152,
+      "grouped_state_count": 192
+    },
+    {
+      "N": 24,
+      "G": 24,
+      "err_full_vs_grouped": 1.9659576943980618e-15,
+      "err_grouped_vs_bptt": 1.241829501657621e-15,
+      "full_state_count": 1152,
+      "grouped_state_count": 1152
+    },
+    {
+      "N": 24,
+      "G": 24,
+      "err_full_vs_grouped": 2.165344294265068e-15,
+      "err_grouped_vs_bptt": 7.43572217650078e-16,
+      "full_state_count": 1152,
+      "grouped_state_count": 1152
+    },
+    {
+      "N": 24,
+      "G": 24,
+      "err_full_vs_grouped": 5.414250743897839e-15,
+      "err_grouped_vs_bptt": 1.446890358234336e-15,
+      "full_state_count": 1152,
+      "grouped_state_count": 1152
+    },
+    {
+      "N": 48,
+      "G": 1,
+      "err_full_vs_grouped": 4.289027632490779e-15,
+      "err_grouped_vs_bptt": 8.477562135354219e-16,
+      "full_state_count": 4608,
+      "grouped_state_count": 96
+    },
+    {
+      "N": 48,
+      "G": 1,
+      "err_full_vs_grouped": 2.2681442914813986e-15,
+      "err_grouped_vs_bptt": 7.994619613995093e-16,
+      "full_state_count": 4608,
+      "grouped_state_count": 96
+    },
+    {
+      "N": 48,
+      "G": 1,
+      "err_full_vs_grouped": 7.83494178994681e-15,
+      "err_grouped_vs_bptt": 1.4566519133937525e-15,
+      "full_state_count": 4608,
+      "grouped_state_count": 96
+    },
+    {
+      "N": 48,
+      "G": 2,
+      "err_full_vs_grouped": 2.8168869613723494e-15,
+      "err_grouped_vs_bptt": 6.801327707665716e-16,
+      "full_state_count": 4608,
+      "grouped_state_count": 192
+    },
+    {
+      "N": 48,
+      "G": 2,
+      "err_full_vs_grouped": 5.897402420673363e-15,
+      "err_grouped_vs_bptt": 1.2237841297592083e-15,
+      "full_state_count": 4608,
+      "grouped_state_count": 192
+    },
+    {
+      "N": 48,
+      "G": 2,
+      "err_full_vs_grouped": 2.7912333142050085e-15,
+      "err_grouped_vs_bptt": 9.171632249521697e-16,
+      "full_state_count": 4608,
+      "grouped_state_count": 192
+    },
+    {
+      "N": 48,
+      "G": 4,
+      "err_full_vs_grouped": 2.6414134480033988e-15,
+      "err_grouped_vs_bptt": 7.854136806049477e-16,
+      "full_state_count": 4608,
+      "grouped_state_count": 384
+    },
+    {
+      "N": 48,
+      "G": 4,
+      "err_full_vs_grouped": 5.547328344177838e-15,
+      "err_grouped_vs_bptt": 8.875725350684579e-16,
+      "full_state_count": 4608,
+      "grouped_state_count": 384
+    },
+    {
+      "N": 48,
+      "G": 4,
+      "err_full_vs_grouped": 5.7331059582128014e-15,
+      "err_grouped_vs_bptt": 6.607078157514218e-16,
+      "full_state_count": 4608,
+      "grouped_state_count": 384
+    },
+    {
+      "N": 48,
+      "G": 48,
+      "err_full_vs_grouped": 2.6838853214006627e-15,
+      "err_grouped_vs_bptt": 1.1560050907911126e-15,
+      "full_state_count": 4608,
+      "grouped_state_count": 4608
+    },
+    {
+      "N": 48,
+      "G": 48,
+      "err_full_vs_grouped": 2.843716268500687e-15,
+      "err_grouped_vs_bptt": 5.832609891003512e-16,
+      "full_state_count": 4608,
+      "grouped_state_count": 4608
+    },
+    {
+      "N": 48,
+      "G": 48,
+      "err_full_vs_grouped": 2.3897384797273834e-15,
+      "err_grouped_vs_bptt": 5.734046506374226e-16,
+      "full_state_count": 4608,
+      "grouped_state_count": 4608
+    }
+  ],
+  "part_b": [
+    {
+      "N": 6,
+      "G": 1,
+      "t_full_s": 0.0007661529998586047,
+      "t_grouped_s": 0.001072360999993786,
+      "full_state_count": 72,
+      "grouped_state_count": 12
+    },
+    {
+      "N": 12,
+      "G": 1,
+      "t_full_s": 0.0016493473334170023,
+      "t_grouped_s": 0.002420014000260077,
+      "full_state_count": 288,
+      "grouped_state_count": 24
+    },
+    {
+      "N": 24,
+      "G": 1,
+      "t_full_s": 0.005215319666604046,
+      "t_grouped_s": 0.005865388999761005,
+      "full_state_count": 1152,
+      "grouped_state_count": 48
+    },
+    {
+      "N": 48,
+      "G": 1,
+      "t_full_s": 0.018527013666243874,
+      "t_grouped_s": 0.016185319333696196,
+      "full_state_count": 4608,
+      "grouped_state_count": 96
+    }
+  ],
+  "part_e": {
+    "12": {
+      "E1_distinct_lowrank_B": {
+        "dim": 12,
+        "M": 12,
+        "r_in": 1,
+        "prediction": "low-rank B does NOT cap Krylov dim under distinct poles"
+      },
+      "E2_G1": {
+        "dim_measured": 2,
+        "dim_formula": 2,
+        "match": true,
+        "G": 1,
+        "M": 12
+      },
+      "E2_G2": {
+        "dim_measured": 4,
+        "dim_formula": 4,
+        "match": true,
+        "G": 2,
+        "M": 12
+      },
+      "E2_G4": {
+        "dim_measured": 8,
+        "dim_formula": 8,
+        "match": true,
+        "G": 4,
+        "M": 12
+      },
+      "E2_G6": {
+        "dim_measured": 12,
+        "dim_formula": 12,
+        "match": true,
+        "G": 6,
+        "M": 12
+      },
+      "E4_invariant_subspace": {
+        "dim_measured": 6,
+        "dim_expected": 6,
+        "match": true
+      }
+    },
+    "24": {
+      "E1_distinct_lowrank_B": {
+        "dim": 24,
+        "M": 24,
+        "r_in": 1,
+        "prediction": "low-rank B does NOT cap Krylov dim under distinct poles"
+      },
+      "E2_G1": {
+        "dim_measured": 2,
+        "dim_formula": 2,
+        "match": true,
+        "G": 1,
+        "M": 24
+      },
+      "E2_G2": {
+        "dim_measured": 4,
+        "dim_formula": 4,
+        "match": true,
+        "G": 2,
+        "M": 24
+      },
+      "E2_G4": {
+        "dim_measured": 8,
+        "dim_formula": 8,
+        "match": true,
+        "G": 4,
+        "M": 24
+      },
+      "E2_G12": {
+        "dim_measured": 24,
+        "dim_formula": 24,
+        "match": true,
+        "G": 12,
+        "M": 24
+      },
+      "E4_invariant_subspace": {
+        "dim_measured": 12,
+        "dim_expected": 12,
+        "match": true
+      }
+    },
+    "48": {
+      "E1_distinct_lowrank_B": {
+        "dim": 47,
+        "M": 48,
+        "r_in": 1,
+        "prediction": "low-rank B does NOT cap Krylov dim under distinct poles"
+      },
+      "E2_G1": {
+        "dim_measured": 2,
+        "dim_formula": 2,
+        "match": true,
+        "G": 1,
+        "M": 48
+      },
+      "E2_G2": {
+        "dim_measured": 4,
+        "dim_formula": 4,
+        "match": true,
+        "G": 2,
+        "M": 48
+      },
+      "E2_G4": {
+        "dim_measured": 8,
+        "dim_formula": 8,
+        "match": true,
+        "G": 4,
+        "M": 48
+      },
+      "E2_G24": {
+        "dim_measured": 48,
+        "dim_formula": 48,
+        "match": true,
+        "G": 24,
+        "M": 48
+      },
+      "E4_invariant_subspace": {
+        "dim_measured": 24,
+        "dim_expected": 24,
+        "match": true
+      }
+    }
+  },
+  "part_g": {
+    "8": {
+      "rank_exogenous": 5,
+      "rank_selective": 6,
+      "norm_exogenous": 1.084061668422051,
+      "norm_selective": 1.0246581662744305,
+      "M": 8,
+      "rank_selective_stopgrad": 0,
+      "norm_selective_stopgrad": 0.0
+    },
+    "32": {
+      "rank_exogenous": 6,
+      "rank_selective": 7,
+      "norm_exogenous": 2.587161299240387,
+      "norm_selective": 2.115270171248678,
+      "M": 32,
+      "rank_selective_stopgrad": 0,
+      "norm_selective_stopgrad": 0.0
+    },
+    "128": {
+      "rank_exogenous": 24,
+      "rank_selective": 28,
+      "norm_exogenous": 8.90498264197178,
+      "norm_selective": 8.775546118256985,
+      "M": 128,
+      "rank_selective_stopgrad": 0,
+      "norm_selective_stopgrad": 0.0
+    }
+  }
+}
