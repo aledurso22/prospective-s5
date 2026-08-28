@@ -7,13 +7,30 @@ axis: temporal interface rank `k`. Code: `credit_memory/b24_interface_frontier.p
 **Headline: the smallest genuinely useful interface is `k_in·k_out ≥ 2`
 (e.g. `k=2`, since `k=1,k_out=2` or `k_in=2,k_out=1` already break the
 k=1 collapse). Above k=1, functional capacity does NOT grow without
-bound — it saturates at an exact, verified closed form:
-`cap = dim_below · min(k_in·k_out, r)`. Exact prospective credit stays
-linear in width (`O(n·k_in·r)` per layer) throughout, so width can be
-added freely without the credit machinery blowing up — but past the
-cap, added width buys nothing. A real trained-task check confirms the
-practical stakes: a k=1 approximator plateaus 37× worse than a
-k=2 approximator matched to a genuinely 2D-interface target.**
+bound — it saturates at an exact, verified closed form (for this
+specific architecture): `cap = dim_below · min(k_in·k_out, r)`. Exact
+prospective credit for a full-stack REFERENCE ADJOINT stays linear in
+width (`O(n·k_in·r)` per layer) throughout. A real trained-task check
+confirms the practical stakes: a k=1 approximator plateaus 37× worse
+than a k=2 approximator matched to a genuinely 2D-interface target.**
+
+> **CORRECTION (Phase B24.1, see `PHASE_B24_1.md`)** — three wording
+> issues in this document, load-bearing enough to flag inline:
+> (1) the driver here is **non-separable, multi-generator structure**,
+> not `k>1` per se — a `k>1` architecture built from a truly separable
+> route (`F_l⊗Q_l`, one shared scalar temporal generator) collapses
+> exactly regardless of `n` or `k`, verified to machine precision in
+> B24.1 Part A. The correct statement is "multiple independently
+> feature-weighted temporal generators can make width useful at fixed
+> k, until the finite temporal-function envelope saturates," not
+> simply "k>1 makes width useful." (2) `stack_backward`'s
+> `O(n·k_in·r)` cost is the cost of an exact **reverse-mode adjoint
+> reference**, not a forward-only online algorithm — it must not be
+> read as "the scaling of our online credit state"; no forward-only
+> credit recurrence for this multi-copy architecture has been derived.
+> (3) the cap law below is an **empirical exact-match law for this
+> specific architecture**, not a general theorem — see B24.1 §6 for
+> what is and isn't established about its generality.
 
 ## 0. Reporting/verification cleanup (B23), done first as required
 
