@@ -208,9 +208,9 @@ def run(seed=0, total_frames=5_000_000, log_every=2000, out_path=None):
                 recent_return_max=float(np.max(recent)) if recent else None,
                 all_finite=fin,
                 obs_stats_mean=np.asarray(carry["obs_stats"]["mean"]).tolist(),
-                obs_stats_var=(np.asarray(carry["obs_stats"]["M2"]) / max(float(carry["obs_stats"]["count"]), 1.0)).tolist(),
-                reward_stats_mean=float(carry["reward_stats"]["mean"]),
-                reward_stats_var=float(carry["reward_stats"]["M2"]) / max(float(carry["reward_stats"]["count"]), 1.0),
+                obs_stats_var=np.asarray(carry["obs_stats"]["var"]).tolist(),
+                reward_scale_trace=float(carry["reward_stats"]["trace"]),
+                reward_scale_var=float(carry["reward_stats"]["stats"]["var"]),
                 rtu_r_actor=r_actor, rtu_r_critic=r_critic,
             )
             history.append(ckpt)

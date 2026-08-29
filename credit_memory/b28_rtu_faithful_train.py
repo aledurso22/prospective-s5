@@ -21,7 +21,7 @@ import popgym
 from credit_memory.b28_rtu_faithful import (
     RTU_FAMILIES, ENCODER_FAMILIES, ALL_NET_FAMILIES,
     make_rtu_params, make_encoder_params, net_streaming_init, net_streaming_step,
-    rtu_g_phi_norm,
+    rtu_g_phi_norm, sparse_init,
 )
 from credit_memory.b28_popgym_stage1 import one_hot_obs
 
@@ -36,10 +36,21 @@ HEAD_POLICY_FAMILIES = ("W_pi", "b_pi")
 HEAD_VALUE_FAMILIES = ("W_v", "b_v")
 
 
-def make_head_params(rng, in_dim, out_dim):
-    scale = 1.0 / np.sqrt(in_dim)
+def make_head_params(rng, in_dim, out_dim, sparsity=0.9):
+    """mohmdelsayed/streaming-drl's initialize_weights applies
+    sparse_init(sparsity=0.9) + bias=0 to EVERY nn.Linear layer via
+    model.apply(...), not just an encoder stage -- confirmed by
+    reading stream_ac_discrete.py directly. Head layers get the same
+    treatment. sparse_init's reference shape is (fan_out,fan_in); our
+    own sparse_init (b28_rtu_faithful.py) is written for (fan_in,
+    fan_out) to match this codebase's x@W encoder convention, so build
+    at (in_dim,out_dim) and transpose to (out_dim,in_dim) matching
+    this head's own W@z convention -- the resulting sparsity pattern
+    (each output unit's own random subset of input connections zeroed)
+    is identical either way."""
+    W = sparse_init(rng, (in_dim, out_dim), sparsity).T
     return dict(
-        W=jnp.array(rng.randn(out_dim, in_dim) * scale),
+        W=jnp.array(W),
         b=jnp.zeros(out_dim),
     )
 
@@ -49,55 +60,71 @@ def head_forward(z, head_params):
 
 
 # ---------------------------------------------------------------------------
-# Running observation/reward normalization (Welford's online algorithm
-# for mean/variance -- exact statistic form not stated in the paper
-# text I could access; this is a standard, defensible choice, FLAGGED
-# as not byte-confirmed against the exact repository code).
+# Literal ports of mohmdelsayed/streaming-drl's normalization_wrappers.py
+# (SampleMeanStd, NormalizeObservation, ScaleReward), verified directly
+# against the source (not a paraphrase): sample variance (N-1
+# denominator), var=1 until count>=2, mean=x/p=0 special-case on the
+# first sample, epsilon INSIDE sqrt, and -- critically for ScaleReward
+# -- the (1-terminal) mask applied to the OLD trace INSIDE the same
+# update as the new reward, never as a separate reset elsewhere.
 # ---------------------------------------------------------------------------
 def running_stats_init(shape=()):
-    return dict(count=1e-4, mean=np.zeros(shape), M2=np.ones(shape))
+    """SampleMeanStd.__init__: mean=0, var=1, p=1, count=0. p=1 is
+    provably never used in a real computation (update()'s count==0
+    special case always overwrites mean/p first), so initializing p=0
+    here is exactly equivalent and lets update() be one formula."""
+    return dict(mean=np.zeros(shape), p=np.zeros(shape), count=0.0, var=np.ones(shape))
 
 
 def running_stats_update(stats, x):
+    """SampleMeanStd.update / update_mean_var_count_from_moments,
+    literally: if count==0: mean=x, p=0; new_count=count+1;
+    new_mean=mean+(x-mean)/new_count; new_p=p+(x-mean)*(x-new_mean);
+    new_var = 1 if new_count<2 else new_p/(new_count-1)."""
     x = np.asarray(x, dtype=np.float64)
-    stats["count"] += 1
-    delta = x - stats["mean"]
-    stats["mean"] = stats["mean"] + delta / stats["count"]
-    delta2 = x - stats["mean"]
-    stats["M2"] = stats["M2"] + delta * delta2
+    if stats["count"] == 0:
+        stats["mean"] = x
+        stats["p"] = np.zeros_like(x)
+    new_count = stats["count"] + 1
+    new_mean = stats["mean"] + (x - stats["mean"]) / new_count
+    new_p = stats["p"] + (x - stats["mean"]) * (x - new_mean)
+    new_var = np.ones_like(new_p) if new_count < 2 else new_p / (new_count - 1)
+    stats["mean"], stats["p"], stats["count"], stats["var"] = new_mean, new_p, new_count, new_var
     return stats
 
 
 def running_stats_normalize(stats, x, eps=1e-8):
-    var = stats["M2"] / max(stats["count"], 1.0)
-    return (np.asarray(x) - stats["mean"]) / (np.sqrt(var) + eps)
+    """NormalizeObservation.normalize: (x - mean) / sqrt(var + eps)."""
+    return (np.asarray(x) - stats["mean"]) / np.sqrt(stats["var"] + eps)
 
 
 # ---------------------------------------------------------------------------
-# Reward SCALING (Elsayed/Farr stream-AC), corrected per review -- NOT
-# the same as running_stats_* above. Maintains a discounted reward
-# trace u_t = gamma*u_{t-1} + r_t (reset to 0 by the caller at episode
-# boundaries), tracks Welford variance of u (not of raw reward), and
-# scales (never centers) the raw reward: scaled = r / (sqrt(var(u))+eps).
+# Reward SCALING (ScaleReward), literal port -- NOT the same as
+# running_stats_* above (different variable being tracked, no mean
+# subtraction on the emitted reward).
 # ---------------------------------------------------------------------------
 def reward_scale_init():
-    return dict(u=0.0, count=1e-4, mean_u=0.0, M2_u=1.0)
+    return dict(trace=0.0, stats=running_stats_init(()))
 
 
-def reward_scale_update(state, raw_reward, gamma):
-    u_new = gamma * state["u"] + raw_reward
-    state["count"] += 1
-    delta = u_new - state["mean_u"]
-    state["mean_u"] = state["mean_u"] + delta / state["count"]
-    delta2 = u_new - state["mean_u"]
-    state["M2_u"] = state["M2_u"] + delta * delta2
-    state["u"] = u_new
+def reward_scale_update(state, raw_reward, gamma, done):
+    """ScaleReward.step: term=terminated or truncated;
+    reward_trace = reward_trace*gamma*(1-term) + rews;
+    reward_stats.update(reward_trace). The (1-term) mask is applied to
+    the OLD trace INSIDE this same update -- on a terminal step,
+    new_trace = raw_reward exactly. No separate reset happens anywhere
+    else (not on env.reset(), not after this call)."""
+    not_done = 0.0 if done else 1.0
+    new_trace = gamma * not_done * state["trace"] + raw_reward
+    running_stats_update(state["stats"], new_trace)
+    state["trace"] = new_trace
     return state
 
 
 def reward_scale_apply(state, raw_reward, eps=1e-8):
-    var_u = state["M2_u"] / max(state["count"], 1.0)
-    return raw_reward / (np.sqrt(var_u) + eps)
+    """ScaleReward.normalize: rews / sqrt(reward_stats.var + eps) --
+    scales the RAW reward (not the trace), epsilon inside sqrt."""
+    return raw_reward / np.sqrt(state["stats"]["var"] + eps)
 
 
 # ---------------------------------------------------------------------------
@@ -108,7 +135,7 @@ def make_network(rng, in_dim, width, hidden_dim, head_out_dim, sparsity=0.9):
     return dict(
         enc=make_encoder_params(rng, in_dim, width, sparsity),
         rtu=make_rtu_params(rng, hidden_dim, width),
-        head=make_head_params(rng, 2 * hidden_dim, head_out_dim),
+        head=make_head_params(rng, 2 * hidden_dim, head_out_dim, sparsity),
     )
 
 
@@ -266,7 +293,7 @@ def test_running_stats(seed=4, n=20000):
     for x in samples:
         running_stats_update(stats, x)
     est_mean = stats["mean"]
-    est_var = stats["M2"] / stats["count"]
+    est_var = stats["var"]  # SampleMeanStd stores var directly (N-1 denominator)
     return abs(est_mean - true_mean), abs(np.sqrt(est_var) - true_std)
 
 
@@ -363,7 +390,7 @@ def smoke_test(seed=8, n_steps=20, hidden_dim=8, width=16):
 
         obs_next, r_t, term, trunc, _ = env.step(a_t)
         done = term or trunc
-        reward_scale_update(reward_stats, r_t, gamma)
+        reward_scale_update(reward_stats, r_t, gamma, done)
         r_t_norm = float(reward_scale_apply(reward_stats, r_t))
 
         v_cur = float(head_forward(z_critic, critic["head"])[0])

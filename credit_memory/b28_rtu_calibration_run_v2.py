@@ -299,10 +299,10 @@ def run(seed=0, total_frames=5_000_000, log_every=2000, out_path=None):
                 recent500_return_median=float(np.median(recent500)) if recent500 else None,
                 all_finite=fin,
                 obs_stats_mean=np.asarray(carry["obs_stats"]["mean"]).tolist(),
-                obs_stats_var=(np.asarray(carry["obs_stats"]["M2"]) / max(float(carry["obs_stats"]["count"]), 1.0)).tolist(),
-                reward_scale_u=float(carry["reward_stats"]["u"]),
-                reward_scale_mean_u=float(carry["reward_stats"]["mean_u"]),
-                reward_scale_var_u=float(carry["reward_stats"]["M2_u"]) / max(float(carry["reward_stats"]["count"]), 1.0),
+                obs_stats_var=np.asarray(carry["obs_stats"]["var"]).tolist(),
+                reward_scale_trace=float(carry["reward_stats"]["trace"]),
+                reward_scale_mean=float(carry["reward_stats"]["stats"]["mean"]),
+                reward_scale_var=float(carry["reward_stats"]["stats"]["var"]),
                 rtu_r_theta_actor=r_theta_actor, rtu_r_theta_critic=r_theta_critic,
                 rtu_drift_actor=drift_actor, rtu_drift_critic=drift_critic,
                 action_distribution=action_dist,
@@ -324,8 +324,8 @@ def run(seed=0, total_frames=5_000_000, log_every=2000, out_path=None):
                   f"recent50 mean/median={ckpt['recent50_return_mean']}/{ckpt['recent50_return_median']}  "
                   f"recent500 mean/median={ckpt['recent500_return_mean']}/{ckpt['recent500_return_median']}", flush=True)
             print(f"  all_finite={fin}", flush=True)
-            print(f"  reward_scale: u={ckpt['reward_scale_u']:.4f} mean_u={ckpt['reward_scale_mean_u']:.4f} "
-                  f"var_u={ckpt['reward_scale_var_u']:.4f}", flush=True)
+            print(f"  reward_scale: trace={ckpt['reward_scale_trace']:.4f} mean={ckpt['reward_scale_mean']:.4f} "
+                  f"var={ckpt['reward_scale_var']:.4f}", flush=True)
             print(f"  action_distribution={action_dist}", flush=True)
             print(f"  watch_steps={ckpt['watch_steps']} play_steps={ckpt['play_steps']} "
                   f"play_accuracy={ckpt['play_accuracy']}", flush=True)
