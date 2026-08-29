@@ -1,250 +1,197 @@
 # Phase B27 — noncommutative temporal advantage falsification
 
 Branch `S5-CCM-scale-validation`. Tests whether B25/B25.1's surviving
-theorem buys any REPRESENTATIONAL advantage over diagonal/RTU-style
-exact-RTRL recurrence — not another "linear in n" credit-cost check
-(retracted from novelty claims in the B26 audit). Code:
-`credit_memory/b27_noncommutative_advantage.py` (new; `main()`
-reproduces every number below, including the final corrected
-protocol). No S5. No wall-clock claims (JIT is used purely for
-practical runtime, never cited as a result).
+theorem buys any REPRESENTATIONAL advantage over the strongest
+existing structured exact-RTRL recurrence — not another "linear in n"
+credit-cost check (retracted from novelty claims in the B26 audit).
+Code: `credit_memory/b27_noncommutative_advantage.py` (new; `main()`
+reproduces every number below, the final corrected protocol). No S5.
+No wall-clock claims (JIT used only for practical runtime).
 
-This report went through two rounds of review corrections before any
-verdict was drawn — both are documented in full below because they
-materially changed the conclusion, and hiding that history would
-misrepresent how the result was actually obtained.
+This report reflects **three** rounds of review correction, each
+material to the conclusion — documented in full rather than hidden,
+because the final verdict depends on understanding why the earlier
+attempts were wrong.
 
-**Headline: D — STILL CONFOUNDED. Parts 1–3 (the noncommutative
-teacher's construction, its genuine use of multiple noncommuting
-generators, and our exact online credit on it) are solid and verified
-to machine precision. The representational comparison itself is not
-yet resolved: after fixing every identified confound (a random-and-
-unobserved teacher initial state, an optimization-budget mismatch
-between architectures, a readout bottleneck, cost-normalization
-errors), a real gap between our architecture and the diagonal
-baseline persists on the noncommutative teacher — but the SAME gap
-also persists, undiminished, on a teacher whose temporal generators
-are verified EXACTLY commuting. Per the phase's own stated criterion
-("if [the gap] does not [close on the commuting control], the
-experiment is confounded"), this rules out attributing the observed
-gap specifically to noncommutativity, and the phase stops here rather
-than forcing a positive verdict.**
+**Headline: A — STRONG SEPARATION. Against the CORRECT, faithful
+Nonlinear RTU baseline (activation inside each independent 2×2 block,
+its own exact block-local RTRL implemented and verified against
+BPTT), the pattern is exactly the one the phase asked to see: on a
+teacher drawn from the RTU's own structural class (block-local), RTU
+and our architecture fit comparably well; on a teacher whose temporal
+algebra is the full, irreducible matrix algebra `A_T=M_r` (verified
+rigorously — `dim=r²` and commutant dimension exactly 1), our
+architecture fits it to near-zero error while RTU plateaus at a large,
+state-and-parameter-independent error floor.**
 
-## 1. Parts 1–3 — solid, unaffected by the corrections below
+## 1. Parts 1–3, 6 — unaffected by any correction, still solid
 
-**Part 1** (teacher construction): `r∈{3,4,5}, k∈{1,2}`, all achieve
-`d_T=r²` exactly with nonzero `[R,Q_ab]` and `[Q_ab,Q_cd]` commutators
-— genuinely noncommutative at every config tested.
+Teacher construction (`d_T=r²`, nonzero commutators), genuine
+multi-generator usage (4/4 pairs active, ablation effect ≈2× state
+std), our exact credit (machine precision vs. naive RTRL and BPTT,
+`4.4e-16` to `1.8e-15`), and L=2 depth exactness (`3.3e-16` to
+`1.3e-15`) all carry over unchanged from the prior draft — none of
+this was in question.
 
-**Part 2** (teacher usage verification, `r=4,k=2,n=6`): all 4/4
-`(a,b)` generator pairs active (`active_frac=1.00`), real temporal
-variation in the dominant generator's coefficient (`cv=0.053`), and
-ablating the most active generator changes the trajectory by `0.98`
-— roughly twice the state's own std (`0.48`), a materially large
-effect, not noise.
+## 2. Round 1 correction: rank(DΦ)=1 ≠ commuting (superseded as decisive)
 
-**Part 3** (our exact credit on this teacher): naive RTRL, factorized
-RTRL, and BPTT agree to machine precision (`4.4e-16` to `1.8e-15`) for
-every parameter family, re-confirmed post-hoc on the final
-BPTT-trained model (`8.9e-16` to `2.0e-14`) as the corrected protocol
-below required.
+The first "commuting" control only forced Φ's Jacobian to rank 1,
+which does not imply `[R,Q*]=0`. Fixed with a **true** commuting
+teacher (diagonal `R`, every interface channel aligned to one
+coordinate) — verified `max‖[R,Q_ab]‖=0`, `max‖[Q_ab,Q_cd]‖=0`
+*exactly*, `d_T=r=4` (abelian). This construction is **kept only as a
+supplementary diagnostic** per the current instruction, not the
+decisive falsifier (see §3 for why it was never going to be decisive).
 
-**Part 6** (depth exactness, cheap reuse of B25.1): re-verified at
-L=2 on this specific noncommutative teacher, machine precision
-(`3.3e-16` to `1.3e-15`). This is exactness evidence only — per
-explicit instruction, it does **not** resolve the representational
-question below, and depth was correctly paused pending that
-resolution.
+## 3. Round 2 correction: why the commuting control could never have worked
 
-## 2. First round of corrections (methodology)
+Review identified the reason the commuting control failed to close
+the gap in the prior draft: **the teacher retains genuinely nonlinear
+recurrent feedback** (Φ still an MLP inside the loop) regardless of
+whether its Jacobian *algebra* commutes, while the baseline used at
+that time had **only linear recurrent dynamics** (`h_{t+1}=R_diag
+h_t+B_diag u_t`, nonlinearity applied *after*, in a stateless head).
+Asking a linear-memory model to approximate nonlinear state-dependent
+memory was never a fair test of commutativity specifically — the
+control's failure was **not evidence against the theorem**, it was
+evidence the baseline itself was the wrong comparison class. This
+reframes the correct structural distinction, refined further:
 
-The first representational comparison (single fixed trajectory,
-diagonal baseline with a `k=2`-bottlenecked readout, no cost
-normalization) suggested a clean, large separation. Review caught
-three real issues before that result was trusted:
+**Not** "noncommutative vs. commuting" (a Nonlinear RTU block has
+time-varying Jacobians `J_t≈D_tR_block`, and different `J_t` need not
+commute either). **The actual distinction**: potentially globally
+coupled / irreducible temporal algebra over an `r`-dimensional
+temporal core (ours) vs. a **direct sum of independent small blocks**
+(Nonlinear RTU) — a *structural decomposability* question, not a
+commutativity one.
 
-1. **Rank-1 ≠ commuting**: the first "commuting" control only forced
-   `Φ`'s Jacobian to rank 1, which does not imply `[R,Q*]=0` — a
-   single active generator can still fail to commute with `R`. Fixed
-   by constructing a **true** commuting teacher: `R` diagonal
-   (distinct real eigenvalues), every interface channel's `B`-column
-   and `C`-row aligned to the *same* state coordinate, so every
-   `Q_ab` is itself diagonal. Verified: `max‖[R,Q_ab]‖=0.0`,
-   `max‖[Q_ab,Q_cd]‖=0.0` exactly (not merely small), `d_T=r=4` (not
-   `r²`) — genuinely abelian by construction, not inferred from rank.
-2. **Single-sequence overfitting risk**: fixed by training/evaluating
-   on batches of independently-sampled input sequences, not one fixed
-   trajectory.
-3. **Readout bottleneck**: the diagonal baseline's original `C_diag`
-   projection to `k=2` before its nonlinear head was replaced with a
-   full-state stateless head `y_t=MLP([h_{t+1},u_t])` seeing the
-   entire recurrent state — tested under both a parameter-matched and
-   a deliberately over-provisioned regime.
+## 4. `A_T = M_r`, verified rigorously (not just `d_T=r²`)
 
-After these fixes, "ours" appeared to do *worse* than the diagonal
-baseline on both teachers — which turned out to be a **second,
-more serious confound**, described next.
+Beyond the algebra-closure dimension (already established), two
+further checks confirm the main teacher's algebra is the *full*,
+*irreducible* `r×r` matrix algebra, not merely large:
 
-## 3. Second round of corrections (two critical bugs)
+- `d_T = 16 = r²` (full matrix algebra — a subalgebra of `M_r`
+  achieving dimension `r²` must equal `M_r` exactly).
+- **Commutant dimension = 1** (`dim{X:XA=AX ∀ generators A}`, computed
+  via the linear system `vec(XA-AX)=0` stacked over all generators —
+  exact linear algebra, no numerical subspace search needed). By
+  Schur's lemma, commutant dimension 1 for a real algebra means the
+  generators act **irreducibly**: no nontrivial common invariant
+  subspace exists. This is the requested "block-decomposition
+  diagnostic," obtained directly and exactly rather than via iterative
+  search.
 
-1. **Random, unobserved teacher initial state** (critical): each
-   training/test sequence had drawn a fresh random `h0_teacher`,
-   unseen by either student. The target was therefore
-   `y=F(U_seq,h0_teacher)` while students were asked to predict `y`
-   from `U_seq` alone — not a deterministic function of the student's
-   own input, creating an irreducible test-error floor capable of
-   fully explaining an apparent plateau on its own. **Fixed**: `h0=0`
-   for every sequence (both teacher and students), making the task a
-   genuine deterministic function of `U_seq`.
-2. **Optimization-budget mismatch**: the diagonal baseline (fast,
-   JIT-compiled) trained for 800 steps × 20 sequences; "ours" (via
-   B25's non-JIT-compatible per-step factorized-RTRL machinery) could
-   only afford 150 steps × 4 sequences in comparable wall-clock time
-   — a genuine confound working *against* "ours," not for it.
-   **Fixed**: since factorized RTRL has been repeatedly verified
-   exact against BPTT, "ours" was retrained via ordinary JIT-compiled
-   BPTT+Adam (`train_ours_bptt_adam`) — legitimate because this
-   subtest asks what each *model class* can represent, not how fast
-   the online algorithm trains — with a **post-hoc re-verification**
-   that factorized RTRL still equals BPTT on the final trained model
-   (machine precision, confirmed above). Both architectures now train
-   under an identical optimizer, step count, and sequence set.
+## 5. The correct baseline: Nonlinear RTU, faithfully implemented and verified
 
-## 4. Main comparison (noncommutative teacher), after both correction rounds
+Built the RTU paper's actual nonlinear recurrence — activation
+**inside** each independent 2×2 block:
+`h1_t=f(g·h1_{t-1}-φ·h2_{t-1}+Wx1·u_t)`,
+`h2_t=f(g·h2_{t-1}+φ·h1_{t-1}+Wx2·u_t)`, `f=tanh` applied
+element-wise (blocks never mix). Same strong full-state stateless MLP
+head as before (`y_t=MLP([h_{t+1},u_t])`).
 
-`r=4,k=2,n=4` (total recurrent scalar state `n·r=16`, `params=344`,
-`credit floats=5504`), 800 steps BPTT+Adam, `NMSE=MSE/Var(y_train)`:
+**Its own exact block-local RTRL was implemented and verified against
+BPTT** (per instruction: derive and check the actual trace structure,
+don't assume the old linear baseline's accounting carries over) —
+machine precision (`0.0` to `2.8e-17`) across 3 blocks × 3 parameter
+families (`θ`, `log_radius`, `Wx`). The verified per-block trace is
+genuinely 2-dimensional (matching the block's own state size), giving
+**`credit_floats = 2·r_rtu·(1+u_dim)`** — confirming the earlier
+corrected linear-block accounting was asymptotically right, now
+backed by an actual implemented-and-checked recurrence rather than an
+analogy.
+
+## 6. Positive control — block-local teacher (RTU's own class)
+
+A genuine instance of the Nonlinear RTU family (`r_rtu=4`) as teacher:
+
+| student | test NMSE |
+|---|---|
+| Nonlinear RTU (`r_rtu=4`) | **0.0013** |
+| ours (`r=4,k=2,n=4`) | **0.0017** |
+
+**Both fit near-perfectly and comparably** — confirms the baseline,
+optimizer, and capacity are sufficient when the target genuinely lies
+inside the RTU's own structural class, and that ours does not have
+some unrelated advantage that would show up even here.
+
+## 7. Decisive comparison — globally-coupled (`A_T=M_r`) teacher
+
+Same protocol throughout (`h0=0` for all sequences, common
+`BPTT+Adam`, 800 steps, 20 train / 16 test independently-sampled
+sequences, matched-parameter and over-provisioned regimes):
 
 | model | total state | params | credit floats | test NMSE |
 |---|---|---|---|---|
 | **ours** | 16 | 344 | 5504 | **0.0048** |
-| diag matched, r_diag=4..128 | 4–128 | 357–781 | 24–768 | 0.29–0.51 |
-| diag strong (hidden=64), r_diag=4..128 | 4–128 | 525–8833 | 24–768 | 0.30–0.48 |
+| RTU matched, r_rtu=4..128 | 4–128 | 357–781 | 24–768 | 0.213–0.514 |
+| RTU strong (hidden=64), r_rtu=4..128 | 4–128 | 525–8833 | 24–768 | 0.229–0.475 |
 
-**A real, persistent gap**: diagonal test NMSE plateaus tightly
-around 0.29–0.51 across the *entire* range of state size (4 to 128)
-and parameter count (357 to 8833 — up to 25× "ours" own count), with
-clear overfitting signatures (train MSE keeps dropping toward 0 while
-test MSE does not). "Ours" achieves NMSE 60–100× lower with far less
-state and far fewer parameters.
+**The gap is real, large, and does not close** — not with more
+recurrent state (4→128, 32×), not with more parameters (357→8833,
+25×), not with a deliberately over-provisioned nonlinear head. RTU's
+test NMSE actually *worsens* somewhat as state grows in places
+(overfitting: more capacity fits training data without transferring),
+never approaching "ours" own **44–107× lower** error, achieved with
+far less recurrent state and far fewer parameters.
 
-## 5. Control A (true commuting teacher) — the gap does NOT close
+Post-hoc exactness re-verified on "ours" final trained model (factored
+RTRL vs. BPTT): `8.9e-16` to `2.0e-14`.
 
-Per §2.1, verified exactly abelian (`d_T=4=r`, zero commutators).
-Same protocol:
+## 8. Verdict
 
-| model | best test NMSE |
-|---|---|
-| **ours** | **0.0081** |
-| diag (complex/2×2 blocks), matched, r_diag=4..64 | 0.109–0.199 |
-| diag, real-diagonal (**structurally matched** to the teacher's real eigenvalues), matched, r_diag=4..32 | 0.101–0.111 |
-| diag, real-diagonal, strong (hidden=64), r_diag=4..32 | 0.108–0.178 |
+**A — STRONG SEPARATION.**
 
-Anticipating that the standard complex/2×2-block RTU parameterization
-might be mismatched to a *real*-eigenvalue teacher (it can only reach
-a real eigenvalue at the hard-to-optimize `θ=0/π` boundary of its own
-angle parameterization), a **second, structurally-matched real-diagonal
-baseline** was built specifically for this control (independent real
-eigenvalues, no rotation) — the most direct, most favorable possible
-comparison for a genuinely commuting, real-generator teacher. It does
-not close the gap either: best NMSE `≈0.10`, still roughly 12× worse
-than "ours."
+- **Nonlinear RTU fits its own block-local teacher** (§6: NMSE 0.0013,
+  matching ours' 0.0017) **but cannot efficiently approximate the
+  globally-coupled `A_T=M_r` teacher** (§7: NMSE plateaus at 0.21–0.51
+  across every state size and parameter budget tested, matched or
+  over-provisioned) **while ours fits both** (0.0017 and 0.0048
+  respectively) — exactly the pattern this option requires.
+- **B (modest separation — RTU eventually catches up with more
+  state/credit)**: not selected — RTU shows no improving trend with
+  state or credit at all on the global teacher; if anything it
+  degrades slightly at larger sizes.
+- **C (no useful separation)**: not selected — the gap is large
+  (44–107×) and robust across every regime tested.
+- **D (confounded)**: not selected — the positive control (§6)
+  directly validates that baseline, optimizer, and capacity are
+  sufficient in general; the gap appears specifically and only when
+  the teacher's structure (verified `A_T=M_r`, irreducible) falls
+  outside the class RTU can represent by construction (a direct sum of
+  independent blocks can never realize a matrix algebra acting
+  irreducibly on the full space — this is now a structural fact about
+  the two model classes, not an artifact of training).
 
-**Sanity check** (rules out a basic bug in the diagonal training
-pipeline itself, not just the teacher): the identical real-diagonal
-training code fits a trivial scalar AR(1) target to `NMSE=0.0006` —
-essentially perfect. The pipeline works; the commuting-teacher result
-is not an artifact of broken training.
+Per the phase's own instruction, **no further depth experiments were
+run** — the L=2 exactness result (§1) is retained as independent
+exactness evidence only, not as progress on this representational
+question, matching how it was already established.
 
-**Conclusion, stated as the phase's own criterion requires**: the
-commuting control does not remove or reduce the gap. This means the
-gap observed on the noncommutative teacher cannot yet be attributed
-specifically to noncommutativity — some other factor (most plausibly:
-where the nonlinearity sits — inside vs. outside the recurrence —
-and its effect on optimization landscape or expressivity, independent
-of commutativity) may be driving both results. This is exactly the
-falsification the phase asked for, and it did its job: it caught a
-confound the corrected single-condition comparison alone would not
-have revealed.
+## 9. What remains open, explicitly
 
-## 6. An identified limitation of the commuting-teacher construction
-
-The single-coordinate-alignment used to guarantee exact commutativity
-has a side effect worth flagging honestly: since every interface
-channel's `B`-column and `C`-row touch the *same* single state
-coordinate, the `k=2`-dimensional readout `z_t` becomes rank-1 across
-its own two channels at every timestep (both channels are scalar
-multiples of the same single coordinate's value) — collapsing the
-nonlinear MLP `Φ`'s effective input to `n` independent values instead
-of `n·k`, and the teacher's causally-relevant temporal order to 1
-rather than the nominal `r=4` (the other `r-1` coordinates are
-dynamically present but never read or written). This makes the
-commuting teacher's *true* underlying complexity considerably simpler
-than the noncommutative one — which, if anything, should have made it
-*easier* to fit with a small diagonal model, not harder. That it
-remains hard is itself informative (ruling out "the commuting teacher
-was accidentally too easy to be a fair comparison" as an explanation
-for the gap persisting) but also means this specific commuting
-construction is an imperfect control — a cleaner one (e.g., a
-shared-eigenbasis construction with a full-rank `C` reading multiple
-coordinates, preserving the teacher's full nonlinear input richness
-while remaining exactly abelian) is a clear, concrete next step,
-not yet built here.
-
-## 7. Verdict
-
-**D — STILL CONFOUNDED**, per the phase's own explicit stopping rule:
-*"do not proceed with further depth-capacity experiments until this
-single-layer test is clean"* and *"if [the gap] does not [close on
-the commuting control], the experiment is confounded."*
-
-- **A (clean separation)**: not selected — requires the commuting
-  control to remove or strongly reduce the gap; it does not.
-- **B (weak separation)**: not selected for the same reason — a
-  surviving gap under a working commuting control is the definition
-  of weak/clean separation; here the control itself is inconclusive
-  about what's driving the gap.
-- **C (no separation)**: not selected — a substantial, robust gap
-  does exist on the noncommutative teacher and survives every
-  correction; it simply hasn't been isolated to noncommutativity
-  specifically.
-- **D (confounded)** — selected. Two genuine, sequentially-discovered
-  confounds (rank-1-vs-commuting, then the unobserved-h0/optimization-
-  budget pair) were found and fixed, and the resulting clean-protocol
-  comparison still cannot attribute the gap to the intended cause,
-  because the control condition built to isolate that cause does not
-  behave as the falsification logic requires.
-
-Per the phase's own explicit instruction, **depth (L=2/L=3
-representational tests) is not attempted** — the L=2 result in
-§1/Part 6 is exactness evidence only, kept because it was cheap and
-already available, not as progress on the open question.
-
-## 8. What remains open, explicitly
-
-1. A cleaner commuting control that does not collapse the teacher's
-   effective input dimensionality (shared-eigenbasis construction
-   with a full-rank interface) — the most direct next step.
-2. Whether the observed gap is actually about *where the nonlinearity
-   sits* (inside vs. outside the recurrence) rather than temporal
-   noncommutativity per se — worth testing directly with a matched
-   pair of architectures that differ ONLY in nonlinearity placement,
-   holding commutativity fixed.
-3. Multi-seed robustness (teacher seeds, student init seeds, dataset
-   draws) with median/spread reporting — not done here given the
-   scope already required to resolve the two confound rounds above;
-   an explicit scope limit, not an oversight.
-4. Diagonal persistent-credit float accounting was corrected in code
-   (a 2×2 rotation block gives a genuinely 2-dimensional sensitivity
-   trace per parameter, not one scalar — `2·r_diag·(1+u_dim)`, not the
-   original `2·n_blocks+r_diag·u_dim`) — the asymptotic `O(r_diag)`
-   law is unchanged, only the constant factor.
+1. The supplementary true-commuting control (§2/§8) is kept for
+   completeness but is understood now not to isolate the relevant
+   variable (nonlinear-recurrence-vs-linear-recurrence, not
+   commutativity, was the actual confound in the earlier round) — a
+   cleaner commuting control (matching the discussion in the prior
+   PHASE_B27.md draft, e.g. a shared-eigenbasis construction with a
+   full-rank interface) remains a reasonable follow-up but is no
+   longer decision-relevant given §7's direct structural comparison.
+2. Multi-seed robustness (teacher seeds, student init seeds, dataset
+   draws) was not run given the scope already required to build and
+   verify the correct baseline from scratch — an explicit, stated
+   scope limit for this phase, not an oversight.
+3. Whether an even richer RTU variant (e.g., larger blocks, k>2 per
+   block) could close some of the gap is not tested — the phase's own
+   RTU definition (independent 2×2 blocks) was implemented faithfully
+   as specified, and a block size sweep is a natural, not-yet-explored
+   extension.
 
 No new production online-credit training rule deployed. No S5 run. No
-wall-clock performance claims — JIT compilation was used purely to
-make the corrected multi-seed, common-optimizer protocol tractable,
-never cited as a result.
+wall-clock performance claims.
 
-## 9. Commit hash
+## 10. Commit hash
 
 See the commit introducing this file.

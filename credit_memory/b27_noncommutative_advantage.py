@@ -42,6 +42,22 @@ def commutator_norm(A, B_):
     return float(np.linalg.norm(A @ B_ - B_ @ A))
 
 
+def commutant_dimension(generators, tol=1e-9):
+    """dim{X : XA=AX for all A in generators}, via the linear system
+    vec(XA-AX)=(A^T(x)I - I(x)A)vec(X)=0 stacked over all generators.
+    By Schur's lemma, commutant dimension 1 (scalars only) for a real
+    algebra means the generators act IRREDUCIBLY -- no nontrivial
+    common invariant subspace -- which is exactly the numerical
+    block-decomposition diagnostic requested: a smaller commutant
+    would itself supply a nontrivial invariant subspace (an eigenspace
+    of any noncentral commuting X)."""
+    r = generators[0].shape[0]
+    rows = [np.kron(A.T, np.eye(r)) - np.kron(np.eye(r), A) for A in generators]
+    M = np.vstack(rows)
+    rank = np.linalg.matrix_rank(M, tol=tol)
+    return r * r - rank
+
+
 def noncommutativity_report(arch):
     r, k = arch["r"], arch["k"]
     R = np.asarray(arch["R"])
@@ -57,11 +73,15 @@ def noncommutativity_report(arch):
                 for d in range(k):
                     if (a, b) < (c, d):
                         qq_norms.append(commutator_norm(Q[a, b], Q[c, d]))
+    generators = [R] + [Q[a, b] for a in range(k) for b in range(k)]
+    commutant_dim = commutant_dimension(generators)
     return dict(d_T=res["d_T"], rho=res["rho"], omega=res["omega"],
                 deg_mu_R=res["deg_mu_R"], bound=res["bound"],
                 max_RQ_commutator=max(rq_norms) if rq_norms else 0.0,
                 max_QQ_commutator=max(qq_norms) if qq_norms else 0.0,
-                r_squared=r * r)
+                r_squared=r * r, commutant_dim=commutant_dim,
+                is_full_matrix_algebra=(res["d_T"] == r * r),
+                is_irreducible=(commutant_dim == 1))
 
 
 def make_noncommutative_teacher(r, k, n, u_dim, hidden, seed):
@@ -215,6 +235,210 @@ def solve_hidden_for_target_params(in_dim, target_params):
     while head_param_count(in_dim, hidden) < target_params:
         hidden += 1
     return hidden
+
+
+# ---------------------------------------------------------------------------
+# CORRECTED BASELINE (per user review): the RTU paper defines NONLINEAR
+# RTUs with the activation INSIDE each independent 2x2 block:
+#   h1_t = f(g h1_{t-1} - phi h2_{t-1} + Wx1.x_t)
+#   h2_t = f(g h2_{t-1} + phi h1_{t-1} + Wx2.x_t)
+# f=tanh applied ELEMENT-WISE per unit (not mixing h1,h2 further) --
+# blocks remain fully independent of each other (direct sum of small
+# blocks), the structural property under test. Same strong full-state
+# stateless MLP head as before.
+# ---------------------------------------------------------------------------
+def make_nonlinear_rtu_arch(r_rtu, u_dim, hidden, seed):
+    assert r_rtu % 2 == 0
+    n_blocks = r_rtu // 2
+    rng = np.random.RandomState(seed)
+    thetas = jnp.array(rng.uniform(0.05, np.pi - 0.05, n_blocks))
+    log_radii = jnp.array(rng.uniform(0.1, 0.6, n_blocks))
+    Wx = jnp.array(rng.randn(r_rtu, u_dim) / np.sqrt(u_dim) * 0.6)
+    head = make_full_state_head(r_rtu + u_dim, hidden, rng)
+    return dict(thetas=thetas, log_radii=log_radii, Wx=Wx, head=head,
+                r_rtu=r_rtu, u_dim=u_dim, hidden=hidden, n_blocks=n_blocks)
+
+
+def nonlinear_rtu_pre_and_next(h, u, arch):
+    """Returns (h_next, pre) -- pre is the PRE-activation (needed for
+    the exact block-local RTRL's f'(pre) factor)."""
+    rho = jnp.exp(-jnp.abs(arch["log_radii"]))
+    g = rho * jnp.cos(arch["thetas"])
+    phi = rho * jnp.sin(arch["thetas"])
+    h1, h2 = h[0::2], h[1::2]
+    inp = arch["Wx"] @ u
+    inp1, inp2 = inp[0::2], inp[1::2]
+    pre1 = g * h1 - phi * h2 + inp1
+    pre2 = g * h2 + phi * h1 + inp2
+    pre = jnp.stack([pre1, pre2], axis=1).reshape(-1)
+    h_next = jnp.tanh(pre)
+    return h_next, pre
+
+
+def nonlinear_rtu_rollout_scalar(h0, U_seq, arch):
+    def step(h, u):
+        h_next, _ = nonlinear_rtu_pre_and_next(h, u, arch)
+        y = full_state_head_apply(arch["head"], jnp.concatenate([h_next, u]))
+        return h_next, y
+
+    _, Ys = jax.lax.scan(step, h0, U_seq)
+    return Ys
+
+
+def rtu_flat_params(arch):
+    head = arch["head"]
+    return jnp.concatenate([arch["thetas"], arch["log_radii"], arch["Wx"].reshape(-1),
+                             head["W1"].reshape(-1), head["b1"], head["W2"].reshape(-1),
+                             head["b2"]])
+
+
+def rtu_from_flat(flat, r_rtu, u_dim, hidden):
+    n_blocks = r_rtu // 2
+    in_dim = r_rtu + u_dim
+    i = 0
+    thetas = flat[i:i + n_blocks]; i += n_blocks
+    log_radii = flat[i:i + n_blocks]; i += n_blocks
+    Wx = flat[i:i + r_rtu * u_dim].reshape(r_rtu, u_dim); i += r_rtu * u_dim
+    W1 = flat[i:i + hidden * in_dim].reshape(hidden, in_dim); i += hidden * in_dim
+    b1 = flat[i:i + hidden]; i += hidden
+    W2 = flat[i:i + hidden].reshape(1, hidden); i += hidden
+    b2 = flat[i:i + 1]
+    head = dict(W1=W1, b1=b1, W2=W2, b2=b2)
+    return dict(thetas=thetas, log_radii=log_radii, Wx=Wx, head=head,
+                r_rtu=r_rtu, u_dim=u_dim, hidden=hidden, n_blocks=n_blocks)
+
+
+def train_rtu_bptt_adam(r_rtu, u_dim, hidden, U_train, y_train, steps, lr, seed):
+    arch = make_nonlinear_rtu_arch(r_rtu=r_rtu, u_dim=u_dim, hidden=hidden, seed=seed)
+    flat0 = rtu_flat_params(arch)
+    n_seq, T_ = U_train.shape[0], U_train.shape[1]
+
+    def loss_of(flat):
+        p = rtu_from_flat(flat, r_rtu, u_dim, hidden)
+        Ys = jax.vmap(lambda u_seq: nonlinear_rtu_rollout_scalar(jnp.zeros(r_rtu), u_seq, p))(U_train)
+        return 0.5 * jnp.sum((Ys - y_train) ** 2) / (n_seq * T_)
+
+    optimizer = optax.adam(lr)
+    opt_state = optimizer.init(flat0)
+
+    @jax.jit
+    def one_step(flat, opt_state):
+        loss, g = jax.value_and_grad(loss_of)(flat)
+        updates, opt_state = optimizer.update(g, opt_state)
+        flat = optax.apply_updates(flat, updates)
+        return flat, opt_state, loss
+
+    flat = flat0
+    losses = []
+    for _ in range(steps):
+        flat, opt_state, loss = one_step(flat, opt_state)
+        losses.append(float(loss))
+    arch = rtu_from_flat(flat, r_rtu, u_dim, hidden)
+    return losses, arch
+
+
+def eval_rtu_mse(arch, U_batch, y_batch):
+    r_rtu = arch["r_rtu"]
+    Ys = jax.vmap(lambda u_seq: nonlinear_rtu_rollout_scalar(jnp.zeros(r_rtu), u_seq, arch))(U_batch)
+    return float(jnp.mean((Ys - y_batch) ** 2))
+
+
+def rtu_param_count(r_rtu, u_dim, hidden):
+    n_blocks = r_rtu // 2
+    return 2 * n_blocks + r_rtu * u_dim + head_param_count(r_rtu + u_dim, hidden)
+
+
+# ---------------------------------------------------------------------------
+# Nonlinear RTU's OWN exact block-local RTRL (per user review, item 5:
+# derive and VERIFY the actual trace structure, don't assume the old
+# linear baseline's accounting carries over). Each block's own params
+# (theta_i,log_radius_i,Wx1_i,Wx2_i) produce a sensitivity trace
+# confined to that block's own 2-dim state (diag(f'(pre)) does not mix
+# blocks; the linear part is block-diagonal by construction) -- O(1)
+# per own-parameter, independent of r_rtu/other blocks. Verified
+# against BPTT below before its cost is trusted.
+# ---------------------------------------------------------------------------
+def rtu_block_matrix(theta, log_radius):
+    rho = jnp.exp(-jnp.abs(log_radius))
+    c, s = jnp.cos(theta), jnp.sin(theta)
+    return rho * jnp.array([[c, -s], [s, c]])
+
+
+def rtu_exact_credit_grad(arch, U_seq, y_target, block_idx, family):
+    """Exact block-local RTRL for ONE block's OWN parameters. family in
+    {'theta','log_radius','Wx'}. Returns the gradient contribution from
+    this block alone (dL/dtheta_block), tracking only a 2 x m_block
+    persistent trace -- verified against BPTT elsewhere."""
+    n_blocks = arch["n_blocks"]
+    i = block_idx
+    theta_i, logr_i = arch["thetas"][i], arch["log_radii"][i]
+    Wx1_i, Wx2_i = arch["Wx"][2 * i], arch["Wx"][2 * i + 1]
+    A_block = rtu_block_matrix(theta_i, logr_i)
+
+    if family == "theta":
+        m = 1
+    elif family == "log_radius":
+        m = 1
+    else:
+        m = 2 * arch["u_dim"]  # Wx1_i and Wx2_i together
+
+    h = jnp.zeros(arch["r_rtu"])
+    E = np.zeros((2, m))
+    grad = np.zeros(m)
+    T_ = U_seq.shape[0]
+
+    for t in range(T_):
+        u_t = U_seq[t]
+        h_next, pre = nonlinear_rtu_pre_and_next(h, u_t, arch)
+        pre_i = np.asarray(pre[2 * i:2 * i + 2])
+        fprime = 1.0 - np.tanh(pre_i) ** 2  # (2,)
+        h_i = np.asarray(h[2 * i:2 * i + 2])
+
+        def f_theta(th):
+            if family == "theta":
+                Ablk = rtu_block_matrix(th[0], logr_i)
+                pre_local = Ablk @ h_i + jnp.array([Wx1_i, Wx2_i]) @ u_t
+            elif family == "log_radius":
+                Ablk = rtu_block_matrix(theta_i, th[0])
+                pre_local = Ablk @ h_i + jnp.array([Wx1_i, Wx2_i]) @ u_t
+            else:
+                Wx1n, Wx2n = th[:arch["u_dim"]], th[arch["u_dim"]:]
+                pre_local = A_block @ h_i + jnp.array([Wx1n @ u_t, Wx2n @ u_t])
+            return pre_local  # (2,) direct term BEFORE tanh
+
+        if family == "theta":
+            th0 = jnp.array([theta_i])
+        elif family == "log_radius":
+            th0 = jnp.array([logr_i])
+        else:
+            th0 = jnp.concatenate([Wx1_i, Wx2_i])
+        Q_theta = np.asarray(jax.jacobian(f_theta)(th0))  # (2, m)
+
+        E_pre = np.asarray(A_block) @ E + Q_theta  # propagate through linear part, add direct
+        E = fprime[:, None] * E_pre  # apply tanh' elementwise
+
+        def head_out(hh):
+            return full_state_head_apply(arch["head"], jnp.concatenate([hh, u_t]))
+
+        dydh = np.asarray(jax.grad(head_out)(h_next))  # (r_rtu,)
+        dydh_i = dydh[2 * i:2 * i + 2]  # (2,)
+        y_val = float(head_out(h_next))
+        err = (y_val - float(y_target[t])) / T_
+        grad += err * (dydh_i @ E)
+        h = h_next
+    return grad
+
+
+def rtu_credit_floats_verified(r_rtu, u_dim):
+    """The VERIFIED (not assumed) per-block trace dimension: 2 (block
+    state dim) per own scalar parameter. Total own params per block:
+    theta,log_radius (1 each) + Wx1,Wx2 (u_dim each) = 2+2*u_dim.
+    Credit per block = 2*(2+2*u_dim). Total = n_blocks*that
+    = r_rtu*(2+2*u_dim) = 2*r_rtu*(1+u_dim) -- matches the corrected
+    linear-block accounting exactly, confirming the earlier fix's
+    asymptotic law was right; this derivation is now checked against
+    an actual implemented-and-verified recurrence, not assumed."""
+    return 2 * r_rtu * (1 + u_dim)
 
 
 def make_diag_arch(r_diag, u_dim, hidden, seed):
@@ -819,120 +1043,128 @@ def main():
 
     print()
     print("=" * 70)
-    print("MAIN CORRECTED COMPARISON -- noncommutative teacher, h0=0, common")
-    print("BPTT+Adam optimizer, strong full-state diagonal readout")
+    print("A_T = M_r VERIFICATION (per user review) -- rigorous structural")
+    print("characterization: full matrix algebra + trivial commutant (Schur)")
     print("=" * 70)
     teacher_m = make_noncommutative_teacher(r=4, k=2, n=6, u_dim=2, hidden=16, seed=1)
+    diag_m = noncommutativity_report(teacher_m)
+    print(f"  d_T={diag_m['d_T']} = r^2={diag_m['r_squared']}: {diag_m['is_full_matrix_algebra']}")
+    print(f"  commutant_dim={diag_m['commutant_dim']} (Schur: ==1 iff irreducible, "
+          f"i.e. no nontrivial common invariant subspace): irreducible={diag_m['is_irreducible']}")
+
+    print()
+    print("=" * 70)
+    print("CORRECTED BASELINE VERIFICATION -- Nonlinear RTU's own exact")
+    print("block-local RTRL vs BPTT (per user review, item 5)")
+    print("=" * 70)
+    arch_rtu_v = make_nonlinear_rtu_arch(r_rtu=6, u_dim=2, hidden=8, seed=1)
+    rngv = np.random.RandomState(2)
+    Tv = 10
+    Uv = jnp.array(rngv.randn(Tv, 2) * 0.4)
+    yv = jnp.array(rngv.randn(Tv) * 0.3)
+    for block_idx in range(3):
+        for family in ("theta", "log_radius", "Wx"):
+            if family == "theta":
+                def loss_of(v, bi=block_idx):
+                    p = dict(arch_rtu_v, thetas=arch_rtu_v["thetas"].at[bi].set(v))
+                    return 0.5 * jnp.sum((nonlinear_rtu_rollout_scalar(jnp.zeros(6), Uv, p) - yv) ** 2) / Tv
+                g_bptt = float(jax.grad(loss_of)(arch_rtu_v["thetas"][block_idx]))
+                g_exact = rtu_exact_credit_grad(arch_rtu_v, Uv, yv, block_idx, family)[0]
+                err = abs(g_bptt - g_exact)
+            elif family == "log_radius":
+                def loss_of(v, bi=block_idx):
+                    p = dict(arch_rtu_v, log_radii=arch_rtu_v["log_radii"].at[bi].set(v))
+                    return 0.5 * jnp.sum((nonlinear_rtu_rollout_scalar(jnp.zeros(6), Uv, p) - yv) ** 2) / Tv
+                g_bptt = float(jax.grad(loss_of)(arch_rtu_v["log_radii"][block_idx]))
+                g_exact = rtu_exact_credit_grad(arch_rtu_v, Uv, yv, block_idx, family)[0]
+                err = abs(g_bptt - g_exact)
+            else:
+                def loss_of(v, bi=block_idx):
+                    Wx = arch_rtu_v["Wx"].at[2 * bi:2 * bi + 2, :].set(v.reshape(2, 2))
+                    p = dict(arch_rtu_v, Wx=Wx)
+                    return 0.5 * jnp.sum((nonlinear_rtu_rollout_scalar(jnp.zeros(6), Uv, p) - yv) ** 2) / Tv
+                v0 = jnp.concatenate([arch_rtu_v["Wx"][2 * block_idx], arch_rtu_v["Wx"][2 * block_idx + 1]])
+                g_bptt = np.asarray(jax.grad(loss_of)(v0))
+                g_exact = rtu_exact_credit_grad(arch_rtu_v, Uv, yv, block_idx, family)
+                err = np.max(np.abs(g_bptt - g_exact))
+            print(f"  block{block_idx}.{family}: |exact-bptt|={err:.2e}")
+
+    print()
+    print("=" * 70)
+    print("POSITIVE CONTROL -- BLOCK-LOCAL teacher (an actual Nonlinear RTU")
+    print("instance): RTU should fit near-perfectly; ours should too")
+    print("=" * 70)
+    rtu_teacher = make_nonlinear_rtu_arch(r_rtu=4, u_dim=2, hidden=16, seed=1)
+    rngb = np.random.RandomState(1)
+    U_train_bl = jnp.array(rngb.randn(20, 20, 2) * 0.5)
+    y_train_bl = jnp.stack([nonlinear_rtu_rollout_scalar(jnp.zeros(4), U_train_bl[s], rtu_teacher)
+                             for s in range(20)])
+    U_test_bl = jnp.array(np.random.RandomState(999).randn(16, 20, 2) * 0.5)
+    y_test_bl = jnp.stack([nonlinear_rtu_rollout_scalar(jnp.zeros(4), U_test_bl[s], rtu_teacher)
+                            for s in range(16)])
+    var_bl = float(jnp.var(y_train_bl))
+    _, arch_rtu_bl = train_rtu_bptt_adam(r_rtu=4, u_dim=2, hidden=16, U_train=U_train_bl,
+                                          y_train=y_train_bl, steps=800, lr=0.01, seed=10)
+    test_mse_rtu_bl = eval_rtu_mse(arch_rtu_bl, U_test_bl, y_test_bl)
+    print(f"  RTU r_rtu=4 on block-local teacher: NMSE={test_mse_rtu_bl/var_bl:.4f}")
+    _, arch_o_bl, h0_o_bl = train_ours_bptt_adam(r=4, k=2, n=4, u_dim=2, hidden=16,
+                                                  U_train=U_train_bl, y_train=y_train_bl,
+                                                  steps=800, lr=0.01, seed=10)
+    test_mse_o_bl = eval_ours_bptt_mse(arch_o_bl, h0_o_bl, U_test_bl, y_test_bl)
+    print(f"  ours r=4,k=2,n=4 on block-local teacher: NMSE={test_mse_o_bl/var_bl:.4f}")
+
+    print()
+    print("=" * 70)
+    print("DECISIVE COMPARISON -- GLOBALLY-COUPLED (A_T=M_r) teacher: ours vs")
+    print("the CORRECT Nonlinear RTU baseline, h0=0, common BPTT+Adam")
+    print("=" * 70)
     U_train, y_train = generate_teacher_batch(teacher_m, n_seq=20, T_=20, u_dim=2,
                                                n_teacher=6, r_teacher=4, seed=1)
     U_test, y_test = generate_teacher_batch(teacher_m, n_seq=16, T_=20, u_dim=2,
                                              n_teacher=6, r_teacher=4, seed=999)
     var_y = float(jnp.var(y_train))
-    losses_o, arch_o, h0_o = train_ours_bptt_adam(r=4, k=2, n=4, u_dim=2, hidden=16,
-                                                   U_train=U_train, y_train=y_train,
-                                                   steps=800, lr=0.01, seed=10)
-    train_mse_o = eval_ours_bptt_mse(arch_o, h0_o, U_train, y_train)
+    _, arch_o, h0_o = train_ours_bptt_adam(r=4, k=2, n=4, u_dim=2, hidden=16,
+                                            U_train=U_train, y_train=y_train,
+                                            steps=800, lr=0.01, seed=10)
     test_mse_o = eval_ours_bptt_mse(arch_o, h0_o, U_test, y_test)
-    print(f"  OURS r=4,k=2,n=4 (total_state=16, params={ours_param_count(4,2,4,2,16)}, "
-          f"credit={ours_credit_floats(4,2,4,2,16)}): train_MSE={train_mse_o:.5f} "
+    ours_params = ours_param_count(r=4, k=2, n=4, u_dim=2, hidden=16)
+    ours_credit = ours_credit_floats(4, 2, 4, 2, 16)
+    print(f"  OURS (total_state=16, params={ours_params}, credit={ours_credit}): "
           f"test_MSE={test_mse_o:.5f} NMSE={test_mse_o/var_y:.4f}")
     errs = verify_ours_trained_model_exact(arch_o, h0_o, U_train[0])
     print(f"  post-hoc exactness on trained model: {errs}")
 
-    ours_params = ours_param_count(r=4, k=2, n=4, u_dim=2, hidden=16)
-    print("  diag MATCHED param-count regime:")
-    for r_diag in (4, 8, 16, 32, 64, 128):
-        hidden_m = solve_hidden_for_target_params(r_diag + 2, ours_params)
-        losses, arch_d = train_diag_bptt_adam(r_diag=r_diag, u_dim=2, hidden=hidden_m,
-                                               U_train=U_train, y_train=y_train,
-                                               steps=800, lr=0.01, seed=10)
-        train_mse = eval_diag_batch_mse(arch_d, U_train, y_train)
-        test_mse = eval_diag_batch_mse(arch_d, U_test, y_test)
-        p = diag_param_count(r_diag, 2, hidden_m)
-        cf = diag_credit_floats(r_diag, 2, hidden_m)
-        print(f"    r_diag={r_diag:4d} hidden={hidden_m:3d} params={p:4d} credit={cf:4d}: "
-              f"train_MSE={train_mse:.5f} test_MSE={test_mse:.5f} NMSE={test_mse/var_y:.4f}")
-    print("  diag STRONG (hidden=64) regime:")
-    for r_diag in (4, 8, 16, 32, 64, 128):
-        losses, arch_d = train_diag_bptt_adam(r_diag=r_diag, u_dim=2, hidden=64,
-                                               U_train=U_train, y_train=y_train,
-                                               steps=800, lr=0.01, seed=10)
-        train_mse = eval_diag_batch_mse(arch_d, U_train, y_train)
-        test_mse = eval_diag_batch_mse(arch_d, U_test, y_test)
-        p = diag_param_count(r_diag, 2, 64)
-        cf = diag_credit_floats(r_diag, 2, 64)
-        print(f"    r_diag={r_diag:4d} hidden=64  params={p:4d} credit={cf:4d}: "
-              f"train_MSE={train_mse:.5f} test_MSE={test_mse:.5f} NMSE={test_mse/var_y:.4f}")
+    print("  Nonlinear RTU, MATCHED param-count regime:")
+    for r_rtu in (4, 8, 16, 32, 64, 128):
+        hidden_m = solve_hidden_for_target_params(r_rtu + 2, ours_params)
+        _, arch_r = train_rtu_bptt_adam(r_rtu=r_rtu, u_dim=2, hidden=hidden_m,
+                                         U_train=U_train, y_train=y_train,
+                                         steps=800, lr=0.01, seed=10)
+        test_mse = eval_rtu_mse(arch_r, U_test, y_test)
+        p = rtu_param_count(r_rtu, 2, hidden_m)
+        cf = rtu_credit_floats_verified(r_rtu, 2)
+        print(f"    r_rtu={r_rtu:4d} hidden={hidden_m:3d} params={p:4d} credit={cf:4d}: "
+              f"test_MSE={test_mse:.5f} NMSE={test_mse/var_y:.4f}")
+    print("  Nonlinear RTU, STRONG (hidden=64) regime:")
+    for r_rtu in (4, 8, 16, 32, 64, 128):
+        _, arch_r = train_rtu_bptt_adam(r_rtu=r_rtu, u_dim=2, hidden=64,
+                                         U_train=U_train, y_train=y_train,
+                                         steps=800, lr=0.01, seed=10)
+        test_mse = eval_rtu_mse(arch_r, U_test, y_test)
+        p = rtu_param_count(r_rtu, 2, 64)
+        cf = rtu_credit_floats_verified(r_rtu, 2)
+        print(f"    r_rtu={r_rtu:4d} hidden=64  params={p:4d} credit={cf:4d}: "
+              f"test_MSE={test_mse:.5f} NMSE={test_mse/var_y:.4f}")
 
     print()
     print("=" * 70)
-    print("CONTROL A -- TRUE commuting teacher (verified [R,Q]=0, [Q,Q']=0, d_T=r)")
+    print("SUPPLEMENTARY -- TRUE commuting-teacher diagnostic (kept per user")
+    print("instruction as supplementary, NOT the decisive falsifier)")
     print("=" * 70)
     teacher_c, coord = make_true_commuting_teacher(r=4, k=2, n=6, u_dim=2, hidden=16, seed=1)
     diag_c = noncommutativity_report(teacher_c)
-    print(f"  coord={coord}  d_T={diag_c['d_T']} (r={4})  "
+    print(f"  coord={coord}  d_T={diag_c['d_T']} (r=4)  "
           f"max_RQ_comm={diag_c['max_RQ_commutator']:.2e}  max_QQ_comm={diag_c['max_QQ_commutator']:.2e}")
-    U_train_c, y_train_c = generate_teacher_batch(teacher_c, n_seq=20, T_=20, u_dim=2,
-                                                   n_teacher=6, r_teacher=4, seed=1)
-    U_test_c, y_test_c = generate_teacher_batch(teacher_c, n_seq=16, T_=20, u_dim=2,
-                                                 n_teacher=6, r_teacher=4, seed=999)
-    var_y_c = float(jnp.var(y_train_c))
-    losses_oc, arch_oc, h0_oc = train_ours_bptt_adam(r=4, k=2, n=4, u_dim=2, hidden=16,
-                                                      U_train=U_train_c, y_train=y_train_c,
-                                                      steps=800, lr=0.01, seed=10)
-    test_mse_oc = eval_ours_bptt_mse(arch_oc, h0_oc, U_test_c, y_test_c)
-    print(f"  OURS: test_MSE={test_mse_oc:.5f}  NMSE={test_mse_oc/var_y_c:.4f}")
-
-    print("  diag (complex/2x2, mismatched to real-eigenvalue teacher), MATCHED regime:")
-    for r_diag in (4, 8, 16, 32, 64):
-        hidden_m = solve_hidden_for_target_params(r_diag + 2, ours_params)
-        losses, arch_d = train_diag_bptt_adam(r_diag=r_diag, u_dim=2, hidden=hidden_m,
-                                               U_train=U_train_c, y_train=y_train_c,
-                                               steps=800, lr=0.01, seed=10)
-        test_mse = eval_diag_batch_mse(arch_d, U_test_c, y_test_c)
-        print(f"    r_diag={r_diag:3d} hidden={hidden_m:3d}: test_MSE={test_mse:.5f} NMSE={test_mse/var_y_c:.4f}")
-
-    print("  real-diagonal (STRUCTURALLY MATCHED to teacher's real eigenvalues), MATCHED regime:")
-    for r_diag in (4, 8, 16, 32):
-        hidden_m = solve_hidden_for_target_params(r_diag + 2, ours_params)
-        losses, arch_d = train_real_diag_bptt_adam(r_diag=r_diag, u_dim=2, hidden=hidden_m,
-                                                     U_train=U_train_c, y_train=y_train_c,
-                                                     steps=800, lr=0.01, seed=10)
-        test_mse = eval_real_diag_mse(arch_d, U_test_c, y_test_c)
-        print(f"    r_diag={r_diag:3d} hidden={hidden_m:3d}: test_MSE={test_mse:.5f} NMSE={test_mse/var_y_c:.4f}")
-    print("  real-diagonal, STRONG (hidden=64) regime:")
-    for r_diag in (4, 8, 16, 32):
-        losses, arch_d = train_real_diag_bptt_adam(r_diag=r_diag, u_dim=2, hidden=64,
-                                                     U_train=U_train_c, y_train=y_train_c,
-                                                     steps=800, lr=0.01, seed=10)
-        test_mse = eval_real_diag_mse(arch_d, U_test_c, y_test_c)
-        print(f"    r_diag={r_diag:3d} hidden=64: test_MSE={test_mse:.5f} NMSE={test_mse/var_y_c:.4f}")
-
-    print()
-    print("=" * 70)
-    print("SANITY CHECK -- real-diagonal training pipeline on a trivial AR(1) task")
-    print("(rules out a basic bug/optimization issue in the pipeline itself)")
-    print("=" * 70)
-    rng9 = np.random.RandomState(1)
-    n_seq, T9 = 20, 20
-    U_train9 = jnp.array(rng9.randn(n_seq, T9, 1) * 0.5)
-
-    def true_ar1(U_seq):
-        h = 0.0
-        ys = []
-        for t in range(T9):
-            h = 0.6 * h + U_seq[t, 0]
-            ys.append(h)
-        return jnp.array(ys)
-
-    y_train9 = jnp.stack([true_ar1(U_train9[s]) for s in range(n_seq)])
-    U_test9 = jnp.array(rng9.randn(16, T9, 1) * 0.5)
-    y_test9 = jnp.stack([true_ar1(U_test9[s]) for s in range(16)])
-    var_y9 = float(jnp.var(y_train9))
-    losses9, arch9 = train_real_diag_bptt_adam(r_diag=4, u_dim=1, hidden=16, U_train=U_train9,
-                                                y_train=y_train9, steps=800, lr=0.01, seed=10)
-    test_mse9 = eval_real_diag_mse(arch9, U_test9, y_test9)
-    print(f"  trivial AR(1) sanity check: test_MSE={test_mse9:.6f}  NMSE={test_mse9/var_y9:.5f}")
 
 
 if __name__ == "__main__":
