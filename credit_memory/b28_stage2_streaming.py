@@ -13,13 +13,59 @@ This file provides the STREAMING (per-step, stateful) RTRL API for
 both architectures -- factorized_rtrl_run/rtu_exact_credit_grad (B25,
 B27) process a WHOLE trajectory at once; a genuine online RL loop
 needs ONE step at a time, with S_t persisting as running state across
-calls. Uses the NAIVE (full r-dim / full r_rtu-dim) internal
-representation deliberately: it is robust to parameters changing
-between steps (fixed dimension throughout, unlike the reduced-basis
-representation, whose dimension is itself a function of the current
-R,B -- awkward under continuous online updates), while remaining
-exactly correct. The theoretical reduced-dimension "credit floor" is
-still reported separately as an accounting number (Stage 3).
+calls.
+
+WHAT "NAIVE FULL-r" MEANS HERE, PRECISELY (per review request): this
+is the ambient/generic full-RTRL representation, V_theta = I_r (the
+r-dim identity), for EVERY family (R, B, C, psi) -- NOT the compressed
+coefficient-basis algorithm from B25/B26. In the theory as originally
+built (basis_for_family, b25_nonlinear_credit.py): families R,B
+already use V=I_r in BOTH the "naive" and the "factorized/reduced"
+mode (basis_for_family returns np.eye(r) for R,B unconditionally --
+there is no compression available for these two families in the first
+place). Families C,psi are where the reduced theory normally uses
+V=K(R,B) (the Krylov/reachability subspace of B under R, dimension
+<= r) instead of the full r-dim identity. use_naive=True (this file's
+choice, for ALL four families) sets V=I_r for C,psi TOO, discarding
+that reduction. Checked empirically for the Stage-2 architecture
+(r=4,k=2, u_dim=4/6, 3 seeds): dim K(R,B) = r = 4 in every case tested
+at initialization -- i.e. for this specific generic random init, the
+reachability subspace already happens to be full rank, so the naive
+and theoretically-reduced representations COINCIDE numerically here
+(no compression is actually being lost to this specific set of
+architectures at t=0). This has NOT been re-verified to hold at every
+point along an online training trajectory (R,B drift under updates);
+the naive/ambient choice was made specifically so correctness does not
+depend on that holding.
+
+Per-family live tensor shape (naive, ALL families): X[family] has
+shape (n, r, m_family) where m_family = family_dim(family, arch) is
+that family's own raw parameter count (r*r for R, r*k for B, k*r for
+C, len(psi_flat) for psi) -- i.e. this is literally d(h_t)/d(theta),
+the FULL (n,r,m_family) Jacobian block, with no basis compression
+applied. Total persistent credit floats = n*r*(m_R+m_B+m_C+m_psi) =
+n*r*param_count (the naive-representation storage cost actually used
+by this streaming implementation -- an upper bound on, and for this
+architecture numerically equal to, what the reduced/factorized
+algorithm would need for the same trajectory). This must NOT be
+attributed to "the compressed coefficient-basis algorithm" in any
+Stage-2 comparison -- it is the correctness/robustness baseline
+representation, reported as its own line item.
+
+RELATION TO A_T, stated to avoid conflating two distinct objects:
+A_T = Alg{R, Q_ab} (B27's temporal algebra, dimension d_T <= r^2) is a
+STRUCTURAL/EXPRESSIVITY quantity -- whether the recurrent map's
+generated matrix algebra is the full r x r matrix algebra (globally
+coupled, B27's irreducibility argument) or a proper subalgebra
+(independent blocks, e.g. RTU). K(R,B) (the reachability subspace used
+for the C/psi families' theoretical credit-basis reduction) is a
+separate, CREDIT-STORAGE quantity -- how large a subspace of R^r a
+given family's sensitivity actually needs to span. Neither implies the
+other in general; this file's naive representation (V_theta=I_r
+throughout) makes no use of either quantity -- it exploits neither the
+d_T<r^2 case for compression nor the dim K(R,B)<r case, which is
+exactly why it remains correct regardless of what either quantity does
+during online training.
 
 Run: python -m credit_memory.b28_stage2_streaming
 """
