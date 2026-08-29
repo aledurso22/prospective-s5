@@ -1,15 +1,41 @@
 """Phase B28 -- JIT rewrite of the faithful RTU calibration hot path.
 
-Commit 72a4f7b (b28_rtu_faithful.py + b28_rtu_faithful_train.py) is the
-FROZEN semantic reference. This file is a PURE EXECUTION-OPTIMIZATION
-rewrite: same architecture, same hyperparameters, same RTU equations,
-same RTRL equations, same normalization semantics, same entropy term,
-same ObGD, same num_envs=1, same frame accounting. Nothing here changes
-what is computed -- only how (pure jnp instead of numpy, one pytree
-carry, one jax.jit'd step function).
+Commit cfa1009 (b28_rtu_faithful.py + b28_rtu_faithful_train.py +
+this file's original version) was treated as the frozen semantic
+reference for a pure execution-optimization pass. TWO CORRECTIONS were
+subsequently required after independent verification against Farr
+Appendix-B Algorithm 2 and the Elsayed stream-AC reference
+implementation (the seed-0 run produced under the pre-correction
+semantics was invalidated and re-run from scratch):
 
-The online POPGym environment itself remains Python/eager (env.step()
-is not JAX-compatible) -- only the model/RTRL/update math is compiled.
+  1. Eligibility traces (actor and critic, independently) now reset to
+     EXACTLY zero at every episode boundary. Previously they persisted
+     across episodes, decaying only via gamma*lam. The CURRENT
+     (terminal) step's own parameter update still uses the properly-
+     accumulated, UNMASKED trace (gamma*lam*old+grad) -- only the
+     STORED trace carried into the next episode is zeroed
+     (mask_traces(), applied inside full_update_step via the `done`
+     flag, not by the outer driver).
+  2. Reward handling changed from observation-style mean-centered/std-
+     scaled NORMALIZATION to Elsayed/Farr stream-AC reward SCALING:
+     maintain a discounted reward trace u_t=gamma*u_{t-1}+r_t (reset
+     to 0 at episode boundaries, same mechanism as #1), track Welford
+     variance of u (NOT of the raw reward), and scale (never center)
+     the raw reward: scaled_reward=r_t/(sqrt(var(u))+eps). The old
+     mean-centered scheme spuriously turned zero-reward steps positive
+     whenever the running raw-reward mean was negative.
+
+Both corrections are verified against independent literal references
+(test_reward_scale_vs_literal_reference, test_eligibility_reset_at_
+episode_boundary) in addition to the full eager-vs-JIT parity suite,
+which still passes bit-exact after the correction.
+
+Otherwise still a PURE EXECUTION-OPTIMIZATION rewrite: same
+architecture, hyperparameters, RTU equations, RTRL equations, entropy
+term, ObGD formula, num_envs=1, frame accounting -- pure jnp instead of
+numpy, one pytree carry, one jax.jit'd step function. The online
+POPGym environment itself remains Python/eager (env.step() is not
+JAX-compatible) -- only the model/RTRL/update math is compiled.
 
 Run tests: python -m credit_memory.b28_rtu_faithful_jit
 """
@@ -186,6 +212,14 @@ def net_carry_from_eager(net, stream_state, traces):
     )
 
 
+def reward_scale_init():
+    """u: discounted reward trace (reset to 0 at episode boundaries by
+    full_update_step's own done-masking, mirroring how eligibility
+    traces are reset there). count/mean_u/M2_u: Welford statistics of
+    u, PERSIST across episodes (global, like obs_stats)."""
+    return dict(u=0.0, count=1e-4, mean_u=0.0, M2_u=1.0)
+
+
 def make_carry(actor_net, actor_stream, actor_traces, critic_net, critic_stream, critic_traces,
                 obs_stats, reward_stats):
     return dict(
@@ -193,8 +227,8 @@ def make_carry(actor_net, actor_stream, actor_traces, critic_net, critic_stream,
         critic=net_carry_from_eager(critic_net, critic_stream, critic_traces),
         obs_stats=dict(count=jnp.asarray(obs_stats["count"]), mean=jnp.asarray(obs_stats["mean"]),
                        M2=jnp.asarray(obs_stats["M2"])),
-        reward_stats=dict(count=jnp.asarray(reward_stats["count"]), mean=jnp.asarray(reward_stats["mean"]),
-                          M2=jnp.asarray(reward_stats["M2"])),
+        reward_stats=dict(u=jnp.asarray(reward_stats["u"]), count=jnp.asarray(reward_stats["count"]),
+                          mean_u=jnp.asarray(reward_stats["mean_u"]), M2_u=jnp.asarray(reward_stats["M2_u"])),
     )
 
 
@@ -210,6 +244,33 @@ def _running_update(stats, x):
 def _running_normalize(stats, x, eps=1e-8):
     var = stats["M2"] / jnp.maximum(stats["count"], 1.0)
     return (x - stats["mean"]) / (jnp.sqrt(var) + eps)
+
+
+def _reward_scale_update(state, raw_reward, gamma):
+    """Elsayed/Farr stream-AC reward SCALING (not observation-style
+    normalization): maintain a discounted reward trace u_t =
+    gamma*(1-terminal_prev)*u_{t-1} + r_t, track Welford variance of u
+    (not of the raw reward itself), never subtract a reward mean. The
+    (1-terminal_prev) factor in the reference equation refers to
+    whether the PREVIOUS step ended an episode; this function computes
+    u's normal accumulation for the CURRENT step (used, unmasked, for
+    this step's own reward-scaling), while full_update_step applies the
+    done-mask to the RETURNED u afterward, so the NEXT step starts from
+    u=0 -- exactly mirroring how eligibility traces are masked there."""
+    u_new = gamma * state["u"] + raw_reward
+    count = state["count"] + 1.0
+    delta = u_new - state["mean_u"]
+    mean_u = state["mean_u"] + delta / count
+    delta2 = u_new - mean_u
+    M2_u = state["M2_u"] + delta * delta2
+    return dict(u=u_new, count=count, mean_u=mean_u, M2_u=M2_u)
+
+
+def _reward_scale_apply(state, raw_reward, eps=1e-8):
+    """scaled_reward = raw_reward / sqrt(var(u) + eps) -- NO mean
+    subtraction (unlike observation normalization)."""
+    var_u = state["M2_u"] / jnp.maximum(state["count"], 1.0)
+    return raw_reward / (jnp.sqrt(var_u) + eps)
 
 
 def _net_z(net_carry, hidden_dim):
@@ -257,8 +318,8 @@ def full_update_step(carry, action, raw_reward, raw_obs_next, done,
     value_next_raw = head_forward(z_critic_next, critic["params"]["head"])[0]
     value_next = jnp.where(done > 0.5, 0.0, value_next_raw)
 
-    reward_stats_next = _running_update(carry["reward_stats"], raw_reward)
-    reward_norm = _running_normalize(reward_stats_next, raw_reward)
+    reward_stats_next = _reward_scale_update(carry["reward_stats"], raw_reward, gamma)
+    reward_norm = _reward_scale_apply(reward_stats_next, raw_reward)
 
     td_error = reward_norm + gamma * value_next - value_cur
 
@@ -338,20 +399,34 @@ def full_update_step(carry, action, raw_reward, raw_obs_next, done,
     )
 
     not_done = 1.0 - done
+
+    def mask_traces(traces_g):
+        """Eligibility traces MUST reset to zero at episode boundaries
+        (Farr Algorithm 2 / Elsayed stream-AC): the CURRENT step's own
+        parameter update above already used the unmasked trace
+        (gamma*lam*old+grad, correct for the terminal transition
+        itself); only the STORED trace carried into the next step is
+        zeroed here so the next episode starts from z=0."""
+        return {k: not_done * v for k, v in traces_g.items()}
+
     new_actor = dict(
         params=new_actor_params,
-        traces=dict(enc=new_actor_traces_enc, rtu=new_actor_traces_rtu, head=new_actor_traces_head),
+        traces=dict(enc=mask_traces(new_actor_traces_enc), rtu=mask_traces(new_actor_traces_rtu),
+                    head=mask_traces(new_actor_traces_head)),
         real=not_done * a_real + done * actor["real"],
         imag=not_done * a_imag + done * actor["imag"],
         S={fam: not_done * a_S_next[fam] + done * actor["S"][fam] for fam in ALL_NET_FAMILIES},
     )
     new_critic = dict(
         params=new_critic_params,
-        traces=dict(enc=new_critic_traces_enc, rtu=new_critic_traces_rtu, head=new_critic_traces_head),
+        traces=dict(enc=mask_traces(new_critic_traces_enc), rtu=mask_traces(new_critic_traces_rtu),
+                    head=mask_traces(new_critic_traces_head)),
         real=not_done * c_real + done * critic["real"],
         imag=not_done * c_imag + done * critic["imag"],
         S={fam: not_done * c_S_next[fam] + done * critic["S"][fam] for fam in ALL_NET_FAMILIES},
     )
+
+    reward_stats_next = dict(reward_stats_next, u=not_done * reward_stats_next["u"])
 
     new_carry = dict(
         actor=new_actor, critic=new_critic,
@@ -403,7 +478,7 @@ def run_eager_trajectory(seed, obs_seq, action_seq, reward_seq, done_seq,
     actor_stream = reft.network_streaming_init(hidden_dim, width, in_dim)
     critic_stream = reft.network_streaming_init(hidden_dim, width, in_dim)
     obs_stats = reft.running_stats_init((in_dim,))
-    reward_stats = reft.running_stats_init(())
+    reward_stats = reft.reward_scale_init()
     actor_traces = reft.zero_traces(actor)
     critic_traces = reft.zero_traces(critic)
 
@@ -420,8 +495,8 @@ def run_eager_trajectory(seed, obs_seq, action_seq, reward_seq, done_seq,
         logits_cur = reft.head_forward(z_actor, actor["head"])
         v_cur = float(reft.head_forward(z_critic, critic["head"])[0])
 
-        reft.running_stats_update(reward_stats, r_t)
-        r_t_norm = float(reft.running_stats_normalize(reward_stats, r_t))
+        reft.reward_scale_update(reward_stats, r_t, gamma)
+        r_t_norm = float(reft.reward_scale_apply(reward_stats, r_t))
 
         if done:
             v_next = 0.0
@@ -482,10 +557,18 @@ def run_eager_trajectory(seed, obs_seq, action_seq, reward_seq, done_seq,
             step_actor=step_actor, step_critic=step_critic,
             actor_head_W=np.asarray(actor["head"]["W"]), critic_head_W=np.asarray(critic["head"]["W"]),
             actor_rtu_nu_log=np.asarray(actor["rtu"]["nu_log"]), critic_rtu_nu_log=np.asarray(critic["rtu"]["nu_log"]),
-            obs_stats_mean=np.asarray(obs_stats["mean"]).copy(), reward_stats_mean=float(reward_stats["mean"]),
+            obs_stats_mean=np.asarray(obs_stats["mean"]).copy(), reward_stats_mean=float(reward_stats["mean_u"]),
         ))
 
         if done:
+            # Eligibility traces AND the discounted reward trace u reset
+            # to zero for the next episode (Farr Algorithm 2 / Elsayed
+            # stream-AC); Welford count/mean_u/M2_u PERSIST.
+            for key in actor_traces:
+                actor_traces[key] = np.zeros_like(actor_traces[key])
+            for key in critic_traces:
+                critic_traces[key] = np.zeros_like(critic_traces[key])
+            reward_stats["u"] = 0.0
             break
         z_actor, S_actor = z_next_actor, S_next_actor
         z_critic, S_critic = z_next_critic, S_next_critic
@@ -503,7 +586,7 @@ def run_jit_trajectory(seed, obs_seq, action_seq, reward_seq, done_seq,
     actor_stream = reft.network_streaming_init(hidden_dim, width, in_dim)
     critic_stream = reft.network_streaming_init(hidden_dim, width, in_dim)
     obs_stats = reft.running_stats_init((in_dim,))
-    reward_stats = reft.running_stats_init(())
+    reward_stats = reft.reward_scale_init()
     actor_traces = reft.zero_traces(actor_net)
     critic_traces = reft.zero_traces(critic_net)
 
@@ -547,7 +630,7 @@ def run_jit_trajectory(seed, obs_seq, action_seq, reward_seq, done_seq,
             actor_rtu_nu_log=np.asarray(new_carry["actor"]["params"]["rtu"]["nu_log"]),
             critic_rtu_nu_log=np.asarray(new_carry["critic"]["params"]["rtu"]["nu_log"]),
             obs_stats_mean=np.asarray(new_carry["obs_stats"]["mean"]),
-            reward_stats_mean=float(new_carry["reward_stats"]["mean"]),
+            reward_stats_mean=float(new_carry["reward_stats"]["mean_u"]),
         ))
         carry = new_carry
         if done:
@@ -609,7 +692,7 @@ def check_recompilation(hidden_dim=8, width=12, in_dim=6, num_actions=4, n_calls
     actor_stream = reft.network_streaming_init(hidden_dim, width, in_dim)
     critic_stream = reft.network_streaming_init(hidden_dim, width, in_dim)
     obs_stats = reft.running_stats_init((in_dim,))
-    reward_stats = reft.running_stats_init(())
+    reward_stats = reft.reward_scale_init()
     carry = make_carry(actor_net, actor_stream, reft.zero_traces(actor_net),
                         critic_net, critic_stream, reft.zero_traces(critic_net), obs_stats, reward_stats)
     hp = (0.99, 0.8, 0.095, 1.0, 1.0, 3.0, 2.0)
@@ -628,7 +711,7 @@ def benchmark_published_scale(n_steps=30, hidden_dim=192, width=64, in_dim=6, nu
     actor_stream = reft.network_streaming_init(hidden_dim, width, in_dim)
     critic_stream = reft.network_streaming_init(hidden_dim, width, in_dim)
     obs_stats = reft.running_stats_init((in_dim,))
-    reward_stats = reft.running_stats_init(())
+    reward_stats = reft.reward_scale_init()
     carry = make_carry(actor_net, actor_stream, reft.zero_traces(actor_net),
                         critic_net, critic_stream, reft.zero_traces(critic_net), obs_stats, reward_stats)
 
@@ -654,7 +737,157 @@ def benchmark_published_scale(n_steps=30, hidden_dim=192, width=64, in_dim=6, nu
     return compile_time, steady_time / n_steps, n_steps
 
 
+# ---------------------------------------------------------------------------
+# Reference-parity tests for the two review-mandated corrections:
+# (1) reward SCALING (discounted trace u, Welford var(u), no mean
+#     subtraction), (2) eligibility-trace reset at episode boundaries.
+# ---------------------------------------------------------------------------
+def literal_reward_scale_reference(raw_rewards, dones, gamma):
+    """Deliberately independent, unvectorized reference: a plain
+    Python loop re-deriving the discounted trace / Welford stats /
+    scaled reward from scratch, not reusing _reward_scale_update or
+    reward_scale_update."""
+    u, count, mean_u, M2_u = 0.0, 1e-4, 0.0, 1.0
+    out = []
+    for r, done in zip(raw_rewards, dones):
+        u = gamma * u + r
+        count = count + 1.0
+        delta = u - mean_u
+        mean_u = mean_u + delta / count
+        delta2 = u - mean_u
+        M2_u = M2_u + delta * delta2
+        var_u = M2_u / max(count, 1.0)
+        scaled = r / (np.sqrt(var_u) + 1e-8)
+        out.append(dict(u=u, count=count, mean_u=mean_u, M2_u=M2_u, scaled_reward=scaled))
+        if done:
+            u = 0.0
+    return out
+
+
+def test_reward_scale_vs_literal_reference(seed=11, n=20):
+    rng = np.random.RandomState(seed)
+    raw_rewards = (rng.randn(n) * 0.02).tolist()
+    dones = [False] * n
+    for i in (5, 12):
+        dones[i] = True
+    gamma = 0.99
+
+    ref_out = literal_reward_scale_reference(raw_rewards, dones, gamma)
+
+    state_jit = reward_scale_init()
+    state_eager = reft.reward_scale_init()
+    max_err = dict(u=0.0, count=0.0, mean_u=0.0, M2_u=0.0, scaled_reward=0.0)
+    for i, (r, done) in enumerate(zip(raw_rewards, dones)):
+        state_jit = _reward_scale_update(state_jit, r, gamma)
+        scaled_jit = float(_reward_scale_apply(state_jit, r))
+        reft.reward_scale_update(state_eager, r, gamma)
+        scaled_eager = float(reft.reward_scale_apply(state_eager, r))
+
+        expected = ref_out[i]
+        max_err["u"] = max(max_err["u"], abs(float(state_jit["u"]) - expected["u"]), abs(state_eager["u"] - expected["u"]))
+        max_err["count"] = max(max_err["count"], abs(float(state_jit["count"]) - expected["count"]))
+        max_err["mean_u"] = max(max_err["mean_u"], abs(float(state_jit["mean_u"]) - expected["mean_u"]), abs(state_eager["mean_u"] - expected["mean_u"]))
+        max_err["M2_u"] = max(max_err["M2_u"], abs(float(state_jit["M2_u"]) - expected["M2_u"]), abs(state_eager["M2_u"] - expected["M2_u"]))
+        max_err["scaled_reward"] = max(max_err["scaled_reward"], abs(scaled_jit - expected["scaled_reward"]), abs(scaled_eager - expected["scaled_reward"]))
+
+        if done:
+            # mirrors full_update_step's post-update masking (JIT) and
+            # smoke_test's explicit reset (eager)
+            state_jit = dict(state_jit, u=0.0)
+            state_eager["u"] = 0.0
+    return max_err
+
+
+def test_eligibility_reset_at_episode_boundary(seed=13, hidden_dim=4, width=6, in_dim=3, num_actions=2):
+    """Runs full_update_step for a few steps with done=0, then one step
+    with done=1, verifying: (a) the parameter update ON the terminal
+    step itself used the properly-accumulated (unmasked) trace, and
+    (b) the STORED trace for actor and critic, independently, is
+    EXACTLY zero immediately after -- so the next episode starts from
+    z=0, matching Farr Algorithm 2 / Elsayed stream-AC."""
+    rng = np.random.RandomState(seed)
+    actor_net = reft.make_network(rng, in_dim, width, hidden_dim, num_actions)
+    critic_net = reft.make_network(rng, in_dim, width, hidden_dim, 1)
+    actor_stream = reft.network_streaming_init(hidden_dim, width, in_dim)
+    critic_stream = reft.network_streaming_init(hidden_dim, width, in_dim)
+    obs_stats = reft.running_stats_init((in_dim,))
+    reward_stats = reward_scale_init()
+    carry = make_carry(actor_net, actor_stream, reft.zero_traces(actor_net),
+                        critic_net, critic_stream, reft.zero_traces(critic_net), obs_stats, reward_stats)
+    hp = (0.99, 0.8, 0.095, 1.0, 1.0, 3.0, 2.0)
+
+    obs_seq = [jnp.array(rng.randn(in_dim) * 0.3) for _ in range(6)]
+    actions = [0, 1, 0, 1, 0]
+    rewards = [0.1, -0.2, 0.3, -0.1, 0.2]
+
+    # Consume obs_seq[0] first (matches every driver's pre-loop consume).
+    a_real, a_imag, _, a_S = net_streaming_step_jit(
+        carry["actor"]["params"]["rtu"], carry["actor"]["params"]["enc"],
+        carry["actor"]["real"], carry["actor"]["imag"], carry["actor"]["S"], obs_seq[0])
+    c_real, c_imag, _, c_S = net_streaming_step_jit(
+        carry["critic"]["params"]["rtu"], carry["critic"]["params"]["enc"],
+        carry["critic"]["real"], carry["critic"]["imag"], carry["critic"]["S"], obs_seq[0])
+    carry["actor"] = dict(carry["actor"], real=a_real, imag=a_imag, S=a_S)
+    carry["critic"] = dict(carry["critic"], real=c_real, imag=c_imag, S=c_S)
+
+    # Steps 0,1: no done. Step 2: done=True (synthetic episode boundary).
+    for t in range(3):
+        done = 1.0 if t == 2 else 0.0
+        carry, diag = full_update_step(
+            carry, jnp.asarray(actions[t]), jnp.asarray(rewards[t]), obs_seq[t + 1], jnp.asarray(done), *hp
+        )
+
+    actor_trace_zero = all(float(jnp.max(jnp.abs(v))) == 0.0
+                            for grp in carry["actor"]["traces"].values() for v in grp.values())
+    critic_trace_zero = all(float(jnp.max(jnp.abs(v))) == 0.0
+                             for grp in carry["critic"]["traces"].values() for v in grp.values())
+    u_zero = float(carry["reward_stats"]["u"]) == 0.0
+
+    # Step 3 (fresh episode, first step after reset): its own trace
+    # should equal EXACTLY gamma*lam*0 + grad_3 -- i.e., match a
+    # completely independent, freshly-initialized network experiencing
+    # this SAME single transition with zero prior trace.
+    fresh_carry = dict(carry)
+    fresh_carry["actor"] = dict(carry["actor"], traces={g: {k: jnp.zeros_like(v) for k, v in d.items()}
+                                                          for g, d in carry["actor"]["traces"].items()})
+    fresh_carry["critic"] = dict(carry["critic"], traces={g: {k: jnp.zeros_like(v) for k, v in d.items()}
+                                                            for g, d in carry["critic"]["traces"].items()})
+    carry_after_reset_step, _ = full_update_step(
+        carry, jnp.asarray(actions[3]), jnp.asarray(rewards[3]), obs_seq[4], jnp.asarray(0.0), *hp)
+    fresh_after_step, _ = full_update_step(
+        fresh_carry, jnp.asarray(actions[3]), jnp.asarray(rewards[3]), obs_seq[4], jnp.asarray(0.0), *hp)
+
+    def traces_match(t1, t2):
+        return all(float(jnp.max(jnp.abs(t1[g][k] - t2[g][k]))) < 1e-12
+                   for g in t1 for k in t1[g])
+
+    actor_matches_fresh = traces_match(carry_after_reset_step["actor"]["traces"], fresh_after_step["actor"]["traces"])
+    critic_matches_fresh = traces_match(carry_after_reset_step["critic"]["traces"], fresh_after_step["critic"]["traces"])
+
+    return dict(actor_trace_zero_at_boundary=actor_trace_zero, critic_trace_zero_at_boundary=critic_trace_zero,
+                u_zero_at_boundary=u_zero, actor_matches_fresh_start=actor_matches_fresh,
+                critic_matches_fresh_start=critic_matches_fresh)
+
+
 def main():
+    print("=" * 70)
+    print("Reference-parity test: reward SCALING vs literal independent reference")
+    print("=" * 70)
+    err = test_reward_scale_vs_literal_reference()
+    for k, v in err.items():
+        print(f"  {k:15s} max_err={v:.2e}")
+    assert all(v < 1e-9 for v in err.values()), f"REWARD-SCALE PARITY FAILURE: {err}"
+    print("  PASS")
+
+    print("=" * 70)
+    print("Eligibility-trace reset at synthetic episode boundary")
+    print("=" * 70)
+    elig = test_eligibility_reset_at_episode_boundary()
+    for k, v in elig.items():
+        print(f"  {k}: {v}")
+    assert all(elig.values()), f"ELIGIBILITY-RESET TEST FAILURE: {elig}"
+    print("  PASS")
+
     print("=" * 70)
     print("Eager-vs-JIT multi-step parity (15 steps, real POPGym Autoencode)")
     print("=" * 70)

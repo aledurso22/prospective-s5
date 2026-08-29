@@ -99,7 +99,7 @@ def run(seed=0, total_frames=5_000_000, log_every=2000, out_path=None):
     actor_stream = reft.network_streaming_init(HIDDEN_DIM, WIDTH, IN_DIM)
     critic_stream = reft.network_streaming_init(HIDDEN_DIM, WIDTH, IN_DIM)
     obs_stats = reft.running_stats_init((IN_DIM,))
-    reward_stats = reft.running_stats_init(())
+    reward_stats = reft.reward_scale_init()
     carry = make_carry(actor_net, actor_stream, reft.zero_traces(actor_net),
                         critic_net, critic_stream, reft.zero_traces(critic_net),
                         obs_stats, reward_stats)

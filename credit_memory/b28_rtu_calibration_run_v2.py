@@ -1,14 +1,24 @@
 """Phase B28 -- faithful-as-practical RTU Autoencode calibration run,
-INSTRUMENTATION v2, for FUTURE seeds only.
+INSTRUMENTATION v2. This is now the driver for the CORRECTED-semantics
+seed-0 calibration run.
 
-Does NOT touch or restart the in-flight seed-0 run
-(credit_memory/b28_rtu_calibration_run.py, left completely unchanged).
-Still uses the FROZEN JIT implementation from commit cfa1009
-(b28_rtu_faithful_jit.py) unchanged -- same architecture,
-hyperparameters, RTU/RTRL equations, normalization semantics, entropy
-term, ObGD, num_envs=1, frame accounting. This file only expands the
-OUTER checkpoint diagnostics and fixes explicit log flushing; nothing
-about the learning rule changes.
+The original seed-0 run (via credit_memory/b28_rtu_calibration_run.py,
+v1 instrumentation) was INVALIDATED and stopped: two algorithmic
+mismatches were found against Farr Appendix-B Algorithm 2 / Elsayed
+stream-AC (see b28_rtu_faithful_jit.py's module docstring for the
+full explanation) -- eligibility traces were not reset at episode
+boundaries, and reward handling used the wrong transformation (mean-
+centered normalization instead of Elsayed/Farr reward SCALING via a
+discounted trace's variance). Both are now fixed in
+b28_rtu_faithful_jit.py's full_update_step, verified against
+independent literal references and the full eager-vs-JIT parity
+suite. This file relaunches seed 0 FROM INITIALIZATION under the
+corrected semantics, with the v2 richer diagnostics from the start.
+
+Same architecture/hyperparameters otherwise: separate actor/critic
+networks, RTU/RTRL equations, entropy term, ObGD, num_envs=1, frame
+accounting. This file's own contribution is only the OUTER checkpoint
+diagnostics and explicit log flushing.
 
 New relative to v1:
   - policy entropy (already had window mean; now also a light sample
@@ -34,8 +44,9 @@ New relative to v1:
     readable mid-flight (unlike v1, which discovered this the hard
     way -- the log stayed at 0 bytes until process exit).
 
-Do NOT launch this for a new seed until seed 0 (v1) has been assessed
-per the review's stated decision rule.
+Launched for the corrected seed-0 calibration run per explicit review
+instruction, after the reward-scaling and eligibility-trace-reset
+corrections were verified.
 
 Run: python -m credit_memory.b28_rtu_calibration_run_v2
 """
@@ -140,7 +151,7 @@ def run(seed=0, total_frames=5_000_000, log_every=2000, out_path=None):
     actor_stream = reft.network_streaming_init(HIDDEN_DIM, WIDTH, IN_DIM)
     critic_stream = reft.network_streaming_init(HIDDEN_DIM, WIDTH, IN_DIM)
     obs_stats = reft.running_stats_init((IN_DIM,))
-    reward_stats = reft.running_stats_init(())
+    reward_stats = reft.reward_scale_init()
     carry = make_carry(actor_net, actor_stream, reft.zero_traces(actor_net),
                         critic_net, critic_stream, reft.zero_traces(critic_net),
                         obs_stats, reward_stats)
@@ -289,8 +300,9 @@ def run(seed=0, total_frames=5_000_000, log_every=2000, out_path=None):
                 all_finite=fin,
                 obs_stats_mean=np.asarray(carry["obs_stats"]["mean"]).tolist(),
                 obs_stats_var=(np.asarray(carry["obs_stats"]["M2"]) / max(float(carry["obs_stats"]["count"]), 1.0)).tolist(),
-                reward_stats_mean=float(carry["reward_stats"]["mean"]),
-                reward_stats_var=float(carry["reward_stats"]["M2"]) / max(float(carry["reward_stats"]["count"]), 1.0),
+                reward_scale_u=float(carry["reward_stats"]["u"]),
+                reward_scale_mean_u=float(carry["reward_stats"]["mean_u"]),
+                reward_scale_var_u=float(carry["reward_stats"]["M2_u"]) / max(float(carry["reward_stats"]["count"]), 1.0),
                 rtu_r_theta_actor=r_theta_actor, rtu_r_theta_critic=r_theta_critic,
                 rtu_drift_actor=drift_actor, rtu_drift_critic=drift_critic,
                 action_distribution=action_dist,
@@ -312,6 +324,8 @@ def run(seed=0, total_frames=5_000_000, log_every=2000, out_path=None):
                   f"recent50 mean/median={ckpt['recent50_return_mean']}/{ckpt['recent50_return_median']}  "
                   f"recent500 mean/median={ckpt['recent500_return_mean']}/{ckpt['recent500_return_median']}", flush=True)
             print(f"  all_finite={fin}", flush=True)
+            print(f"  reward_scale: u={ckpt['reward_scale_u']:.4f} mean_u={ckpt['reward_scale_mean_u']:.4f} "
+                  f"var_u={ckpt['reward_scale_var_u']:.4f}", flush=True)
             print(f"  action_distribution={action_dist}", flush=True)
             print(f"  watch_steps={ckpt['watch_steps']} play_steps={ckpt['play_steps']} "
                   f"play_accuracy={ckpt['play_accuracy']}", flush=True)

@@ -45,7 +45,7 @@ from credit_memory.b28_popgym_stage1 import one_hot_obs
 from credit_memory import b28_rtu_faithful_train as reft
 from credit_memory.b28_rtu_faithful_jit import (
     make_carry, full_update_step, net_streaming_step_jit,
-    _running_update, _running_normalize,
+    _running_update, _running_normalize, _reward_scale_apply,
 )
 
 jax.config.update("jax_enable_x64", True)
@@ -93,7 +93,7 @@ def train_twin_snapshot(seed=0, target_frames=300_000, log_every=20_000):
     actor_stream = reft.network_streaming_init(HIDDEN_DIM, WIDTH, IN_DIM)
     critic_stream = reft.network_streaming_init(HIDDEN_DIM, WIDTH, IN_DIM)
     obs_stats = reft.running_stats_init((IN_DIM,))
-    reward_stats = reft.running_stats_init(())
+    reward_stats = reft.reward_scale_init()
     carry = make_carry(actor_net, actor_stream, reft.zero_traces(actor_net),
                         critic_net, critic_stream, reft.zero_traces(critic_net),
                         obs_stats, reward_stats)
@@ -168,7 +168,7 @@ def rollout_frozen_episode(carry, env, action_rng):
 
         obs_next, r_t, term, trunc, _ = env.step(a_t)
         done = term or trunc
-        r_norm = float(_running_normalize(carry["reward_stats"], jnp.asarray(float(r_t))))  # FROZEN
+        r_norm = float(_reward_scale_apply(carry["reward_stats"], jnp.asarray(float(r_t))))  # FROZEN
 
         is_play = (obs_next[0] == 0) if not done else None  # PLAY=0, WATCH=1 (popgym Mode enum)
         phases.append("play" if is_play else ("watch" if is_play is not None else "terminal"))

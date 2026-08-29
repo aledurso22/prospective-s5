@@ -74,6 +74,33 @@ def running_stats_normalize(stats, x, eps=1e-8):
 
 
 # ---------------------------------------------------------------------------
+# Reward SCALING (Elsayed/Farr stream-AC), corrected per review -- NOT
+# the same as running_stats_* above. Maintains a discounted reward
+# trace u_t = gamma*u_{t-1} + r_t (reset to 0 by the caller at episode
+# boundaries), tracks Welford variance of u (not of raw reward), and
+# scales (never centers) the raw reward: scaled = r / (sqrt(var(u))+eps).
+# ---------------------------------------------------------------------------
+def reward_scale_init():
+    return dict(u=0.0, count=1e-4, mean_u=0.0, M2_u=1.0)
+
+
+def reward_scale_update(state, raw_reward, gamma):
+    u_new = gamma * state["u"] + raw_reward
+    state["count"] += 1
+    delta = u_new - state["mean_u"]
+    state["mean_u"] = state["mean_u"] + delta / state["count"]
+    delta2 = u_new - state["mean_u"]
+    state["M2_u"] = state["M2_u"] + delta * delta2
+    state["u"] = u_new
+    return state
+
+
+def reward_scale_apply(state, raw_reward, eps=1e-8):
+    var_u = state["M2_u"] / max(state["count"], 1.0)
+    return raw_reward / (np.sqrt(var_u) + eps)
+
+
+# ---------------------------------------------------------------------------
 # One full network (encoder+RTU+head) -- used twice (actor, critic),
 # each with FULLY INDEPENDENT parameters and streaming state.
 # ---------------------------------------------------------------------------
@@ -309,7 +336,7 @@ def smoke_test(seed=8, n_steps=20, hidden_dim=8, width=16):
     critic_stream = network_streaming_init(hidden_dim, width, in_dim)
 
     obs_stats = running_stats_init((in_dim,))
-    reward_stats = running_stats_init(())
+    reward_stats = reward_scale_init()
 
     gamma, lam = 0.99, 0.8
     actor_alpha, critic_alpha = 1.0, 1.0
@@ -336,8 +363,8 @@ def smoke_test(seed=8, n_steps=20, hidden_dim=8, width=16):
 
         obs_next, r_t, term, trunc, _ = env.step(a_t)
         done = term or trunc
-        running_stats_update(reward_stats, r_t)
-        r_t_norm = float(running_stats_normalize(reward_stats, r_t))
+        reward_scale_update(reward_stats, r_t, gamma)
+        r_t_norm = float(reward_scale_apply(reward_stats, r_t))
 
         v_cur = float(head_forward(z_critic, critic["head"])[0])
         if done:
