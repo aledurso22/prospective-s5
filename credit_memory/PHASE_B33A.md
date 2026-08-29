@@ -16,6 +16,22 @@ compression does NOT require `rank(S_t) < r`. The eligibility matrix
 timestep, while its entire dynamic (time-varying) content lives in a
 fixed 2-dimensional lifted subspace `span{I,K}`.**
 
+Central result to preserve, verbatim:
+
+```
+rank(S_t) = 64 at essentially every sampled time,  while  S_t = a_t I + b_t K
+```
+
+so the exact dynamic eligibility state has only two coefficients
+despite full ordinary sensitivity rank. This establishes:
+
+```
+rank(S_t) = r   does NOT imply   r*P independent dynamic credit degrees of freedom.
+```
+
+The significance of this result is **representational / minimal-state
+complexity** — not yet a total-memory-footprint reduction (see §3).
+
 ## 1. Construction
 
 `r=P=64`. `K = Q D Q^T`, `D=diag(+-1)` (32 of each sign), `Q` dense
@@ -76,26 +92,33 @@ memory reduction."
 | 1e-2 | 96 | 158 | 5.107e-02 |
 | 1e-1 | 35 | 28 | 1.000e+00 (saturated) |
 
-At **eps=0, the lifted span stays exactly 2 at every T tested (5, 20,
-100, 500)** — "lifted dimension ≤2 forever," confirmed. At **eps>0 the
-span grows** and the forced (deliberately-blind, B29-style) two-
-coefficient reconstruction becomes systematically wrong, growing with
-`eps`. **Full recurrence stayed exact throughout** (computed correctly
-at every eps — no approximation was ever applied to path A).
+**Clean falsification claim, restricted to eps≤1e-2 where the dynamics
+remain numerically interpretable**: at **eps=0, the lifted span stays
+exactly 2 at every T tested (5, 20, 100, 500)** — exact 2-d lifted
+closure holds indefinitely. For **generic nonzero eps (1e-8 through
+1e-2)**, the lifted span leaves dimension 2 and grows, and the forced
+(deliberately-blind, B29-style) two-coefficient reconstruction becomes
+systematically incorrect, growing with `eps`. **Full recurrence
+remains exact throughout**, at every eps (computed correctly — no
+approximation was ever applied to path A). No claim is made that span
+dimension or relative error is monotonic in T; it is not required to
+be, and it visibly is not (see below).
 
-**Caveat, stated rather than hidden**: span_dim is **not monotonic in
-T** at large eps (e.g. eps=1e-1: T=100→35, T=500→28 — a *decrease*).
-This is a genuine numerical artifact, not a modeling error: `R` was
-drawn with no stability constraint, so `eps·R` at eps=0.1 pushes the
-full recurrence into severe instability — trajectory values reach
-~1e86 by T=500 (`forced_recon_max|d|` literally hits 9.1e86 at that
-setting). At that scale, the SVD-based numerical-rank estimate becomes
-dominated by a few enormous directions and is no longer a reliable
-measure of "true" dimensionality — this is expected behavior of an
-unconstrained generic perturbation at large eps, not a bug, and the
-qualitative conclusion (rank grows once eps>0, forced-reconstruction
-breaks) still holds cleanly at the smaller/well-conditioned eps values
-(1e-8 through 1e-2).
+**eps=0.1 row: excluded from structural evidence, not a counter-
+example**. At eps=0.1 the raw result is kept in the table above for
+completeness, but it must **not** be read as structural evidence: `R`
+was drawn with no stability constraint, so `eps·R` at this magnitude
+pushes the full recurrence into severe numerical instability —
+trajectory values reach ~1e86 by T=500 (`forced_recon_max|d|` literally
+hits 9.1e86 at that setting), and the SVD-based numerical-rank estimate
+becomes dominated by a few enormous directions, producing the
+non-monotone span_dim(T=100→500: 35→28) visible in the table. This is a
+numerical-conditioning artifact of an unconstrained large perturbation,
+not a structural finding about the lifted-closure theory, and it is
+**not** used to support (or undermine) the falsification claim above.
+The clean claim — exact 2-d closure at eps=0, growing lifted span and
+broken forced-reconstruction at generic eps — rests entirely on the
+eps≤1e-2 rows, where the dynamics stay numerically interpretable.
 
 ## 5. Commit hash
 
