@@ -45,12 +45,18 @@ def commutator_norm(A, B_):
 def commutant_dimension(generators, tol=1e-9):
     """dim{X : XA=AX for all A in generators}, via the linear system
     vec(XA-AX)=(A^T(x)I - I(x)A)vec(X)=0 stacked over all generators.
-    By Schur's lemma, commutant dimension 1 (scalars only) for a real
-    algebra means the generators act IRREDUCIBLY -- no nontrivial
-    common invariant subspace -- which is exactly the numerical
-    block-decomposition diagnostic requested: a smaller commutant
-    would itself supply a nontrivial invariant subspace (an eigenspace
-    of any noncentral commuting X)."""
+    CORRECTED (per review): this is reported as an INDEPENDENT
+    consistency diagnostic only, not as a proof of irreducibility --
+    "commutant dimension 1 implies irreducible" is the converse of
+    Schur's lemma and is not generally valid. The actual irreducibility
+    argument used elsewhere (noncommutativity_report /
+    is_full_matrix_algebra) is direct: A_T subseteq M_r trivially, and
+    dim(A_T)=r^2=dim(M_r) forces A_T=M_r exactly; M_r acting on R^r has
+    no nontrivial invariant subspace (invariance under every
+    elementary matrix E_ij forces {0} or the whole space), so the
+    action is irreducible. Commutant=1 is then merely CONSISTENT with
+    that (a known-irreducible algebra has trivial commutant by Schur's
+    lemma, the direction that IS valid), not the source of the claim."""
     r = generators[0].shape[0]
     rows = [np.kron(A.T, np.eye(r)) - np.kron(np.eye(r), A) for A in generators]
     M = np.vstack(rows)
@@ -75,13 +81,20 @@ def noncommutativity_report(arch):
                         qq_norms.append(commutator_norm(Q[a, b], Q[c, d]))
     generators = [R] + [Q[a, b] for a in range(k) for b in range(k)]
     commutant_dim = commutant_dimension(generators)
+    is_full = (res["d_T"] == r * r)
+    # CORRECTED: irreducibility follows from the DIRECT argument
+    # (A_T=M_r, and M_r has no nontrivial invariant subspace on R^r),
+    # not from commutant_dim==1 (that converse of Schur's lemma is not
+    # generally valid). commutant_dim is reported purely as an
+    # independent consistency check, not used to derive this flag.
+    is_irreducible = is_full
     return dict(d_T=res["d_T"], rho=res["rho"], omega=res["omega"],
                 deg_mu_R=res["deg_mu_R"], bound=res["bound"],
                 max_RQ_commutator=max(rq_norms) if rq_norms else 0.0,
                 max_QQ_commutator=max(qq_norms) if qq_norms else 0.0,
                 r_squared=r * r, commutant_dim=commutant_dim,
-                is_full_matrix_algebra=(res["d_T"] == r * r),
-                is_irreducible=(commutant_dim == 1))
+                is_full_matrix_algebra=is_full,
+                is_irreducible=is_irreducible)
 
 
 def make_noncommutative_teacher(r, k, n, u_dim, hidden, seed):
@@ -1044,13 +1057,16 @@ def main():
     print()
     print("=" * 70)
     print("A_T = M_r VERIFICATION (per user review) -- rigorous structural")
-    print("characterization: full matrix algebra + trivial commutant (Schur)")
+    print("characterization: DIRECT argument (dim A_T=r^2 forces A_T=M_r, which")
+    print("has no nontrivial invariant subspace) + commutant as consistency check")
     print("=" * 70)
     teacher_m = make_noncommutative_teacher(r=4, k=2, n=6, u_dim=2, hidden=16, seed=1)
     diag_m = noncommutativity_report(teacher_m)
-    print(f"  d_T={diag_m['d_T']} = r^2={diag_m['r_squared']}: {diag_m['is_full_matrix_algebra']}")
-    print(f"  commutant_dim={diag_m['commutant_dim']} (Schur: ==1 iff irreducible, "
-          f"i.e. no nontrivial common invariant subspace): irreducible={diag_m['is_irreducible']}")
+    print(f"  d_T={diag_m['d_T']} = r^2={diag_m['r_squared']} -> A_T=M_r: "
+          f"{diag_m['is_full_matrix_algebra']} -> irreducible (direct argument): "
+          f"{diag_m['is_irreducible']}")
+    print(f"  commutant_dim={diag_m['commutant_dim']} (consistency check only, "
+          f"NOT the source of the irreducibility claim)")
 
     print()
     print("=" * 70)
@@ -1165,6 +1181,97 @@ def main():
     diag_c = noncommutativity_report(teacher_c)
     print(f"  coord={coord}  d_T={diag_c['d_T']} (r=4)  "
           f"max_RQ_comm={diag_c['max_RQ_commutator']:.2e}  max_QQ_comm={diag_c['max_QQ_commutator']:.2e}")
+
+    print()
+    print("=" * 70)
+    print("SEED-ROBUSTNESS SWEEP (modest, 3 runs, per user review)")
+    print("=" * 70)
+    summary, failures = robustness_sweep(n_runs=3, r_rtu_points=(8, 64))
+    for k, v in summary.items():
+        print(f"  {k}: median={v['median']}  min={v['min']}  max={v['max']}  n={v['n']}")
+    print(f"  failures: {failures if failures else 'none'}")
+
+
+# ---------------------------------------------------------------------------
+def robustness_sweep(n_runs=3, r_rtu_points=(8, 64)):
+    results = {"block_local_rtu": [], "block_local_ours": [], "global_ours": []}
+    for r_rtu in r_rtu_points:
+        results[f"global_rtu_{r_rtu}"] = []
+    failures = []
+
+    for run in range(n_runs):
+        teacher_seed = 1 + run * 17
+        student_seed = 10 + run * 23
+        data_seed = 1 + run * 31
+        test_seed = 999 + run * 31
+
+        try:
+            # --- (A) block-local positive control ---
+            rtu_teacher = make_nonlinear_rtu_arch(r_rtu=4, u_dim=2, hidden=16, seed=teacher_seed)
+            rng_bl = np.random.RandomState(data_seed)
+            U_train_bl = jnp.array(rng_bl.randn(20, 20, 2) * 0.5)
+            y_train_bl = jnp.stack([nonlinear_rtu_rollout_scalar(jnp.zeros(4), U_train_bl[s], rtu_teacher)
+                                     for s in range(20)])
+            U_test_bl = jnp.array(np.random.RandomState(test_seed).randn(16, 20, 2) * 0.5)
+            y_test_bl = jnp.stack([nonlinear_rtu_rollout_scalar(jnp.zeros(4), U_test_bl[s], rtu_teacher)
+                                    for s in range(16)])
+            var_bl = float(jnp.var(y_train_bl))
+            if var_bl < 1e-8:
+                failures.append((run, "block_local", "degenerate target variance"))
+                continue
+
+            _, arch_rtu_bl = train_rtu_bptt_adam(r_rtu=4, u_dim=2, hidden=16, U_train=U_train_bl,
+                                                  y_train=y_train_bl, steps=800, lr=0.01, seed=student_seed)
+            nmse_rtu_bl = eval_rtu_mse(arch_rtu_bl, U_test_bl, y_test_bl) / var_bl
+            _, arch_o_bl, h0_o_bl = train_ours_bptt_adam(r=4, k=2, n=4, u_dim=2, hidden=16,
+                                                          U_train=U_train_bl, y_train=y_train_bl,
+                                                          steps=800, lr=0.01, seed=student_seed)
+            nmse_o_bl = eval_ours_bptt_mse(arch_o_bl, h0_o_bl, U_test_bl, y_test_bl) / var_bl
+            results["block_local_rtu"].append(nmse_rtu_bl)
+            results["block_local_ours"].append(nmse_o_bl)
+
+            # --- (B) global A_T=M_r teacher, verified before use ---
+            global_teacher = make_noncommutative_teacher(r=4, k=2, n=6, u_dim=2, hidden=16, seed=teacher_seed)
+            diag = noncommutativity_report(global_teacher)
+            if not diag["is_full_matrix_algebra"]:
+                failures.append((run, "global_teacher", f"dim A_T={diag['d_T']} != r^2=16, SKIPPED"))
+                continue
+
+            U_train, y_train = generate_teacher_batch(global_teacher, n_seq=20, T_=20, u_dim=2,
+                                                       n_teacher=6, r_teacher=4, seed=data_seed)
+            U_test, y_test = generate_teacher_batch(global_teacher, n_seq=16, T_=20, u_dim=2,
+                                                     n_teacher=6, r_teacher=4, seed=test_seed)
+            var_g = float(jnp.var(y_train))
+            if var_g < 1e-8:
+                failures.append((run, "global", "degenerate target variance"))
+                continue
+
+            _, arch_o, h0_o = train_ours_bptt_adam(r=4, k=2, n=4, u_dim=2, hidden=16,
+                                                    U_train=U_train, y_train=y_train,
+                                                    steps=800, lr=0.01, seed=student_seed)
+            nmse_o = eval_ours_bptt_mse(arch_o, h0_o, U_test, y_test) / var_g
+            results["global_ours"].append(nmse_o)
+
+            for r_rtu in r_rtu_points:
+                hidden_m = solve_hidden_for_target_params(
+                    r_rtu + 2, ours_param_count(4, 2, 4, 2, 16))
+                _, arch_r = train_rtu_bptt_adam(r_rtu=r_rtu, u_dim=2, hidden=hidden_m,
+                                                 U_train=U_train, y_train=y_train,
+                                                 steps=800, lr=0.01, seed=student_seed)
+                nmse_r = eval_rtu_mse(arch_r, U_test, y_test) / var_g
+                results[f"global_rtu_{r_rtu}"].append(nmse_r)
+        except Exception as e:
+            failures.append((run, "exception", str(e)))
+
+    summary = {}
+    for key, vals in results.items():
+        if vals:
+            arr = np.array(vals)
+            summary[key] = dict(median=float(np.median(arr)), min=float(np.min(arr)),
+                                 max=float(np.max(arr)), n=len(arr))
+        else:
+            summary[key] = dict(median=None, min=None, max=None, n=0)
+    return summary, failures
 
 
 if __name__ == "__main__":
