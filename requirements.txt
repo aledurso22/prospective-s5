@@ -4,3 +4,5 @@ numpy>=1.26
 jax==0.11.0
 flax==0.12.8
 optax==0.2.8
+popgym==1.0.7
+gymnasium==1.3.0
