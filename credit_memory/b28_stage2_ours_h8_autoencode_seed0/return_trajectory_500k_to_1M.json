@@ -1,0 +1,16 @@
+{
+  "note": "Reconstructed from production_checkpoints.json's per-episode (frame, return) list -- NOT from separate checkpoints (only 100k/250k/500k/1M were configured as CHECKPOINTS). Rolling window ending at each listed frame.",
+  "trajectory": [
+    {"frame": 500000, "recent500_mean": -0.4845, "recent50_mean": -0.4846},
+    {"frame": 600000, "recent500_mean": -0.4735, "recent50_mean": -0.4677, "note": "peak; entropy collapse onset is ~594k-624k in production_run.log"},
+    {"frame": 700000, "recent500_mean": -0.4888, "recent50_mean": -0.5054},
+    {"frame": 800000, "recent500_mean": -0.4918, "recent50_mean": -0.4754},
+    {"frame": 900000, "recent500_mean": -0.4900, "recent50_mean": -0.4992},
+    {"frame": 1000000, "recent500_mean": -0.4872, "recent50_mean": -0.4908}
+  ],
+  "rtu_seed0_reference_recent500": {
+    "500000": -0.487,
+    "1000000": -0.481,
+    "source": "rtu_calib_seed0_v3_final.log/json, same repo, not archived in this directory"
+  }
+}
