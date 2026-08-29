@@ -133,17 +133,68 @@ OBGD_KAPPA = 2.0
 # descent) while leaving RTU's step size effectively untouched. A fixed
 # clip cannot equalize two architectures with structurally different raw
 # sensitivity scales. Replaced with ObGD (Overshooting-bounded Gradient
-# Descent, the "optimizer / ObGD machinery" named in the review spec,
-# per the streaming-RL literature): a SMOOTH, scale-normalizing
-# effective step size computed from the trace norm and TD error each
-# step, rather than a hard clip -- same formula, same kappa, applied
-# identically to both architectures and to head params.
+# Descent, the "optimizer / ObGD machinery" named in the review spec).
+#
+# SECOND CORRECTION (per review): the first ObGD attempt used the
+# SQUARED L2 trace norm and a bare |delta| -- not the published
+# formula. Corrected to match exactly:
+#   delta_bar = max(|delta|, 1.0)
+#   M         = alpha * kappa * delta_bar * ||z||_1   (L1 norm, WHOLE
+#               update group's trace vector, not summed per-family L2)
+#   alpha_eff = alpha            if M <= 1
+#             = alpha / M        otherwise
+# The run using the first (wrong) formula is kept as pipeline/smoke
+# evidence only -- NOT used for any Stage-2 performance verdict.
 
 
 def obgd_step_size(alpha, delta, trace_dict, kappa=OBGD_KAPPA):
-    z_sq_sum = sum(float(np.sum(np.asarray(z) ** 2)) for z in trace_dict.values())
-    denom = max(1.0, alpha * kappa * abs(delta) * z_sq_sum)
-    return alpha / denom
+    delta_bar = max(abs(delta), 1.0)
+    trace_l1 = sum(float(np.sum(np.abs(np.asarray(z)))) for z in trace_dict.values())
+    M = alpha * kappa * delta_bar * trace_l1
+    if M <= 1.0:
+        return alpha
+    return alpha / M
+
+
+def obgd_step_size_reference(alpha, delta, trace_dict, kappa=OBGD_KAPPA):
+    """Deliberately naive, unvectorized reference: explicit element-wise
+    Python loops over every scalar in every trace array, no numpy
+    reductions -- an independent check that obgd_step_size's vectorized
+    np.sum(np.abs(.)) computes the same L1 norm and applies the same
+    min(alpha/M, alpha) rule."""
+    delta_bar = abs(delta) if abs(delta) > 1.0 else 1.0
+    trace_l1 = 0.0
+    for z in trace_dict.values():
+        for x in np.asarray(z).flatten().tolist():
+            trace_l1 += abs(x)
+    M = alpha * kappa * delta_bar * trace_l1
+    if M <= 1.0:
+        return alpha
+    else:
+        return alpha / M
+
+
+def test_obgd_step_size(seed=0, n_trials=25):
+    """Permanent unit test: obgd_step_size vs. the naive reference above,
+    on random trace dictionaries (varied shapes, mixed signs, mixed
+    magnitudes) and several delta values spanning small/large/negative."""
+    rng = np.random.RandomState(seed)
+    deltas = [0.0, 0.01, -0.01, 0.5, -0.5, 1.0, -1.0, 3.7, -3.7, 50.0, -50.0]
+    max_err = 0.0
+    for trial in range(n_trials):
+        n_families = rng.randint(1, 5)
+        trace_dict = {}
+        for i in range(n_families):
+            shape = tuple(rng.randint(1, 6) for _ in range(rng.randint(1, 3)))
+            scale = 10 ** rng.uniform(-3, 2)
+            trace_dict[f"fam{i}"] = rng.randn(*shape) * scale
+        for delta in deltas:
+            got = obgd_step_size(0.5, delta, trace_dict)
+            ref = obgd_step_size_reference(0.5, delta, trace_dict)
+            max_err = max(max_err, abs(got - ref))
+    assert max_err < 1e-12, f"obgd_step_size disagrees with reference: max_err={max_err}"
+    print(f"  test_obgd_step_size PASS (max_err={max_err:.2e} over {n_trials} trials x {len(deltas)} deltas)")
+    return max_err
 
 
 def make_head(z_dim, num_actions, seed):
@@ -462,6 +513,35 @@ def stability_events_in_window(stability_events, ep, up_to_step):
     return [e for e in stability_events if e["ep"] == ep and e["step"] <= up_to_step]
 
 
+def summarize_staleness(staleness_history, families):
+    """Per review request: a single max is too sensitive to one early
+    transient. Report median/p90/max per family AND aggregate (all
+    families' checkpoint values pooled), over ALL recorded checkpoints
+    across ALL episodes -- not just the per-episode worst."""
+    per_family = {fam: [] for fam in families}
+    all_vals = []
+    for entry in staleness_history:
+        for e in entry["log"]:
+            for fam in families:
+                v = e["rel_err"][fam]
+                per_family[fam].append(v)
+                all_vals.append(v)
+    out = {}
+    for fam in families:
+        vals = per_family[fam]
+        if vals:
+            out[fam] = dict(median=float(np.median(vals)), p90=float(np.percentile(vals, 90)),
+                             max=float(np.max(vals)), n=len(vals))
+        else:
+            out[fam] = dict(median=None, p90=None, max=None, n=0)
+    if all_vals:
+        out["aggregate"] = dict(median=float(np.median(all_vals)), p90=float(np.percentile(all_vals, 90)),
+                                 max=float(np.max(all_vals)), n=len(all_vals))
+    else:
+        out["aggregate"] = dict(median=None, p90=None, max=None, n=0)
+    return out
+
+
 def run_multiseed(task, arch_kind, num_episodes, seeds, hp, log_every=999999):
     all_res = []
     for seed in seeds:
@@ -486,6 +566,18 @@ def run_multiseed(task, arch_kind, num_episodes, seeds, hp, log_every=999999):
             print(f"    staleness ep={entry['ep']} step={worst_step['step']} "
                   f"max_rel_err={worst:.3f}{proj_note}")
 
+        families = FAMILIES_OURS if arch_kind == "ours" else FAMILIES_RTU
+        stale_summary = summarize_staleness(res["staleness_history"], families)
+        res["staleness_summary"] = stale_summary
+        agg = stale_summary["aggregate"]
+        if agg["n"]:
+            print(f"    staleness aggregate (n={agg['n']}): median={agg['median']:.3f} "
+                  f"p90={agg['p90']:.3f} max={agg['max']:.3f}")
+            for fam in families:
+                s = stale_summary[fam]
+                if s["n"]:
+                    print(f"      family={fam:12s} median={s['median']:.3f} p90={s['p90']:.3f} max={s['max']:.3f} n={s['n']}")
+
         if arch_kind == "ours":
             s = res["stability_summary"]
             print(f"    R stability projection: n_events={s['n_events']}  "
@@ -495,25 +587,70 @@ def run_multiseed(task, arch_kind, num_episodes, seeds, hp, log_every=999999):
     return all_res
 
 
+def check_positive_control(returns, label, frac=0.2, margin=0.02):
+    """Heuristic automatic flag (NOT a substitute for human judgment):
+    compares mean return of the first `frac` of episodes to the last
+    `frac`. Prints a loud warning if there is no improvement beyond
+    `margin` -- per item 5, RTU must clear this bar before any
+    ours-vs-RTU comparison is trusted."""
+    n = len(returns)
+    k = max(1, int(n * frac))
+    early = float(np.mean(returns[:k]))
+    late = float(np.mean(returns[-k:]))
+    improved = (late - early) > margin
+    print(f"  [{label}] positive-control check: early(first {k})={early:+.4f}  "
+          f"late(last {k})={late:+.4f}  delta={late - early:+.4f}  "
+          f"{'PASS' if improved else '*** NO CLEAR IMPROVEMENT -- DO NOT INTERPRET ours-vs-RTU YET ***'}")
+    return improved
+
+
+def report_credit_ratio(res_ours, res_rtu, task):
+    ours_floats = res_ours["credit_floats"]
+    rtu_floats = res_rtu["credit_floats"]
+    ratio = ours_floats / rtu_floats
+    print(f"  [{task}] recurrent-credit floats: ours={ours_floats}  RTU={rtu_floats}  "
+          f"ratio(ours/RTU)={ratio:.2f}x")
+    if ratio > 1.5:
+        print(f"  *** ours uses {ratio:.1f}x more credit-memory than RTU here -- if ours wins on "
+              f"return, that is evidence for REPRESENTATIONAL/ONLINE-LEARNING TRANSFER, "
+              f"NOT a performance-vs-credit-memory frontier improvement (d_theta=r for all "
+              f"families in this generic-init regime, so no compression is being tested here; "
+              f"see b28_stage2_streaming.py docstring). Stage 3 is where the frontier question "
+              f"belongs. ***")
+
+
 def main():
+    test_obgd_step_size()
+
     hp = dict(gamma=0.97, lam_v=0.8, lam_pi=0.8, alpha_v=0.5, alpha_pi=0.5)
     seeds = (0, 1, 2)
 
     print("=" * 70)
     print("PIPELINE SMOKE TEST ONLY (not the official simple-memory-control")
     print("condition -- that is item 4, RepeatFirst+QRC(lambda)): stream")
-    print("AC(lambda) machinery sanity-checked on the short, cheap RepeatFirst")
-    print("task before spending compute on the longer Autoencode episodes.")
+    print("AC(lambda) machinery sanity-checked, faithful ObGD, on the short,")
+    print("cheap RepeatFirst task before spending compute on Autoencode.")
     print("=" * 70)
-    run_multiseed("repeat_first", "rtu", num_episodes=200, seeds=seeds[:1], hp=hp, log_every=50)
-    run_multiseed("repeat_first", "ours", num_episodes=200, seeds=seeds[:1], hp=hp, log_every=50)
+    res_rtu_rf = run_multiseed("repeat_first", "rtu", num_episodes=200, seeds=seeds[:1], hp=hp, log_every=50)
+    res_ours_rf = run_multiseed("repeat_first", "ours", num_episodes=200, seeds=seeds[:1], hp=hp, log_every=50)
+    check_positive_control(res_rtu_rf[0]["returns"], "repeat_first/rtu (smoke)")
+    check_positive_control(res_ours_rf[0]["returns"], "repeat_first/ours (smoke)")
 
     print("=" * 70)
-    print("Stage 2, item 3: AUTOENCODE + stream AC(lambda) -- RTU replication")
-    print("sanity control, then ours-vs-RTU learning curves.")
+    print("Stage 2, item 3: AUTOENCODE + stream AC(lambda), faithful ObGD --")
+    print("RTU replication sanity control FIRST; ours only interpreted if RTU")
+    print("clears the positive-control bar.")
     print("=" * 70)
     res_rtu_ae = run_multiseed("autoencode", "rtu", num_episodes=300, seeds=seeds, hp=hp, log_every=50)
+    rtu_ok = all(check_positive_control(r["returns"], f"autoencode/rtu seed={s}")
+                 for s, r in zip(seeds, res_rtu_ae))
+    if not rtu_ok:
+        print("  RTU DID NOT CLEAR THE AUTOENCODE POSITIVE-CONTROL BAR ON ALL SEEDS.")
+        print("  Per item 5: STOP and debug. Not proceeding to ours-vs-RTU interpretation.")
+        return
     res_ours_ae = run_multiseed("autoencode", "ours", num_episodes=300, seeds=seeds, hp=hp, log_every=50)
+    for s, r_ours, r_rtu in zip(seeds, res_ours_ae, res_rtu_ae):
+        report_credit_ratio(r_ours, r_rtu, f"autoencode seed={s}")
 
 
 if __name__ == "__main__":
