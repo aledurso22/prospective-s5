@@ -356,12 +356,18 @@ DIVERGENCE_LOSS_CEIL = 1e4
 
 def train_student_one_run(rollout_fn, make_params_fn, param_count_fn, teacher, lr, seed_init,
                            n_train=N_TRAIN, n_val=N_VAL, T=T_SEQ,
-                           seq_seed_offset=20_000, val_seed_offset=95_000):
+                           seq_seed_offset=20_000, val_seed_offset=95_000, test_seed_offset=200_000):
     """ONE (architecture, teacher, lr, seed) training run. Adam + common
     gradient clipping; architecture-appropriate structural projection
     (R_V spectral cap) where applicable. Divergence stops training
     immediately and is reported explicitly -- NEVER folded into an NMSE
-    number."""
+    number.
+
+    Train/validation/test separation (audit fix): val_seed_offset
+    sequences are used ONLY for LR selection (train_student_with_grid);
+    test_seed_offset sequences are a disjoint, untouched set evaluated
+    here but never used for selection -- the reported "final" number in
+    the matrix must come from the test set, not the selection set."""
     loss_fn = make_loss_mse(rollout_fn)
     grad_fn = jax.jit(jax.grad(loss_fn, argnums=0))
     loss_jit = jax.jit(loss_fn)
@@ -390,31 +396,39 @@ def train_student_one_run(rollout_fn, make_params_fn, param_count_fn, teacher, l
     elapsed = time.time() - t0
 
     if diverged:
-        return dict(train_losses=train_losses, nmse=None, val_loss=None, elapsed=elapsed,
+        return dict(train_losses=train_losses, nmse=None, test_nmse=None, val_loss=None, elapsed=elapsed,
                     P_c=param_count_fn(params), diverged=True, diverged_at_step=diverged_at_step,
                     lr=lr, seed=seed_init)
 
-    val_losses, val_ref_var = [], []
-    for i in range(n_val):
-        h0, xs = make_sequence(val_seed_offset + i, T, teacher.state_dim)
-        targets = teacher.targets(h0, xs)
-        vl = float(loss_jit(params, h0, xs, targets, teacher.W))
-        val_losses.append(vl)
-        val_ref_var.append(float(jnp.mean(targets ** 2)))
-    if not all(np.isfinite(val_losses)):
-        return dict(train_losses=train_losses, nmse=None, val_loss=None, elapsed=elapsed,
+    def eval_split(offset, n):
+        losses, ref_var = [], []
+        for i in range(n):
+            h0, xs = make_sequence(offset + i, T, teacher.state_dim)
+            targets = teacher.targets(h0, xs)
+            losses.append(float(loss_jit(params, h0, xs, targets, teacher.W)))
+            ref_var.append(float(jnp.mean(targets ** 2)))
+        return losses, ref_var
+
+    val_losses, val_ref_var = eval_split(val_seed_offset, n_val)
+    test_losses, test_ref_var = eval_split(test_seed_offset, n_val)
+    if not all(np.isfinite(val_losses)) or not all(np.isfinite(test_losses)):
+        return dict(train_losses=train_losses, nmse=None, test_nmse=None, val_loss=None, elapsed=elapsed,
                     P_c=param_count_fn(params), diverged=True, diverged_at_step=n_train, lr=lr, seed=seed_init)
     nmse = float(np.mean(val_losses) / (np.mean(val_ref_var) + 1e-12))
+    test_nmse = float(np.mean(test_losses) / (np.mean(test_ref_var) + 1e-12))
     return dict(train_losses=train_losses, val_loss=float(np.mean(val_losses)), nmse=nmse,
-                elapsed=elapsed, P_c=param_count_fn(params), diverged=False, diverged_at_step=None,
-                lr=lr, seed=seed_init)
+                test_nmse=test_nmse, elapsed=elapsed, P_c=param_count_fn(params), diverged=False,
+                diverged_at_step=None, lr=lr, seed=seed_init)
 
 
 def train_student_with_grid(rollout_fn, make_params_fn, param_count_fn, teacher, lr_grid, seeds=SEEDS,
                              **kwargs):
-    """Small LR grid x fixed seed count; selects the (lr) with the best
-    MEAN FINITE validation NMSE. Reports divergence fraction over ALL
-    grid x seed runs, never mixes a sentinel into the NMSE numbers."""
+    """Small LR grid x fixed seed count. LR is selected using VALIDATION
+    NMSE ONLY (by_lr keys off r["nmse"], the validation-set number,
+    never r["test_nmse"]). The TEST NMSE reported for the selected LR
+    comes from a disjoint set never used in selection. Reports
+    divergence fraction over ALL grid x seed runs, never mixes a
+    sentinel into either NMSE number."""
     all_runs = []
     for lr in lr_grid:
         for seed in seeds:
@@ -431,18 +445,24 @@ def train_student_with_grid(rollout_fn, make_params_fn, param_count_fn, teacher,
     for lr in lr_grid:
         runs = [r for r in finite_runs if r["lr_tag"] == lr]
         if runs:
-            by_lr[lr] = float(np.mean([r["nmse"] for r in runs]))
+            by_lr[lr] = float(np.mean([r["nmse"] for r in runs]))  # VALIDATION nmse -- selection criterion
 
     if not by_lr:
         return dict(status="all_diverged", n_total=n_total, n_diverged=n_diverged,
-                     best_lr=None, nmse_values=[], nmse_mean=None, nmse_median=None, P_c=all_runs[0]["P_c"])
+                     best_lr=None, val_nmse_values=[], val_nmse_mean=None, val_nmse_median=None,
+                     test_nmse_values=[], test_nmse_mean=None, test_nmse_median=None,
+                     P_c=all_runs[0]["P_c"])
 
     best_lr = min(by_lr, key=by_lr.get)
     best_runs = [r for r in finite_runs if r["lr_tag"] == best_lr]
-    nmse_values = [r["nmse"] for r in best_runs]
+    val_nmse_values = [r["nmse"] for r in best_runs]
+    test_nmse_values = [r["test_nmse"] for r in best_runs]
     return dict(status="ok", n_total=n_total, n_diverged=n_diverged, best_lr=best_lr,
-                nmse_values=nmse_values, nmse_mean=float(np.mean(nmse_values)),
-                nmse_median=float(np.median(nmse_values)), P_c=best_runs[0]["P_c"],
+                val_nmse_values=val_nmse_values, val_nmse_mean=float(np.mean(val_nmse_values)),
+                val_nmse_median=float(np.median(val_nmse_values)),
+                test_nmse_values=test_nmse_values, test_nmse_mean=float(np.mean(test_nmse_values)),
+                test_nmse_median=float(np.median(test_nmse_values)),
+                P_c=best_runs[0]["P_c"],
                 diverged_at_best_lr=sum(1 for r in all_runs if r["lr_tag"] == best_lr and r["diverged"]))
 
 
@@ -493,6 +513,179 @@ def verify_full_rtrl_once(step_fn, params, state_dim, seed=0, T=10):
 
 
 # ---------------------------------------------------------------------
+# Audit item 3: positive-control saturation -- same protocol, 5x steps.
+# ---------------------------------------------------------------------
+def run_saturation_audit(teacher_B_gen, multiplier=5):
+    print()
+    print("=" * 78)
+    print(f"Audit 3: positive-control saturation, {multiplier}x training horizon "
+          f"(N_TRAIN={N_TRAIN*multiplier}), same optimizer/clipping/data/init/LR-selection protocol")
+    print("=" * 78)
+    teacher_A = make_teacher_A_independent()
+    teacher_B, _ = make_teacher_B_jet()
+    teacher_D = make_teacher_D_coupled()
+
+    configs = [
+        ("RTU->A", make_rollout(lambda h, p, x: rtu_step(h, p, x, RTU_HIDDEN)),
+         lambda seed: rtu_make_params(seed, RTU_HIDDEN), rtu_param_count, teacher_A, (0.03, 0.1, 0.3)),
+        ("B34->B", make_rollout(make_jet_step(teacher_B_gen, R_STATE)),
+         lambda seed: jet_make_theta(seed, R_STATE), jet_param_count, teacher_B, (0.01, 0.03, 0.1)),
+        ("Flag->D", make_rollout(lambda h, p, x: flag_step(h, p, x, FLAG_CONSTS)),
+         flag_make_params, flag_param_count, teacher_D, (0.003, 0.01, 0.03)),
+    ]
+
+    results = {}
+    for name, rollout_fn, make_params_fn, param_count_fn, teacher, lr_grid in configs:
+        res = train_student_with_grid(rollout_fn, make_params_fn, param_count_fn, teacher, lr_grid,
+                                       n_train=N_TRAIN * multiplier)
+        results[name] = res
+        # learning curve: sparse checkpoints from the single run at the selected LR/first seed,
+        # rerun once more to capture train_losses (train_student_with_grid discards per-run curves)
+        curve_res = train_student_one_run(rollout_fn, make_params_fn, param_count_fn, teacher,
+                                           res["best_lr"], seed_init=1000 + SEEDS[0],
+                                           n_train=N_TRAIN * multiplier)
+        tl = curve_res["train_losses"]
+        n = len(tl)
+        checkpoints = sorted(set([0, n // 10, n // 4, n // 2, 3 * n // 4, n - 1])) if n > 0 else []
+        curve_str = ", ".join(f"step{c}={tl[c]:.4e}" for c in checkpoints)
+        print(f"  {name}: best_lr={res['best_lr']}  VAL_NMSE={res['val_nmse_mean']:.4e}  "
+              f"TEST_NMSE={res['test_nmse_mean']:.4e}  diverged={res['n_diverged']}/{res['n_total']}")
+        print(f"    learning curve (seed {SEEDS[0]}, best lr): {curve_str}")
+    return results
+
+
+# ---------------------------------------------------------------------
+# Audit item 4: exact-online (full RTRL, autodiff S-propagation) vs
+# BPTT -- FULL OPTIMIZER TRAJECTORY comparison (not just one gradient),
+# on each architecture's own positive-control teacher.
+# ---------------------------------------------------------------------
+def full_rtrl_grad_mse_generic(step_fn, params, unravel, theta_flat, P_c, h0, xs, targets, W, state_dim):
+    T = xs.shape[0]
+    h = h0
+    S = jnp.zeros((state_dim, P_c), dtype=jnp.float64)
+    g_total = jnp.zeros(P_c, dtype=jnp.float64)
+    loss_total = 0.0
+    for t in range(T):
+        x_t = xs[t]
+        J_t = jax.jacobian(lambda hh: step_fn(hh, unravel(theta_flat), x_t))(h)
+        G_t = jax.jacobian(lambda thf: step_fn(h, unravel(thf), x_t))(theta_flat)
+        S = J_t @ S + G_t
+        h_next = step_fn(h, unravel(theta_flat), x_t)
+        y = W @ h_next
+        diff = y - targets[t]
+        loss_total = loss_total + 0.5 * jnp.sum(diff ** 2)
+        dl_dh = W.T @ diff
+        g_total = g_total + dl_dh @ S
+        h = h_next
+    return g_total / T, loss_total / T
+
+
+def run_exact_rtrl_vs_bptt_trajectory(step_fn, make_params_fn, teacher, lr, state_dim, seed_init=1000,
+                                       n_steps=10, T=T_SEQ):
+    """Two identical copies (same init, same Adam state, same data),
+    one updated via generic exact full-RTRL gradients (autodiff S
+    propagation -- exact, not the BPTT reverse-mode graph), one via
+    BPTT, for n_steps Adam updates. Reports max gradient discrepancy
+    (step 0) and max parameter discrepancy over the trajectory."""
+    from jax.flatten_util import ravel_pytree
+    loss_fn = make_loss_mse(make_rollout(step_fn))
+    grad_bptt_fn = jax.jit(jax.grad(loss_fn, argnums=0))
+
+    params_rtrl = make_params_fn(seed_init)
+    params_bptt = make_params_fn(seed_init)
+    theta_flat0, unravel = ravel_pytree(params_rtrl)
+    P_c = theta_flat0.shape[0]
+    opt_rtrl = adam_init(params_rtrl)
+    opt_bptt = adam_init(params_bptt)
+
+    grad_discrepancies, param_discrepancies = [], []
+    for step in range(n_steps):
+        h0, xs = make_sequence(20_000 + step, T, state_dim)
+        targets = teacher.targets(h0, xs)
+
+        theta_flat_rtrl, _ = ravel_pytree(params_rtrl)
+        g_rtrl_flat, _ = full_rtrl_grad_mse_generic(step_fn, params_rtrl, unravel, theta_flat_rtrl, P_c,
+                                                     h0, xs, targets, teacher.W, state_dim)
+        g_rtrl = unravel(g_rtrl_flat)
+        g_bptt = grad_bptt_fn(params_bptt, h0, xs, targets, teacher.W)
+
+        g_rtrl_flat_cmp, _ = ravel_pytree(g_rtrl)
+        g_bptt_flat_cmp, _ = ravel_pytree(g_bptt)
+        grad_disc = float(jnp.linalg.norm(g_rtrl_flat_cmp - g_bptt_flat_cmp))
+        grad_discrepancies.append(grad_disc)
+
+        g_rtrl_c = clip_grad(g_rtrl)
+        g_bptt_c = clip_grad(g_bptt)
+        params_rtrl, opt_rtrl = adam_step(params_rtrl, g_rtrl_c, opt_rtrl, lr)
+        params_bptt, opt_bptt = adam_step(params_bptt, g_bptt_c, opt_bptt, lr)
+        if isinstance(params_rtrl, dict):
+            params_rtrl = project_stable_R_V(params_rtrl)
+            params_bptt = project_stable_R_V(params_bptt)
+
+        p_rtrl_flat, _ = ravel_pytree(params_rtrl)
+        p_bptt_flat, _ = ravel_pytree(params_bptt)
+        param_discrepancies.append(float(jnp.linalg.norm(p_rtrl_flat - p_bptt_flat)))
+
+    return dict(grad_discrepancy_step0=grad_discrepancies[0], max_grad_discrepancy=max(grad_discrepancies),
+                max_param_discrepancy=max(param_discrepancies), param_discrepancies=param_discrepancies)
+
+
+def run_exact_gradient_trajectory_audit(teacher_B_gen):
+    print()
+    print("=" * 78)
+    print("Audit 4: exact-online (full RTRL) vs BPTT, full optimizer trajectory (10 steps)")
+    print("=" * 78)
+    teacher_A = make_teacher_A_independent()
+    teacher_B, _ = make_teacher_B_jet()
+    teacher_D = make_teacher_D_coupled()
+
+    res_rtu = run_exact_rtrl_vs_bptt_trajectory(
+        lambda h, p, x: rtu_step(h, p, x, RTU_HIDDEN), lambda seed: rtu_make_params(seed, RTU_HIDDEN),
+        teacher_A, lr=0.1, state_dim=2 * RTU_HIDDEN)
+    print(f"  RTU->A:  grad_discrepancy(step0)={res_rtu['grad_discrepancy_step0']:.3e}  "
+          f"max_grad_discrepancy={res_rtu['max_grad_discrepancy']:.3e}  "
+          f"max_param_discrepancy={res_rtu['max_param_discrepancy']:.3e}")
+
+    res_b34 = run_exact_rtrl_vs_bptt_trajectory(
+        make_jet_step(teacher_B_gen, R_STATE), lambda seed: jet_make_theta(seed, R_STATE),
+        teacher_B, lr=0.03, state_dim=R_STATE)
+    print(f"  B34->B:  grad_discrepancy(step0)={res_b34['grad_discrepancy_step0']:.3e}  "
+          f"max_grad_discrepancy={res_b34['max_grad_discrepancy']:.3e}  "
+          f"max_param_discrepancy={res_b34['max_param_discrepancy']:.3e}")
+
+    res_flag = run_exact_rtrl_vs_bptt_trajectory(
+        lambda h, p, x: flag_step(h, p, x, FLAG_CONSTS), flag_make_params,
+        teacher_D, lr=0.003, state_dim=FLAG_R_DIM)
+    print(f"  Flag->D: grad_discrepancy(step0)={res_flag['grad_discrepancy_step0']:.3e}  "
+          f"max_grad_discrepancy={res_flag['max_grad_discrepancy']:.3e}  "
+          f"max_param_discrepancy={res_flag['max_param_discrepancy']:.3e}")
+
+    return dict(RTU=res_rtu, B34=res_b34, Flag=res_flag)
+
+
+# ---------------------------------------------------------------------
+# Audit item 5: structural accounting, kept separate from optimization outcome.
+# ---------------------------------------------------------------------
+def print_structural_accounting():
+    print()
+    print("=" * 78)
+    print("Audit 5: structural accounting (state dim r, trainable P, exact credit, r*P, ratio)")
+    print("=" * 78)
+    rows = [
+        ("RTU", 2 * RTU_HIDDEN, 128, rtu_credit_scalars(RTU_HIDDEN)),
+        ("B34", R_STATE, R_STATE, jet_credit_scalars(R_STATE)),
+        ("BoundedInterfaceFlag", FLAG_R_DIM, 10888, flag_credit_scalars(10888)),
+    ]
+    for name, r, P, credit in rows:
+        print(f"  {name:22s} r={r:4d}  P={P:6d}  exact_credit={credit['reduced']:7d}  "
+              f"r*P(full)={credit['full']:7d}  ratio={credit['ratio']:.1f}x")
+    print(f"  {'DenseBPTTBaseline':22s} r={DENSE_HIDDEN:4d}  P={4224:6d}  "
+          f"exact_credit=N/A (not an online learner)  r*P(full)={DENSE_HIDDEN*4224:7d} (hypothetical, "
+          f"illustrative only)  ratio=N/A")
+    print("  NOTE: View 1 is NOT matched parameter count or matched credit budget -- do not read it that way.")
+
+
+# ---------------------------------------------------------------------
 # Sanity checks -- MUST pass before any cross-family matrix.
 # ---------------------------------------------------------------------
 def run_sanity_checks():
@@ -535,13 +728,15 @@ def run_sanity_checks():
         print(f"  Dense -> {name}:                      {res}")
 
     print()
-    print("Positive-control PASS criteria (NMSE << 1, using a permissive 0.3 threshold):")
+    print("Positive-control PASS criteria (TEST NMSE << 1, permissive 0.3 threshold; "
+          "LR was selected on VALIDATION NMSE only, never on this test number):")
     all_pass = True
     for key in ("RTU->A", "B34->B", "Flag->D"):
         r = checks[key]
-        ok = r["status"] == "ok" and r["nmse_mean"] < 0.3
+        ok = r["status"] == "ok" and r["test_nmse_mean"] < 0.3
         all_pass = all_pass and ok
-        print(f"  {key}: {'PASS' if ok else 'FAIL'}  (nmse_mean={r.get('nmse_mean')})")
+        print(f"  {key}: {'PASS' if ok else 'FAIL'}  (val_nmse_mean={r.get('val_nmse_mean')}, "
+              f"test_nmse_mean={r.get('test_nmse_mean')})")
     print(f"ALL POSITIVE CONTROLS PASS: {all_pass}")
     return dict(all_pass=all_pass, checks=checks, teacher_B_gen=teacher_B_gen)
 
@@ -564,7 +759,7 @@ def run_view1_matrix(teacher_B_gen):
     teachers = [teacher_A, teacher_B, teacher_C, teacher_D]
 
     lr_grids = dict(RTU=(0.03, 0.1, 0.3), B34=(0.01, 0.03, 0.1),
-                     BoundedInterfaceFlag=(0.003, 0.01, 0.03), DenseBPTTOracle=(0.01, 0.03, 0.1))
+                     BoundedInterfaceFlag=(0.003, 0.01, 0.03), DenseBPTTBaseline=(0.01, 0.03, 0.1))
 
     architectures = dict(
         RTU=dict(rollout=make_rollout(lambda h, p, x: rtu_step(h, p, x, RTU_HIDDEN)),
@@ -579,7 +774,7 @@ def run_view1_matrix(teacher_B_gen):
                  rollout=make_rollout(lambda h, p, x: flag_step(h, p, x, FLAG_CONSTS)),
                  make_params=flag_make_params, param_count=flag_param_count,
                  state_dim=FLAG_R_DIM, credit=None),
-        DenseBPTTOracle=dict(rollout=make_rollout(dense_step),
+        DenseBPTTBaseline=dict(rollout=make_rollout(dense_step),
                  make_params=dense_make_params, param_count=dense_param_count,
                  state_dim=DENSE_HIDDEN, credit=dict(reduced=None, full=None, ratio=None)),
     )
@@ -602,13 +797,14 @@ def run_view1_matrix(teacher_B_gen):
             else:
                 print(f"  arch={arch_name:22s} teacher={teacher.name:14s} state_dim={arch['state_dim']:3d}  "
                       f"P_c={res['P_c']:6d}  best_lr={res['best_lr']}  "
-                      f"NMSE(finite)={res['nmse_mean']:.4e} (median {res['nmse_median']:.4e})  "
+                      f"VAL_NMSE={res['val_nmse_mean']:.4e}  TEST_NMSE={res['test_nmse_mean']:.4e} "
+                      f"(median {res['test_nmse_median']:.4e})  "
                       f"diverged={res['n_diverged']}/{res['n_total']}", flush=True)
 
-    with open("/tmp/p2a_view1_results.json", "w") as f:
+    with open("/tmp/p2a_view1_results_v2.json", "w") as f:
         json.dump(results, f, indent=2, default=str)
     print()
-    print("Saved to /tmp/p2a_view1_results.json")
+    print("Saved to /tmp/p2a_view1_results_v2.json")
     return results
 
 
@@ -619,3 +815,6 @@ if __name__ == "__main__":
         print("STOPPING: not all positive controls passed. Repair before running the cross-family matrix.")
     else:
         run_view1_matrix(sanity["teacher_B_gen"])
+        run_saturation_audit(sanity["teacher_B_gen"])
+        run_exact_gradient_trajectory_audit(sanity["teacher_B_gen"])
+        print_structural_accounting()
