@@ -1,0 +1,19 @@
+{
+ "dataset": "enwik8",
+ "require_enwik8": true,
+ "n_bytes": 200000,
+ "J": 8,
+ "d_tile": 4,
+ "q": 2,
+ "batch": 4,
+ "chunk": 64,
+ "steps": 50,
+ "lr": 0.01,
+ "seed": 0,
+ "arm": "L",
+ "algo": "rtrl",
+ "check_grads": true,
+ "n_eval": 4,
+ "download": true,
+ "f64": true
+}

@@ -1,0 +1,5 @@
+# CPU (local): pip install -r requirements.txt
+# GPU (cluster): pip install --upgrade "jax[cuda12]" numpy
+jax>=0.4.30
+jaxlib>=0.4.30
+numpy>=1.26
