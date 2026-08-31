@@ -122,6 +122,7 @@ if __name__ == "__main__":
     Ns = [int(z) for z in a.N.split(",")]
     print(f"backend={jax.default_backend()}  devices={jax.devices()}")
     rows = []
+    BACKEND = jax.default_backend()
     print("\n== BATCHED-CONTEXT (identical resident B x T inputs for both algorithms) ==")
     hdr = (f"{'algo':>5s} {'N':>6s} {'T':>7s} {'B':>4s} {'tok/s':>11s} {'ms/upd':>9s} "
            f"{'elig MB':>9s} {'model MB':>9s} {'opt MB':>8s} {'input MB':>9s} "
@@ -148,5 +149,7 @@ if __name__ == "__main__":
               f"| {r['tokens_per_s']:11.3e} tok/s | elig {r['elig_bytes']/1e6:8.3f} MB "
               f"| chunk input {r['input_bytes']/1e6:7.4f} MB "
               f"| peak dev {r['peak_device_bytes']/1e6 if r['peak_device_bytes']>0 else -1:9.1f} MB")
-    json.dump(rows, open(a.out, "w"), indent=1, default=float)
+    json.dump(dict(backend=jax.default_backend(),
+                   devices=[str(x) for x in jax.devices()], rows=rows),
+              open(a.out, "w"), indent=1, default=float)
     print(f"\nsaved {a.out}")

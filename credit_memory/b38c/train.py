@@ -102,14 +102,17 @@ def run(cfg):
     wall = time.time() - t0
     vl = evaluate(p, J, d, arm, ev)
     eb, brk = elig_bytes(B, J, d, q, V, 8 if cfg.get("f64") else 4)
+    dev = [str(x) for x in jax.devices()]
     out = dict(cfg=cfg, source=src, P=nparams(p),
+               backend=jax.default_backend(), devices=dev,
                P_rec=int(sum(np.prod(p[k].shape) for k in REC_KEYS if k in p)),
                val_ce=vl, val_bpb=bits_per_byte(vl), hist=hist,
                wall=wall, tokens_per_s=ntok / wall,
                elig_bytes=eb if algo == "rtrl" else 0,
                grad_check=worst.tolist() if both is not None else None)
     print(f"  FINAL val CE {vl:.4f} nats  |  {bits_per_byte(vl):.4f} bits/byte  "
-          f"|  P={nparams(p)}  |  {wall:.1f}s  {ntok/wall:.0f} tok/s (CPU-only unless GPU)")
+          f"|  P={nparams(p)}  |  {wall:.1f}s  {ntok/wall:.0f} tok/s "
+          f"on {jax.default_backend()} ({', '.join(dev)})")
     if both is not None:
         print(f"  worst in-training RTRL-vs-BPTT gradient error: {worst.max():.3e}")
     return out
