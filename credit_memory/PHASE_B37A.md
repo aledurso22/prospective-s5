@@ -129,9 +129,19 @@ path propagates only r numbers.
 
 ## 7. Representation side
 
-**R1** (`u(x)=x`, controllable canonical form; `a` obtained by SOLVING
-`K a = -A^r b` from Cayley–Hamilton rather than via ill-conditioned
-root-finding; `K` = controllability matrix):
+**Notation, disambiguated.** `AK = KC_q` and `A = K C_q K^{-1}` are the SAME
+equation, not two assertions — the second is the first with `K` inverted. Both
+are the `u(x) = x` SPECIAL CASE of the universal criterion `AT = T u(C_q)`,
+with `T = K`. `K` is the controllability matrix of the target `A` itself (not
+an auxiliary matrix standing in for `A`). The scope limitation is that
+`AT = T C_q` (i.e. `u = x`) forces `A` to be **cyclic**, and R1's targets are
+random dense matrices, which are generically cyclic — so **R1 alone does not
+test universality**; it only confirms the cyclic special case. The derogatory
+case is tested in section 7a with nontrivial `u`.
+
+**R1** (`u(x)=x`, controllable canonical form, CYCLIC targets only; `a`
+obtained by SOLVING `K a = -A^r b` from Cayley–Hamilton rather than via
+ill-conditioned root-finding; `K` = controllability matrix of `A`):
 
 | r | cond(K) | ‖AK−KC_q‖ rel | ‖A−KC_qK⁻¹‖ rel | Markov err |
 |---|---|---|---|---|
@@ -141,8 +151,8 @@ root-finding; `K` = controllability matrix):
 | 32 | 1.6e9 | 4.1e-16 | 2.1e-09 | 6.4e-16 |
 | 32 (sd1) | 6.5e10 | 3.2e-16 | 9.2e-08 | 4.7e-16 |
 
-The similarity identity `AK = KC_q` holds at **machine precision at every r**
-including 32. Only the explicit inversion `K C_q K^{-1}` degrades, tracking
+The identity `AK = KC_q` (equivalently `A = K C_q K^{-1}`; the `u=x` case of
+`AT = T u(C_q)`) holds at **machine precision at every r** including 32. Only the explicit inversion `K C_q K^{-1}` degrades, tracking
 cond(K) as expected. **Markov parameters `c A^k b = (cK) C_q^k (K^{-1}b)`
 match to ~1e-16 over k=0..59 at every r.**
 
@@ -151,14 +161,71 @@ match to ~1e-16 over k=0..59 at every r.**
 matrix powers, two independent code paths) 0 to 4.6e-14; Markov error 1.5e-16
 at r=2 rising to 2.9e-06 at r=32 (same nonnormal-conditioning limit).
 
-**Structural note (reported, not hidden):** a single quotient `R[x]/(q)` is
-always **nonderogatory** — `C_q` has exactly one Jordan block per distinct
-root. Multiple Jordan blocks sharing an eigenvalue ARE reachable for
-`M_u = u(C_q)` (take `q=(x-lam)^r` with `u'(lam)=0, u''(lam)!=0`; this is the
-`multi_jordan_shared` family), but **not every Jordan structure is reachable
-from a single quotient**: from `q=(x-lam)^4` the attainable structures for
-`u(C_q)` are `J_4`, `J_2+J_2`, `J_1^4` — but not `J_2+J_1+J_1`. Realising
-arbitrary derogatory structures requires a PRODUCT of quotients, not one.
+### 7a. CORRECTION — universality holds; the earlier caveat was FALSE
+
+An earlier revision of this document claimed that "not every Jordan structure
+is reachable from a single quotient", citing `J_2+J_1+J_1` as unreachable from
+`q=(x-alpha)^4`, and concluded that products of quotients are required. **That
+claim was wrong and is retracted.** The enumeration behind it was incomplete:
+writing `u(C_q) = u(alpha)I + c_1 N + c_2 N^2 + c_3 N^3`, it considered
+`c_1=0, c_2!=0` (giving `J_2+J_2`) and `c_1=c_2=c_3=0` (giving `lambda I`) but
+**omitted `c_1=c_2=0, c_3!=0`**. That omitted case is exactly the counterexample:
+
+```
+q(x) = (x-alpha)^4 ,   u(x) = lambda + (x-alpha)^3   =>   u(C_q) = lambda I + N^3
+```
+`N^3` has rank 1 and square zero, so its nilpotent type is `J_2(0)+J_1(0)+J_1(0)`,
+giving `u(C_q) ~ J_2(lambda)+J_1(lambda)+J_1(lambda)`. Verified numerically:
+`rank(u(C_q)-lambda I) = 1`, `||(u(C_q)-lambda I)^2|| = 3.4e-16`, detected Jordan
+type `[2,1,1]`.
+
+**Corrected mathematical statement.** `C_q` is always cyclic/nonderogatory —
+one Jordan block per distinct root — but `u(C_q)` **need not be**, and this is
+the whole point. Every matrix `A` of size r (arbitrarily derogatory) satisfies
+`A = T u(C_q) T^{-1}` for a suitable monic `q` of degree r and `deg u <= r-1`.
+Constructive proof, with each step verified numerically below:
+
+1. Let `A` have Jordan blocks `{(lambda_i, n_i)}_{i=1..p}`, `sum n_i = r`. Pick
+   **distinct** `alpha_i` and set `q = prod_i (x-alpha_i)^{n_i}`.
+2. With `g_{i,k} = q(x)/(x-alpha_i)^k` (k=1..n_i) one has
+   `x*g_{i,k} = g_{i,k-1} + alpha_i g_{i,k}` in `A=R[x]/(q)` (with `g_{i,0}=q=0`),
+   so `V = [... g_{i,k} ...]` gives `C_q V = V D`, `D = (+)_i J_{n_i}(alpha_i)`,
+   hence `u(C_q) V = V u(D)` with `u(D) = (+)_i u(J_{n_i}(alpha_i))`.
+3. Impose Hermite conditions `u(alpha_i) = lambda_i` for every block, plus
+   `u'(alpha_i) = 1` only for blocks with `n_i >= 2`. The condition count is
+   `p_1 + 2 p_2 <= p_1 + sum_{n_i>=2} n_i = r`, so Hermite interpolation returns
+   `deg u <= r-1` — **inside the model**. This is the step the retracted claim
+   missed: size-1 blocks cost only ONE condition, so the budget always fits.
+4. Per block, `u(J_n(alpha)) = lambda I + P` with `P` nilpotent of rank `n-1`
+   (because `u'(alpha) != 0`); `W = [P^{n-1}e | ... | Pe | e]`, `e = e_n`, gives
+   `P W = W N` and hence `u(J_n(alpha)) W = W J_n(lambda)`.
+
+`T = V * blockdiag(W_i)` then satisfies `u(C_q) T = T A` exactly.
+
+**Re-audit results** (`credit_memory/b37a_representation_reaudit.py`), criterion
+`||u(C_q)T - TA|| / (1 + ||A|| ||T||)`, plus Markov equality under transformed
+ports `B_q = T b`, `C_q = c T^{-1}`:
+
+| target | r | u(C_q) Jordan type | ‖u(C_q)T−TA‖ rel | Markov err | cond(T) | verdict |
+|---|---|---|---|---|---|---|
+| `lambda*I_4` | 4 | [1,1,1,1] | 5.34e-17 | 3.68e-15 | 2.9e2 | PASS |
+| `lambda*I_6` | 6 | [1,1,1,1,1,1] | 1.69e-16 | 1.14e-13 | 2.9e4 | PASS |
+| `J2+J1+J1` | 4 | [2,1,1] | 4.83e-16 | 1.88e-15 | 1.1e2 | PASS |
+| `J2+J2` | 4 | [2,2] | 7.28e-16 | 3.02e-15 | 3.5e1 | PASS |
+| `J3+J2` | 5 | [3,2] | 4.09e-16 | 1.76e-15 | 4.2e2 | PASS |
+
+**ALL 65 equal-eigenvalue partitions for r = 2..8: 65/65 PASS.** Worst
+`||u(C_q)T-TA||` rel = 2.15e-12, worst Markov error = 4.33e-09 (both at r=8,
+tracking cond(T) up to ~4e8 — floating-point conditioning, not a structural
+limit). The independent Jordan-type check confirmed `u(C_q)` has exactly the
+target block structure in **65/65** cases.
+
+**Conclusion: ONE quotient suffices for arbitrary derogatory structures.** A
+product of quotients is NOT necessary for representation. (A product may still
+be preferable for other reasons — e.g. the float64 conditioning of the
+companion parameterisation documented in section 5, or bounded local factor
+size — but that is a numerical/architectural argument, not a representational
+one.)
 
 ## 8. Verdict
 
@@ -174,5 +241,13 @@ failing case the reduced trace is the most accurate of the three paths tested.
 The 30 nominal failures are a property of the float64 conditioning of the
 quotient/companion parameterisation in defective and nonnormal regimes, not of
 the reduced-eligibility derivation.
+
+**Representation universality (corrected).** Every matrix of size r, including
+arbitrarily derogatory ones, is `T u(C_q) T^{-1}` for a single monic `q` of
+degree r and `deg u <= r-1`: verified on all 65 equal-eigenvalue Jordan
+partitions for r=2..8 (65/65, worst residual 2.15e-12) plus the required
+targets `lambda I`, `J2+J1+J1`, `J2+J2`, `J3+J2`. The earlier "products of
+quotients are required" caveat was based on an incomplete case enumeration and
+has been retracted — see section 7a.
 
 Stopped here as instructed; no training experiments performed.
