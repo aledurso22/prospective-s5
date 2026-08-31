@@ -1,0 +1,52 @@
+========================================================================================================
+1. ANALYTIC instantaneous G_t  vs  jacrev/autodiff
+========================================================================================================
+ J  d  q   V |          E       Atil         uD         cD         uB         cB
+ 2  2  2   5 |   5.68e-17   7.71e-18   1.87e-17   3.50e-17   0.00e+00   0.00e+00
+ 3  2  2   7 |   6.82e-17   1.61e-17   6.03e-17   8.71e-17   0.00e+00   0.00e+00
+ 2  3  3   6 |   1.04e-16   6.25e-17   6.34e-17   5.53e-17   0.00e+00   0.00e+00
+ 4  2  3   9 |   7.33e-17   4.48e-17   5.78e-17   6.22e-17   0.00e+00   0.00e+00
+
+  worst analytic-vs-autodiff error: 1.041e-16  (PASS)
+
+========================================================================================================
+2. reduced source-local RTRL  vs  dense RTRL  vs  BPTT   (all families)
+========================================================================================================
+ J  d  q   V   T      P |         E      Atil        uD        cD        uB        cB      Wout      cout
+ 2  2  2   5  12     73 |  3.33e-17  2.86e-18  3.05e-18  7.23e-18  2.01e-17  5.99e-17  1.87e-17  2.18e-17
+ 3  2  2   7  20    133 |  7.48e-17  1.63e-17  4.92e-18  1.60e-17  3.25e-17  1.05e-16  5.01e-17  3.35e-17
+ 2  3  3   6  16    132 |  5.79e-17  3.89e-17  4.29e-18  2.54e-17  6.24e-17  6.62e-17  4.61e-17  3.76e-17
+ 4  2  3   9  24    261 |  7.38e-17  4.20e-17  4.91e-17  8.61e-17  8.52e-17  1.15e-16  7.11e-17  9.01e-17
+
+  worst reduced=dense=BPTT error: 1.150e-16  (PASS)
+
+========================================================================================================
+3. optimizer-step agreement from identical initialization (50 Adam steps)
+========================================================================================================
+  max parameter deviation over 50 matched Adam steps: 3.331e-16  (PASS)
+
+========================================================================================================
+4/5. eligibility memory: vs sequence length T, and vs N  (persistent state only)
+========================================================================================================
+  B    J  d  q    V       T      N     P_rec   elig MB   elig/P
+  8   16  4  2  256     128     64      8640     1.063    30.76
+  8   16  4  2  256     512     64      8640     1.063    30.76
+  8   16  4  2  256    2048     64      8640     1.063    30.76
+  8   16  4  2  256    8192     64      8640     1.063    30.76
+   (identical at every T -- eligibility does not depend on sequence length)
+  8    8  4  2  256      --     32      4320     0.531    30.76
+  8   32  4  2  256      --    128     17280     2.126    30.76
+  8  128  4  2  256      --    512     69120     8.503    30.76
+  8  512  4  2  256      --   2048    276480    34.013    30.76
+   elig/P constant in N => O(P). Dominated by the tile-local embedding
+   (B*J*d*V*q); selector eligibility is only B*J*d*(3+2q).
+
+========================================================================================================
+6. no O(T) scan output/scratch attributable to the RTRL algorithm
+========================================================================================================
+  T=   64  XLA temp    0.1521 MB   input buffers    0.0041 MB   temp - input    0.1480 MB
+  T=  256  XLA temp    0.1644 MB   input buffers    0.0164 MB   temp - input    0.1480 MB
+  T= 1024  XLA temp    0.2135 MB   input buffers    0.0655 MB   temp - input    0.1480 MB
+  T= 4096  XLA temp    0.4101 MB   input buffers    0.2621 MB   temp - input    0.1480 MB
+   RTRL scan emits None per step; any T-dependence above is input buffers,
+   which are NOT eligibility memory.
