@@ -6,9 +6,9 @@
 # the repo, venv and enwik8 live on pgi15-gpu3 and exist nowhere else.
 #
 # Submit with (paths passed in, nothing machine-specific hard-coded):
-#   sbatch --export=ALL,B38C_VENV=/Local/durso/prospective_ssm_project/.venv,\
-#B38C_DATA_DIR=/Local/durso/data,B38C_OUT_DIR=/Local/durso/b38c_out \
-#     --output=/Local/durso/b38c_out/slurm_%j.out scripts/sbatch_b38c.sh
+#   export B38C_DATA_DIR=/path/data B38C_OUT_DIR=/path/out
+#   sbatch -o /path/out/slurm_%j.out scripts/sbatch_b38c.sh
+# (the venv is taken from $VIRTUAL_ENV if you submit with it activated)
 #
 #SBATCH --job-name=b38c
 #SBATCH --partition=pgi15-single-gpu
@@ -18,7 +18,11 @@
 #SBATCH --output=slurm_b38c_%j.out
 set -uo pipefail
 cd "$(dirname "$0")/.."
-: "${B38C_VENV:?set B38C_VENV (path to the virtualenv)}"
+# Default the venv to whatever was active at submit time ($VIRTUAL_ENV is
+# exported, and sbatch forwards the submitting environment by default), so the
+# submit line stays short enough not to be broken by terminal line-wrapping.
+B38C_VENV="${B38C_VENV:-${VIRTUAL_ENV:-}}"
+: "${B38C_VENV:?set B38C_VENV, or submit from an activated virtualenv}"
 : "${B38C_DATA_DIR:?set B38C_DATA_DIR}"
 : "${B38C_OUT_DIR:?set B38C_OUT_DIR}"
 source "$B38C_VENV/bin/activate"
