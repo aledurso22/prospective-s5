@@ -27,6 +27,7 @@ def stage_enwik8(root, download=False):
     import zipfile
     with zipfile.ZipFile(zp) as z:
         z.extract("enwik8", root)
+    os.remove(zp)          # keep only the 100 MB payload, not the 36 MB archive
     return p
 
 
