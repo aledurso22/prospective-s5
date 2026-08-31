@@ -1,0 +1,65 @@
+[
+ {
+  "tokens": 256,
+  "chunks": 1,
+  "elig": 1024,
+  "state": 512,
+  "opt": 384,
+  "chunkbuf": 32768,
+  "rss": 2011.430912
+ },
+ {
+  "tokens": 1024,
+  "chunks": 4,
+  "elig": 1024,
+  "state": 512,
+  "opt": 384,
+  "chunkbuf": 32768,
+  "rss": 2011.430912
+ },
+ {
+  "tokens": 4096,
+  "chunks": 16,
+  "elig": 1024,
+  "state": 512,
+  "opt": 384,
+  "chunkbuf": 32768,
+  "rss": 2011.430912
+ },
+ {
+  "tokens": 16384,
+  "chunks": 64,
+  "elig": 1024,
+  "state": 512,
+  "opt": 384,
+  "chunkbuf": 32768,
+  "rss": 2011.430912
+ },
+ {
+  "tokens": 65536,
+  "chunks": 256,
+  "elig": 1024,
+  "state": 512,
+  "opt": 384,
+  "chunkbuf": 32768,
+  "rss": 2011.430912
+ },
+ {
+  "tokens": 262144,
+  "chunks": 1024,
+  "elig": 1024,
+  "state": 512,
+  "opt": 384,
+  "chunkbuf": 32768,
+  "rss": 2011.430912
+ },
+ {
+  "tokens": 1048576,
+  "chunks": 4096,
+  "elig": 1024,
+  "state": 512,
+  "opt": 384,
+  "chunkbuf": 32768,
+  "rss": 2011.430912
+ }
+]
